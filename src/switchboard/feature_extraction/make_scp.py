@@ -6,7 +6,7 @@ import sys
 import glob
 
 sys.path.append('../')
-sys.path.append('../../../')
+sys.path.append('../../')
 from prepare_path import Prepare
 from utils.util import mkdir
 from utils.config.make_config import setup

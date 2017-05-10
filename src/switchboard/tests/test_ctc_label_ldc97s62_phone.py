@@ -5,7 +5,7 @@ import sys
 import unittest
 
 sys.path.append('../')
-sys.path.append('../../../')
+sys.path.append('../../')
 from prepare_path import Prepare
 from labels.ctc.ldc97s62.phone import read_transcript
 

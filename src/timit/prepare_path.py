@@ -14,7 +14,7 @@ class Prepare(object):
 
         # path to save dataset (set yourself)
         self.data_root_path = '/n/sd8/inaguma/corpus/timit/'
-        self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/src/corpus/timit/'
+        self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/src/timit/'
 
         # path to timit path (set yourself)
         self.train_data_path = '/n/sd8/inaguma/corpus/timit/original/train/'

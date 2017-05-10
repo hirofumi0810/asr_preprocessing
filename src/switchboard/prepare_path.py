@@ -14,7 +14,7 @@ class Prepare(object):
 
         # path to save dataset (set yourself)
         self.data_root_path = '/n/sd8/inaguma/corpus/switchboard/'
-        self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/asr_preprocessing/corpus/switchboard/'
+        self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/src/switchboard/'
 
         # path to switchboard path (set yourself)
         self.train_data_path = '/n/sd8/inaguma/corpus/switchboard/LDC97S62/'

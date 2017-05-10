@@ -8,7 +8,7 @@ import glob
 import numpy as np
 
 sys.path.append('../')
-sys.path.append('../../../')
+sys.path.append('../../')
 from prepare_path import Prepare
 from inputs.input_data_global_norm import read_htk
 from labels.ctc.phone import read_phone

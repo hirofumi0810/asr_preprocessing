@@ -10,7 +10,7 @@ import glob
 from tqdm import tqdm
 
 sys.path.append('../../')
-sys.path.append('../../../../')
+sys.path.append('../../../')
 from prepare_path import Prepare
 from inputs.input_data_global_norm import read_htk
 from labels.ctc.fisher.character import read_transcript as read_char

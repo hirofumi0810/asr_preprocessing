@@ -10,7 +10,7 @@ import shutil
 from tqdm import tqdm
 
 sys.path.append('../')
-sys.path.append('../../../')
+sys.path.append('../../')
 from prepare_path import Prepare
 from utils.util import mkdir
 
