@@ -24,8 +24,7 @@ def main(label_type, normalize_type):
 
     print('===== ' + label_type + ', ' + normalize_type + ' =====')
     prep = Prepare()
-    save_path = mkdir(os.path.join(prep.data_root_path, 'dataset'))
-    save_path = mkdir(os.path.join(save_path, 'ctc'))
+    save_path = mkdir(os.path.join(prep.dataset_path, 'ctc'))
     save_path = mkdir(os.path.join(save_path, label_type))
 
     train_save_path = mkdir(os.path.join(save_path, 'train'))
@@ -62,7 +61,8 @@ def main(label_type, normalize_type):
         speaker_dict = read_phone(label_paths=label_train_paths,
                                   save_path=label_train_save_path)
 
-    # read htk files, save input data as npy files, save frame num dict as a pickle file
+    # read htk files, save input data as npy files, save frame num dict as a
+    # pickle file
     print('=> Processing input data...')
     htk_train_paths = [os.path.join(prep.train_data_path, htk_dir)
                        for htk_dir in sorted(glob.glob(os.path.join(prep.train_data_path, 'fbank/*.htk')))]

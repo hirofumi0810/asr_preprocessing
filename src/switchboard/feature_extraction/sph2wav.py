@@ -24,13 +24,14 @@ def main():
     sph_test_callhome_paths = prep.sph_test_callhome()
 
     wav_train_path = mkdir(os.path.join(prep.train_data_path, 'wav'))
-    wav_train_fisher_path = mkdir(os.path.join(prep.train_data_fisher_path, 'wav'))
+    wav_train_fisher_path = mkdir(
+        os.path.join(prep.train_data_fisher_path, 'wav'))
     wav_test_path = mkdir(os.path.join(prep.test_data_path, 'wav'))
     wav_test_swbd_path = mkdir(os.path.join(wav_test_path, 'swbd'))
     wav_test_callhome_path = mkdir(os.path.join(wav_test_path, 'callhome'))
 
-    # train (LDC97S62)
-    print('===== LDC97S62 =====')
+    # train (ldc97s62)
+    print('===== ldc97s62 =====')
     if len(os.listdir(wav_train_path)) == 4876:
         print('Already converted.')
     else:
@@ -64,8 +65,10 @@ def main():
             number = sph_train_fisher_path.split('/')[-2]
             mkdir(os.path.join(wav_train_fisher_path, number))
             wav_index = os.path.basename(sph_train_fisher_path).split('.')[0]
-            save_path_a = os.path.join(wav_train_fisher_path, number, wav_index + 'A.wav')
-            save_path_b = os.path.join(wav_train_fisher_path, number, wav_index + 'B.wav')
+            save_path_a = os.path.join(
+                wav_train_fisher_path, number, wav_index + 'A.wav')
+            save_path_b = os.path.join(
+                wav_train_fisher_path, number, wav_index + 'B.wav')
 
             # convert from sph to wav
             # A side
@@ -108,8 +111,10 @@ def main():
 
         for sph_test_callhome_path in tqdm(sph_test_callhome_paths):
             wav_index = os.path.basename(sph_test_callhome_path).split('.')[0]
-            save_path_a = os.path.join(wav_test_callhome_path, wav_index + 'A.wav')
-            save_path_b = os.path.join(wav_test_callhome_path, wav_index + 'B.wav')
+            save_path_a = os.path.join(
+                wav_test_callhome_path, wav_index + 'A.wav')
+            save_path_b = os.path.join(
+                wav_test_callhome_path, wav_index + 'B.wav')
 
             # convert from sph to wav
             # A side

@@ -21,8 +21,7 @@ def main(label_type, normalize_type):
 
     print('===== Fisher =====')
     prep = Prepare()
-    save_path = mkdir(os.path.join(prep.data_root_path, 'dataset'))
-    save_path = mkdir(os.path.join(save_path, 'ctc'))
+    save_path = mkdir(os.path.join(prep.dataset_path, 'ctc'))
     save_path = mkdir(os.path.join(save_path, label_type))
 
     # reset directory
@@ -50,7 +49,8 @@ def main(label_type, normalize_type):
     speaker_dict = read_char(label_paths=label_train_paths,
                              save_path=label_train_save_path)
 
-    # read htk files, save input data as npy files, save frame num dict as a pickle file
+    # read htk files, save input data as npy files, save frame num dict as a
+    # pickle file
     print('=> Processing input data...')
     htk_train_path = os.path.join(prep.train_data_path, 'fbank')
     train_mean, train_std = read_htk(htk_paths=htk_train_path,

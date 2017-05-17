@@ -22,8 +22,7 @@ def main():
 
     print('========== swbd ==========')
     prep = Prepare()
-    save_path = mkdir(os.path.join(prep.data_root_path, 'dataset'))
-    save_path = mkdir(os.path.join(save_path, 'ctc'))
+    save_path = mkdir(os.path.join(prep.dataset_path, 'ctc'))
     test_save_path = mkdir(os.path.join(save_path, 'test'))
     test_save_path = mkdir(os.path.join(test_save_path, 'swbd'))
 
@@ -52,7 +51,8 @@ def main():
     train_mean = np.load(os.path.join(save_path, 'train/train_mean.npy'))
     train_std = np.load(os.path.join(save_path, 'train/train_std.npy'))
 
-    # read htk files, save input data as npy files, save frame num dict as a pickle file
+    # read htk files, save input data as npy files, save frame num dict as a
+    # pickle file
     print('=> Processing input data...')
     htk_paths = [os.path.join(prep.test_data_path, htk_dir)
                  for htk_dir in sorted(glob.glob(os.path.join(prep.test_data_path, 'fbank/swbd/*.htk')))]
@@ -97,12 +97,13 @@ def main_callhome():
                                    save_path=label_save_path)
 
     # load statistics over train dataset
-    train_mean = np.load(os.path.join(prep.data_root_path,
-                                      'dataset/ctc/character/train/train_mean.npy'))
-    train_std = np.load(os.path.join(prep.data_root_path,
-                                     'dataset/ctc/character/train/train_std.npy'))
+    train_mean = np.load(os.path.join(prep.dataset_path,
+                                      'ctc/character/train/train_mean.npy'))
+    train_std = np.load(os.path.join(prep.dataset_path,
+                                     'ctc/character/train/train_std.npy'))
 
-    # read htk files, save input data as npy files, save frame num dict as a pickle file
+    # read htk files, save input data as npy files, save frame num dict as a
+    # pickle file
     print('=> Processing input data...')
     htk_paths = [os.path.join(prep.test_data_path, htk_dir)
                  for htk_dir in sorted(glob.glob(os.path.join(prep.test_data_path, 'fbank/callhome/*.htk')))]
