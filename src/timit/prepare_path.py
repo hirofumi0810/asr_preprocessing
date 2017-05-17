@@ -4,7 +4,11 @@
 """Prepare for making dataset."""
 
 import os
+import sys
 import glob
+
+sys.path.append('../')
+from utils.util import mkdir
 
 
 class Prepare(object):
@@ -12,13 +16,17 @@ class Prepare(object):
 
     def __init__(self):
 
-        # path to save dataset (set yourself)
-        self.data_root_path = '/n/sd8/inaguma/corpus/timit/'
-        self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/src/timit/'
+        # path to timit data (set yourself)
+        self.data_path = '/n/sd8/inaguma/corpus/timit/original/'
+        self.train_data_path = os.path.join(self.data_path, 'train')
+        self.test_data_path = os.path.join(self.data_path, 'test')
 
-        # path to timit path (set yourself)
-        self.train_data_path = '/n/sd8/inaguma/corpus/timit/original/train/'
-        self.test_data_path = '/n/sd8/inaguma/corpus/timit/original/test/'
+        # path to save directories (set yourself)
+        self.dataset_path = mkdir('/n/sd8/inaguma/corpus/timit/dataset/')
+        self.fbank_path = mkdir('/n/sd8/inaguma/corpus/timit/fbank/')
+
+        # absolute path to this directory (set yourself)
+        self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/src/timit/'
 
         self.__make()
 
@@ -36,22 +44,21 @@ class Prepare(object):
             ext = os.path.splitext(file_name)[1]
             if os.path.basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
-                    self.wav_train_paths.append(os.path.join(self.train_data_path, file_path))
+                    self.wav_train_paths.append(
+                        os.path.join(self.train_data_path, file_path))
                 elif ext == '.txt':
-                    self.text_train_paths.append(os.path.join(self.train_data_path, file_path))
+                    self.text_train_paths.append(
+                        os.path.join(self.train_data_path, file_path))
                 elif ext == '.wrd':
-                    self.word_train_paths.append(os.path.join(self.train_data_path, file_path))
+                    self.word_train_paths.append(
+                        os.path.join(self.train_data_path, file_path))
                 elif ext == '.phn':
-                    self.phone_train_paths.append(os.path.join(self.train_data_path, file_path))
+                    self.phone_train_paths.append(
+                        os.path.join(self.train_data_path, file_path))
 
         ####################
         # dev
         ####################
-        self.wav_dev_paths = []
-        self.text_dev_paths = []
-        self.word_dev_paths = []
-        self.phone_dev_paths = []
-
         # read speaker list
         speakers_dev = []
         with open(os.path.join(self.run_root_path, 'dev_speaker_list.txt'), 'r') as f:
@@ -59,31 +66,33 @@ class Prepare(object):
                 line = line.strip()
                 speakers_dev.append(line)
 
+        self.wav_dev_paths = []
+        self.text_dev_paths = []
+        self.word_dev_paths = []
+        self.phone_dev_paths = []
         for file_path in glob.glob(os.path.join(self.test_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
             ext = os.path.splitext(file_name)[1]
 
             if speaker_name not in speakers_dev:
                 continue
-
-            if os.path.basename(file_name)[0: 2] in ['sx', 'si']:
+            elif os.path.basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
-                    self.wav_dev_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.wav_dev_paths.append(
+                        os.path.join(self.test_data_path, file_path))
                 elif ext == '.txt':
-                    self.text_dev_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.text_dev_paths.append(
+                        os.path.join(self.test_data_path, file_path))
                 elif ext == '.wrd':
-                    self.word_dev_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.word_dev_paths.append(
+                        os.path.join(self.test_data_path, file_path))
                 elif ext == '.phn':
-                    self.phone_dev_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.phone_dev_paths.append(
+                        os.path.join(self.test_data_path, file_path))
 
         ####################
         # test
         ####################
-        self.wav_test_paths = []
-        self.text_test_paths = []
-        self.word_test_paths = []
-        self.phone_test_paths = []
-
         # read speaker list
         speakers_test = []
         with open(os.path.join(self.run_root_path, 'test_speaker_list.txt'), 'r') as f:
@@ -91,22 +100,29 @@ class Prepare(object):
                 line = line.strip()
                 speakers_test.append(line)
 
+        self.wav_test_paths = []
+        self.text_test_paths = []
+        self.word_test_paths = []
+        self.phone_test_paths = []
         for file_path in glob.glob(os.path.join(self.test_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
             ext = os.path.splitext(file_name)[1]
 
             if speaker_name not in speakers_test:
                 continue
-
-            if os.path.basename(file_name)[0: 2] in ['sx', 'si']:
+            elif os.path.basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
-                    self.wav_test_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.wav_test_paths.append(
+                        os.path.join(self.test_data_path, file_path))
                 elif ext == '.txt':
-                    self.text_test_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.text_test_paths.append(
+                        os.path.join(self.test_data_path, file_path))
                 elif ext == '.wrd':
-                    self.word_test_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.word_test_paths.append(
+                        os.path.join(self.test_data_path, file_path))
                 elif ext == '.phn':
-                    self.phone_test_paths.append(os.path.join(self.test_data_path, file_path))
+                    self.phone_test_paths.append(
+                        os.path.join(self.test_data_path, file_path))
 
     def wav(self, data_type):
         """Get paths to wav files.

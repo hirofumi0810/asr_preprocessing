@@ -22,8 +22,7 @@ def main(label_type):
 
     print('===== ' + label_type + ' =====')
     prep = Prepare()
-    save_path = mkdir(os.path.join(prep.data_root_path, 'dataset'))
-    save_path = mkdir(os.path.join(save_path, 'attention'))
+    save_path = mkdir(os.path.join(prep.dataset_path, 'attention'))
     save_path = mkdir(os.path.join(save_path, label_type))
 
     # reset directory
@@ -50,10 +49,11 @@ def main(label_type):
     # train
     ####################
     print('---------- train ----------')
-    # read htk files, save input data as npy files, save frame num dict as a pickle file
+    # read htk files, save input data as npy files, save frame num dict as a
+    # pickle file
     print('=> Processing input data...')
-    htk_train_paths = [os.path.join(prep.data_root_path, htk_dir)
-                       for htk_dir in sorted(glob.glob(os.path.join(prep.data_root_path, 'fbank/train/*.htk')))]
+    htk_train_paths = [os.path.join(prep.fbank_path, htk_dir)
+                       for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'train/*.htk')))]
     train_mean, train_std = read_htk(htk_paths=htk_train_paths,
                                      save_path=input_train_save_path,
                                      normalize=True,
@@ -75,10 +75,11 @@ def main(label_type):
     # dev
     ####################
     print('---------- dev ----------')
-    # read htk files, save input data as npy files, save frame num dict as a pickle file
+    # read htk files, save input data as npy files, save frame num dict as a
+    # pickle file
     print('=> Processing input data...')
-    htk_dev_paths = [os.path.join(prep.data_root_path, htk_dir)
-                     for htk_dir in sorted(glob.glob(os.path.join(prep.data_root_path, 'fbank/dev/*.htk')))]
+    htk_dev_paths = [os.path.join(prep.fbank_path, htk_dir)
+                     for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'dev/*.htk')))]
     read_htk(htk_paths=htk_dev_paths,
              save_path=input_dev_save_path,
              normalize=True,
@@ -102,10 +103,11 @@ def main(label_type):
     # test
     ####################
     print('---------- test ----------')
-    # read htk files, save input data as npy files, save frame num dict as a pickle file
+    # read htk files, save input data as npy files, save frame num dict as a
+    # pickle file
     print('=> Processing input data...')
-    htk_test_paths = [os.path.join(prep.data_root_path, htk_dir)
-                      for htk_dir in sorted(glob.glob(os.path.join(prep.data_root_path, 'fbank/test/*.htk')))]
+    htk_test_paths = [os.path.join(prep.fbank_path, htk_dir)
+                      for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'test/*.htk')))]
     read_htk(htk_paths=htk_test_paths,
              save_path=input_test_save_path,
              normalize=True,

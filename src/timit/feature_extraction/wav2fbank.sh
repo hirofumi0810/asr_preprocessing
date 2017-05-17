@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HTK_PATH='/misc/local/htk-3.4/bin/HCopy'
-CONFIG_PATH="../../../core/config/timit_fbank"
+CONFIG_PATH="./timit_fbank"
 
 
 # make a mapping file from wav to htk
