@@ -4,8 +4,8 @@
 import sys
 import unittest
 
-sys.path.append('../')
-sys.path.append('../../')
+sys.path.append('../../../')
+sys.path.append('../../../../')
 from prepare_path import Prepare
 from labels.ctc.phone import read_phone
 

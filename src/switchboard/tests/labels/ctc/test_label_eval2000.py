@@ -4,8 +4,8 @@
 import sys
 import unittest
 
-sys.path.append('../')
-sys.path.append('../../')
+sys.path.append('../../../')
+sys.path.append('../../../../')
 from prepare_path import Prepare
 from labels.ctc.eval2000.swbd import read_transcript
 
@@ -14,6 +14,8 @@ class TestCTCLabelEval2000(unittest.TestCase):
     def test(self):
         prep = Prepare()
         label_test_paths = prep.label_test()
+
+        print('===== eval2000 =====')
         read_transcript(label_paths=label_test_paths)
 
 

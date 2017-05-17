@@ -4,8 +4,8 @@
 import sys
 import unittest
 
-sys.path.append('../')
-sys.path.append('../../')
+sys.path.append('../../../')
+sys.path.append('../../../../')
 from prepare_path import Prepare
 from labels.ctc.character import read_text
 
@@ -17,6 +17,7 @@ class TestCTCCharacter(unittest.TestCase):
         label_dev_paths = prep.text(data_type='dev')
         label_test_paths = prep.text(data_type='test')
 
+        print('===== character =====')
         read_text(label_paths=label_train_paths)
         read_text(label_paths=label_dev_paths)
         read_text(label_paths=label_test_paths)
