@@ -1,16 +1,13 @@
 # TODO
 ## TIMIT
 #### CTC
-- [x] **39 phone**
-- [x] **48 phone**
-- [x] **61 phone**
+- [x] **phone (39, 48, 61)**
 - [x] **character**
 
 #### Attention
-- [x] **39 phone**
-- [x] **48 phone**
-- [x] **61 phone**
+- [x] **phone (39, 48, 61)**
 - [x] **character**
+
 
 ## Switchboard
 ### 300h Training data (LDC97S62)
@@ -36,17 +33,15 @@
 - [ ] **word**
 
 ### evaluatin data (eval2000 - swbd)
-#### CTC
-- [ ] **phone**
-- [ ] **character**
-- [ ] **word**
-
-#### Attention
-- [ ] **phone**
-- [ ] **character**
-- [ ] **word**
+- [ ] **CTC**
+- [ ] **Attention**
 
 ### evaluatin data (eval2000 - CallHome)
+- [ ] **CTC**
+- [ ] **Attention**
+
+
+## CSJ
 #### CTC
 - [ ] **phone**
 - [ ] **character**
@@ -57,8 +52,38 @@
 - [ ] **character**
 - [ ] **word**
 
-## WSJ
 
-## CSJ
+## WSJ
+#### CTC
+- [ ] **phone**
+- [ ] **character**
+- [ ] **word**
+
+#### Attention
+- [ ] **phone**
+- [ ] **character**
+- [ ] **word**
+
+
+## Librispeech
+#### CTC
+- [ ] **phone**
+- [ ] **character**
+- [ ] **word**
+
+#### Attention
+- [ ] **phone**
+- [ ] **character**
+- [ ] **word**
+
 
 ## AMI
+#### CTC
+- [ ] **phone**
+- [ ] **character**
+- [ ] **word**
+
+#### Attention
+- [ ] **phone**
+- [ ] **character**
+- [ ] **word**

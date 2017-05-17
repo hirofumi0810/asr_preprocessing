@@ -1,5 +1,7 @@
 .DS_Store
+.dropbox.attr
 __pychache__
+*.log
+*.pyc
 svc
-csj
 erato
