@@ -20,7 +20,7 @@ def read_transcript(label_paths, save_path=None):
         save_path: path to save labels. If None, don't save labels
     Returns:
         speaker_dict: dictionary of speakers
-            key => speaker index
+            key => speaker name
             value => dictionary of utterance infomation of each speaker
                 key => utterance index
                 value => [start_frame, end_frame, transcript]
@@ -39,20 +39,22 @@ def read_transcript(label_paths, save_path=None):
                 end_frame = int(float(line[1]) * 100)
                 if line[2] == 'B:' and not flag_speaker_b:
                     flag_speaker_b = True
-                    speaker_index_a = os.path.basename(label_path).split('.')[0] + 'A'
-                    speaker_index_a = speaker_index_a.replace('sw_', 'sw')
-                    speaker_dict[speaker_index_a] = utterance_dict
+                    speaker_name_a = os.path.basename(
+                        label_path).split('.')[0] + 'A'
+                    speaker_name_a = speaker_name_a.replace('sw_', 'sw')
+                    speaker_dict[speaker_name_a] = utterance_dict
                     # reset
                     utterance_dict = {}
                     utt_index = 0
-                speaker_index = os.path.basename(label_path).split('.')[0] + line[2][0]
-                speaker_index = speaker_index.replace('sw_', 'sw')
+                speaker_name = os.path.basename(label_path).split('.')[
+                    0] + line[2][0]
+                speaker_name = speaker_name.replace('sw_', 'sw')
 
                 # convert to lowercase
                 original_transcript = ' '.join(line[3:]).lower()
 
                 # clean transcript
-                transcript = fix_transcript(original_transcript, speaker_index)
+                transcript = fix_transcript(original_transcript, speaker_name)
 
                 # merge silence around each utterance
                 # transcript = '_' + transcript + '_'
@@ -63,9 +65,10 @@ def read_transcript(label_paths, save_path=None):
                 for char in list(transcript.lower()):
                     char_set.add(char)
 
-                utterance_dict[str(utt_index)] = [start_frame, end_frame, transcript]
+                utterance_dict[str(utt_index)] = [
+                    start_frame, end_frame, transcript]
                 utt_index += 1
-            speaker_dict[speaker_index] = utterance_dict
+            speaker_dict[speaker_name] = utterance_dict
 
     # print(sorted(list(char_set)))
 
@@ -77,24 +80,26 @@ def read_transcript(label_paths, save_path=None):
     if save_path is not None:
         # save target labels
         print('===> Saving target labels...')
-        for speaker_index, utterance_dict in tqdm(speaker_dict.items()):
-            save_path_speaker = mkdir(os.path.join(save_path, speaker_index))
+        for speaker_name, utterance_dict in tqdm(speaker_dict.items()):
+            save_path_speaker = mkdir(os.path.join(save_path, speaker_name))
             for utt_index,  utt_info in utterance_dict.items():
                 start_frame, end_frame, transcript = utt_info
-                save_file_name = speaker_index + '_' + utt_index + '.npy'
+                save_file_name = speaker_name + '_' + utt_index + '.npy'
 
                 # convert from character to number
                 char_index_list = char2num(transcript, mapping_file_path)
 
                 # save as npy file
-                np.save(os.path.join(save_path_speaker, save_file_name), char_index_list)
+                np.save(os.path.join(save_path_speaker,
+                                     save_file_name), char_index_list)
 
     return speaker_dict
 
 
-def fix_transcript(transcript, speaker_index):
+def fix_transcript(transcript, speaker_name):
 
-    # remove <b_aside>, <e_aside>, [silence], [vocalized-noise], [noise], [noise-good]
+    # remove <b_aside>, <e_aside>, [silence], [vocalized-noise], [noise],
+    # [noise-good]
     transcript = re.sub(r'\<b_aside\>', '', transcript)
     transcript = re.sub(r'\<e_aside\>', '', transcript)
     transcript = re.sub(r'\[silence\]', '', transcript)
@@ -115,9 +120,10 @@ def fix_transcript(transcript, speaker_index):
     laughter_expr = re.compile(r'(.*)\[laughter-([\S]+)\](.*)')
     while re.match(laughter_expr, transcript) is not None:
         laughter = re.match(laughter_expr, transcript)
-        # print(speaker_index)
+        # print(speaker_name)
         # print(transcript)
-        transcript = laughter.group(1) + 'L ' + laughter.group(2) + laughter.group(3)
+        transcript = laughter.group(
+            1) + 'L ' + laughter.group(2) + laughter.group(3)
         # print(transcript)
         # print('---')
 
@@ -132,9 +138,10 @@ def fix_transcript(transcript, speaker_index):
         r'(.*)<contraction e_form=\"\[[\S]+=>([\S]+)\]\[[\S]+=>([\S]+)\]\">([\S]+)(.*)')
     while re.match(abbr_expr2, transcript) is not None:
         abbr = re.match(abbr_expr2, transcript)
-        # print(speaker_index)
+        # print(speaker_name)
         # print(transcript)
-        transcript = abbr.group(1) + abbr.group(2) + ' ' + abbr.group(3) + abbr.group(5)
+        transcript = abbr.group(1) + abbr.group(2) + \
+            ' ' + abbr.group(3) + abbr.group(5)
         # print(transcript)
         # print('---')
 
@@ -143,7 +150,7 @@ def fix_transcript(transcript, speaker_index):
         r'(.*)<contraction e_form=\"\[[\S]+=>([\S]+)\]\">([\S]+)(.*)')
     while re.match(abbr_expr1, transcript) is not None:
         abbr = re.match(abbr_expr1, transcript)
-        # print(speaker_index)
+        # print(speaker_name)
         # print(transcript)
         transcript = abbr.group(1) + abbr.group(2) + abbr.group(4)
         # print(transcript)
@@ -156,7 +163,7 @@ def fix_transcript(transcript, speaker_index):
     bracket_expr = re.compile(r'(.*)\(\((.+)\)\)(.*)')
     while re.match(bracket_expr, transcript) is not None:
         bracket = re.match(bracket_expr, transcript)
-        # print(speaker_index)
+        # print(speaker_name)
         # print(transcript)
         transcript = bracket.group(1) + bracket.group(2) + bracket.group(3)
         # print(transcript)
@@ -177,7 +184,7 @@ def fix_transcript(transcript, speaker_index):
     middle_expr = re.compile(r'(.*) ([\S]+)\[([\S]+)\]([\S]+)- (.*)')
     while re.match(middle_expr, transcript) is not None:
         middle = re.match(middle_expr, transcript)
-        # print(speaker_index)
+        # print(speaker_name)
         # print(transcript)
         transcript = middle.group(1) + ' ' + middle.group(2) + \
             middle.group(4) + '- ' + middle.group(5)
@@ -189,7 +196,7 @@ def fix_transcript(transcript, speaker_index):
     backward_expr = re.compile(r'(.*)-\[([\S]+)\](.*)')
     while re.match(backward_expr, transcript) is not None:
         backward = re.match(backward_expr, transcript)
-        # print(speaker_index)
+        # print(speaker_name)
         # print(transcript)
         transcript = backward.group(1) + '-' + backward.group(3)
         # print(transcript)
@@ -200,9 +207,10 @@ def fix_transcript(transcript, speaker_index):
     forward_expr = re.compile(r'(.*) ([\S]+)\[([\S]+)\] (.*)')
     while re.match(forward_expr, transcript) is not None:
         forward = re.match(forward_expr, transcript)
-        # print(speaker_index)
+        # print(speaker_name)
         # print(transcript)
-        transcript = forward.group(1) + ' ' + forward.group(2) + '- ' + forward.group(4)
+        transcript = forward.group(
+            1) + ' ' + forward.group(2) + '- ' + forward.group(4)
         # print(transcript)
         # print('---3')
 

@@ -22,7 +22,7 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None, tr
     Args:
         htk_paths: list of paths to HTK files
         speaker_dict: dictionary of speakers
-            key => speaker index
+            key => speaker name
             value => dictionary of utterance infomation of each speaker
                 key => utterance index
                 value => [start_frame, end_frame, transcript]
@@ -39,14 +39,14 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None, tr
     print('===> Reading HTK files...')
     input_data_dict_list = []
     for htk_path in tqdm(htk_paths):
-        speaker_index = os.path.basename(htk_path).split('.')[0]
+        speaker_name = os.path.basename(htk_path).split('.')[0]
         # e.g. sw04771A => sw4771A (LDC97S62)
-        speaker_index = speaker_index.replace('sw0', 'sw')
+        speaker_name = speaker_name.replace('sw0', 'sw')
         # e.g. sw_4771A => sw4771A (eval2000)
-        speaker_index = speaker_index.replace('sw_', 'sw')
+        speaker_name = speaker_name.replace('sw_', 'sw')
 
         input_data_dict_list.append(
-            read_each_htk(htk_path, speaker_index, speaker_dict[speaker_index]))
+            read_each_htk(htk_path, speaker_name, speaker_dict[speaker_name]))
 
     # merge all dicts
     print('===> Merge all dictionaries...')
@@ -66,7 +66,8 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None, tr
         train_data = np.empty((total_frame_num, feature_dim))
         for input_data_utt in tqdm(all_input_data_dict.values()):
             frame_num_utt = input_data_utt.shape[0]
-            train_data[frame_offset:frame_offset + frame_num_utt] = input_data_utt
+            train_data[frame_offset:frame_offset +
+                       frame_num_utt] = input_data_utt
             frame_offset += frame_num_utt
         train_mean = np.mean(train_data, axis=0)
         train_std = np.std(train_data, axis=0)
@@ -74,8 +75,10 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None, tr
         if save_path is not None:
             # save global mean & std
             statistics_save_path = '/'.join(save_path.split('/')[:-1])
-            np.save(os.path.join(statistics_save_path, 'train_mean.npy'), train_mean)
-            np.save(os.path.join(statistics_save_path, 'train_std.npy'), train_std)
+            np.save(os.path.join(statistics_save_path,
+                                 'train_mean.npy'), train_mean)
+            np.save(os.path.join(statistics_save_path,
+                                 'train_std.npy'), train_std)
             # del train_data
             # gc.collect()
 
@@ -88,10 +91,10 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None, tr
             if normalize:
                 input_data_utt = (input_data_utt - train_mean) / train_std
 
-            speaker_index, utt_index = input_data_save_name.split('_')
-            mkdir(os.path.join(save_path, speaker_index))
+            speaker_name, utt_index = input_data_save_name.split('_')
+            mkdir(os.path.join(save_path, speaker_name))
             input_data_save_path = os.path.join(
-                save_path, speaker_index, input_data_save_name + '.npy')
+                save_path, speaker_name, input_data_save_name + '.npy')
 
             np.save(input_data_save_path, input_data_utt)
             frame_num_dict[input_data_save_name] = input_data_utt.shape[0]
@@ -105,17 +108,17 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None, tr
     return train_mean, train_std
 
 
-def read_each_htk(htk_path, speaker_index, utterance_dict):
+def read_each_htk(htk_path, speaker_name, utterance_dict):
     """Read each HTK file.
     Args:
         htk_path: path to a HTK file
-        speaker_index: speaker index
+        speaker_name: speaker name
         utterance_dict: dictionary of utterance infomation of each speaker
             key => utterance index
             value => [start_frame, end_frame, transcript]
     Returns:
         input_data_dict:
-            key => speaker_index + utterance_index
+            key => speaker_name + utterance_index
             value => np.ndarray, (frame_num, feature_dim)
     """
     # print('=====> Reading: ' + os.path.basename(htk_path))
@@ -134,7 +137,7 @@ def read_each_htk(htk_path, speaker_index, utterance_dict):
 
         # error check
         if start_frame > end_frame:
-            print('Warning: time stamp is reversed. %s' % speaker_index)
+            print('Warning: time stamp is reversed. %s' % speaker_name)
 
         # first utterance
         if index == 0:
@@ -146,20 +149,23 @@ def read_each_htk(htk_path, speaker_index, utterance_dict):
             start_frame_next = utterance_dict_sorted[index + 1][1][0]
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
-                print('speaker: %s' % speaker_index)
-                print('utt index: %s & %s' % (utt_index, utterance_dict_sorted[index + 1][0]))
+                print('speaker: %s' % speaker_name)
+                print('utt index: %s & %s' %
+                      (utt_index, utterance_dict_sorted[index + 1][0]))
 
             if start_frame_next - end_frame >= 100:
                 end_frame_extend = end_frame + 50
             else:
-                end_frame_extend = end_frame + int((start_frame_next - end_frame) / 2)
+                end_frame_extend = end_frame + \
+                    int((start_frame_next - end_frame) / 2)
 
         # last uttrerance
         elif index == utt_num - 1:
             if start_frame - end_frame_pre >= 100:
                 start_frame_extend = start_frame - 50
             else:
-                start_frame_extend = start_frame - int((start_frame - end_frame_pre) / 2)
+                start_frame_extend = start_frame - \
+                    int((start_frame - end_frame_pre) / 2)
 
             if input_data.shape[0] - end_frame >= 50:
                 end_frame_extend = end_frame + 50
@@ -171,22 +177,26 @@ def read_each_htk(htk_path, speaker_index, utterance_dict):
             if start_frame - end_frame_pre >= 100:
                 start_frame_extend = start_frame - 50
             else:
-                start_frame_extend = start_frame - int((start_frame - end_frame_pre) / 2)
+                start_frame_extend = start_frame - \
+                    int((start_frame - end_frame_pre) / 2)
 
-            start_frame_next = int(float(utterance_dict_sorted[index + 1][1][0]) * 100 + 0.05)
+            start_frame_next = int(
+                float(utterance_dict_sorted[index + 1][1][0]) * 100 + 0.05)
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
-                print('speaker: %s' % speaker_index)
-                print('utt index: %s & %s' % (utt_index, utterance_dict_sorted[index + 1][0]))
+                print('speaker: %s' % speaker_name)
+                print('utt index: %s & %s' %
+                      (utt_index, utterance_dict_sorted[index + 1][0]))
 
             if start_frame_next - end_frame >= 100:
                 end_frame_extend = end_frame + 50
             else:
-                end_frame_extend = end_frame + int((start_frame_next - end_frame) / 2)
+                end_frame_extend = end_frame + \
+                    int((start_frame_next - end_frame) / 2)
 
         input_data_utt = input_data[start_frame_extend:end_frame_extend]
         total_frame_num += (end_frame_extend - start_frame_extend)
-        input_data_dict[speaker_index + '_' + utt_index] = input_data_utt
+        input_data_dict[speaker_name + '_' + utt_index] = input_data_utt
 
         # update
         end_frame_pre = end_frame

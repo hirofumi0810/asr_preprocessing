@@ -75,7 +75,7 @@ def read_transcript(label_paths, save_path=None):
         save_path: path to save labels. If None, don't save labels
     Returns:
         speaker_dict: dictionary of speakers
-            key => speaker index
+            key => speaker name
             value => dictionary of utterance infomation of each speaker
                 key => utterance index
                 value => [start_frame, end_frame, transcript]
@@ -85,7 +85,8 @@ def read_transcript(label_paths, save_path=None):
     prep = Prepare()
     mapping_file_path = os.path.join(prep.run_root_path,
                                      'labels/MSU_single_letter.txt')
-    pronounce_dict = read_pronounce_dict(prep.pronounce_dict_path, mapping_file_path)
+    pronounce_dict = read_pronounce_dict(
+        prep.pronounce_dict_path, mapping_file_path)
 
     print('===> Reading target labels...')
     speaker_dict = {}
@@ -95,7 +96,7 @@ def read_transcript(label_paths, save_path=None):
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().split(' ')
-                speaker_index = line[0].split('-')[0]
+                speaker_name = line[0].split('-')[0]
                 utt_index = line[0].split('-')[-1]
                 start_frame = int(float(line[1]) * 100 + 0.05)
                 end_frame = int(float(line[2]) * 100 + 0.05)
@@ -104,7 +105,7 @@ def read_transcript(label_paths, save_path=None):
                 original_transcript = ' '.join(line[3:]).lower()
 
                 # clean transcript
-                transcript = fix_transcript(original_transcript, speaker_index)
+                transcript = fix_transcript(original_transcript, speaker_name)
 
                 # skip silence
                 if transcript == '':
@@ -126,7 +127,8 @@ def read_transcript(label_paths, save_path=None):
                     else:
                         print(transcript.split(' '))
 
-                # convert to phone list where each element is phone (remove ' ')
+                # convert to phone list where each element is phone (remove '
+                # ')
                 phone_seq = ' '.join(phone_list)
                 phone_list = phone_seq.split(' ')
 
@@ -135,8 +137,9 @@ def read_transcript(label_paths, save_path=None):
                         print(phone_list)
                     phone_set.add(phone)
 
-                utterance_dict[utt_index] = [start_frame, end_frame, phone_list]
-            speaker_dict[speaker_index] = utterance_dict
+                utterance_dict[utt_index] = [
+                    start_frame, end_frame, phone_list]
+            speaker_dict[speaker_name] = utterance_dict
 
     # make the mapping file (from phone to number)
     mapping_file_path = os.path.join(prep.run_root_path,
@@ -148,22 +151,23 @@ def read_transcript(label_paths, save_path=None):
     if save_path is not None:
         # save target labels
         print('===> Saving target labels...')
-        for speaker_index, utterance_dict in tqdm(speaker_dict.items()):
-            mkdir(os.path.join(save_path, speaker_index))
+        for speaker_name, utterance_dict in tqdm(speaker_dict.items()):
+            mkdir(os.path.join(save_path, speaker_name))
             for utt_index, utt_info in utterance_dict.items():
                 start_frame, end_frame, phone_list = utt_info
-                save_file_name = speaker_index + '_' + utt_index + '.npy'
+                save_file_name = speaker_name + '_' + utt_index + '.npy'
 
                 # convert from phone to number
                 phone_index_list = phone2num(phone_list, mapping_file_path)
 
                 # save as npy file
-                np.save(os.path.join(save_path, speaker_index, save_file_name), phone_index_list)
+                np.save(os.path.join(save_path, speaker_name,
+                                     save_file_name), phone_index_list)
 
     return speaker_dict
 
 
-def fix_transcript(transcript, speaker_index):
+def fix_transcript(transcript, speaker_name):
     # remove <b_aside>, <e_aside>, [silence]
     transcript = re.sub(r'\<b_aside\>', '', transcript)
     transcript = re.sub(r'\<e_aside\>', '', transcript)

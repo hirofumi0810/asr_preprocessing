@@ -23,7 +23,7 @@ def read_word(label_paths, save_path=None):
         save_path: path to save labels. If None, don't save labels
     Returns:
         speaker_dict: dictionary of speakers
-            key => speaker index
+            key => speaker name
             value => dictionary of utterance infomation of each speaker
                 key => utterance index
                 value => [start_time, end_time, transcript]
@@ -37,7 +37,7 @@ def read_word(label_paths, save_path=None):
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().split(' ')
-                speaker_index = line[0].split('-')[0]
+                speaker_name = line[0].split('-')[0]
                 utt_index = line[0].split('-')[-1]
                 start_time = float(line[1])
                 end_time = float(line[2])
@@ -45,7 +45,7 @@ def read_word(label_paths, save_path=None):
                 word_original = ' '.join(line[3:]).lower()
 
                 # clean transcript
-                transcript = fix_transcript(word_original, speaker_index)
+                transcript = fix_transcript(word_original, speaker_name)
 
                 # skip silence
                 if transcript == '':
@@ -77,7 +77,7 @@ def read_word(label_paths, save_path=None):
                     char_set.add(char)
 
             #     utterance_dict[utt_index] = [start_time, end_time, phone_list]
-            # speaker_dict[speaker_index] = utterance_dict
+            # speaker_dict[speaker_name] = utterance_dict
 
         p.update(i + 1)
         i += 1
@@ -98,11 +98,11 @@ def read_word(label_paths, save_path=None):
     #     print('Saving target labels...')
     #     p_save = ProgressBar(max_value=len(label_paths))
     #     i_save = 0
-    #     for speaker_index, utterance_dict in p_save(speaker_dict.items()):
-    #         save_path_speaker = mkdir(os.path.join(save_path, speaker_index))
+    #     for speaker_name, utterance_dict in p_save(speaker_dict.items()):
+    #         save_path_speaker = mkdir(os.path.join(save_path, speaker_name))
     #         for utt_index,  utt_info in utterance_dict.items():
     #             start_time, end_time, phone_list = utt_info
-    #             save_file_name = speaker_index + '_' + utt_index + '.npy'
+    #             save_file_name = speaker_name + '_' + utt_index + '.npy'
     #
     #             # convert from phone to number
     #             phone_index_list = phone2num(phone_list)
@@ -117,7 +117,7 @@ def read_word(label_paths, save_path=None):
     return speaker_dict
 
 
-def fix_transcript(word, speaker_index):
+def fix_transcript(word, speaker_name):
 
     # remove <b_aside>, <e_aside>, [silence]
     word = re.sub(r'\<b_aside\>', '', word)
