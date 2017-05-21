@@ -13,3 +13,5 @@ $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_train_plus.scp
 $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_eval1.scp
 $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_eval2.scp
 $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_eval3.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_dialog_core.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_dialog_noncore.scp
