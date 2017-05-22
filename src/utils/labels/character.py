@@ -12,7 +12,7 @@ def char2num(str_char, map_file_path):
     """
     char_list = list(str_char)
 
-    # read mapping file
+    # read the mapping file
     map_dict = {}
     with open(map_file_path, 'r') as f:
         for line in f:
@@ -26,6 +26,47 @@ def char2num(str_char, map_file_path):
     return char_list
 
 
+def kana2num(str_char, map_file_path):
+    """Convert from kana character to number.
+    Args:
+        str_char: string of kana characters
+        map_file_path: path to the mapping file
+    Returns:
+        num_list: list of kana character indices
+    """
+    kana_list = list(str_char)
+    num_list = []
+
+    # read the mapping file
+    map_dict = {}
+    with open(map_file_path, 'r') as f:
+        for line in f:
+            line = line.strip().split()
+            map_dict[line[0]] = int(line[1])
+
+    i = 0
+    while i < len(kana_list):
+        # check whether next kana character is a double consonant
+        if i != len(kana_list) - 1:
+            if kana_list[i] + kana_list[i + 1] in map_dict.keys():
+                num_list.append(int(map_dict[kana_list[i] + kana_list[i + 1]]))
+                i += 1
+            elif kana_list[i] in map_dict.keys():
+                num_list.append(int(map_dict[kana_list[i]]))
+            else:
+                raise ValueError(
+                    'There are no kana character such as %s' % kana_list[i])
+        else:
+            if kana_list[i] in map_dict.keys():
+                num_list.append(int(map_dict[kana_list[i]]))
+            else:
+                raise ValueError(
+                    'There are no kana character such as %s' % kana_list[i])
+        i += 1
+
+    return num_list
+
+
 def num2char(num_list, map_file_path):
     """Convert from number to character.
     Args:
@@ -34,7 +75,7 @@ def num2char(num_list, map_file_path):
     Returns:
         str_char: string of characters
     """
-    # read mapping file
+    # read the mapping file
     map_dict = {}
     with open(map_file_path, 'r') as f:
         for line in f:

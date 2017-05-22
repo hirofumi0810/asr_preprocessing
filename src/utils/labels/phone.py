@@ -10,7 +10,7 @@ def phone2num(phone_list, map_file_path):
     Returns:
         phone_list: list of phone indices (int)
     """
-    # read mapping file
+    # read the mapping file
     map_dict = {}
     with open(map_file_path, 'r') as f:
         for line in f:
@@ -32,7 +32,7 @@ def num2phone(num_list, map_file_path):
     Returns:
         phone_list: list of phones
     """
-    # read mapping file
+    # read the mapping file
     map_dict = {}
     with open(map_file_path, 'r') as f:
         for line in f:

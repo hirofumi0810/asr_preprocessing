@@ -17,7 +17,7 @@ def setup(corpus, feature, dim, sampling_rate=16000, window=0.025, slide=0.01, e
         window_func:
 """
 
-    with open(corpus + '_' + feature, 'w') as f:
+    with open('config', 'w') as f:
         if corpus == 'timit':
             f.write('SOURCEFORMAT = NIST\n')
         else:

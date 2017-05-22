@@ -1,0 +1,149 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+import numpy as np
+from struct import unpack
+
+
+def segment_htk(htk_path, speaker_name, utt_dict, speaker_norm=False, sil_duration=50):
+    """Segment each HTK file.
+    Args:
+        htk_path: path to a HTK file
+        speaker_name: speaker name
+        utt_dict: dictionary of utterance information of each speaker
+            key => utterance index
+            value => [start_frame, end_frame, transcript]
+        speaker_norm: if True, normalize inputs by mean & std per speaker
+        sil_duration: duration of silence at both ends
+    Returns:
+        input_data_dict:
+            key => speaker_name + utterance_index
+            value => np.ndarray, (frame_num, feature_dim)
+        train_mean: mean per speaker
+        train_std: standard deviation per speaker
+        total_frame_num: total frame num per speaker
+    """
+    # read the htk file
+    input_data = read_htk(htk_path)
+
+    # divide into each utterance
+    input_data_dict = {}
+    total_frame_num = 0
+    end_frame_pre = 0
+    utt_num = len(utt_dict.keys())
+    utt_dict_sorted = sorted(utt_dict.items(), key=lambda x: x[0])
+    for index, (utt_index, utt_info) in enumerate(utt_dict_sorted):
+        start_frame, end_frame = utt_info[0], utt_info[1]
+
+        # error check
+        if start_frame > end_frame:
+            print('Warning: time stamp is reversed.')
+            print('speaker name: %s' % speaker_name)
+            print('utterance index: %s & %s' %
+                  (utt_index, utt_dict_sorted[index + 1][0]))
+
+        # first utterance
+        if index == 0:
+            if start_frame >= sil_duration:
+                start_frame_extend = start_frame - sil_duration
+            else:
+                start_frame_extend = 0
+
+            start_frame_next = utt_dict_sorted[index + 1][1][0]
+            if end_frame > start_frame_next:
+                print('Warning: utterances are overlapping.')
+                print('speaker name: %s' % speaker_name)
+                print('utterance index: %s & %s' %
+                      (utt_index, utt_dict_sorted[index + 1][0]))
+
+            if start_frame_next - end_frame >= sil_duration * 2:
+                end_frame_extend = end_frame + sil_duration
+            else:
+                end_frame_extend = end_frame + \
+                    int((start_frame_next - end_frame) / 2)
+
+        # last utterance
+        elif index == utt_num - 1:
+            if start_frame - end_frame_pre >= sil_duration * 2:
+                start_frame_extend = start_frame - sil_duration
+            else:
+                start_frame_extend = start_frame - \
+                    int((start_frame - end_frame_pre) / 2)
+
+            if input_data.shape[0] - end_frame >= sil_duration:
+                end_frame_extend = end_frame + sil_duration
+            else:
+                end_frame_extend = input_data.shape[0]  # last frame
+
+        # middle utterances
+        else:
+            if start_frame - end_frame_pre >= sil_duration * 2:
+                start_frame_extend = start_frame - sil_duration
+            else:
+                start_frame_extend = start_frame - \
+                    int((start_frame - end_frame_pre) / 2)
+
+            start_frame_next = utt_dict_sorted[index + 1][1][0]
+            if end_frame > start_frame_next:
+                print('Warning: utterances are overlapping.')
+                print('speaker: %s' % speaker_name)
+                print('utt index: %s & %s' %
+                      (utt_index, utt_dict_sorted[index + 1][0]))
+
+            if start_frame_next - end_frame >= sil_duration * 2:
+                end_frame_extend = end_frame + sil_duration
+            else:
+                end_frame_extend = end_frame + \
+                    int((start_frame_next - end_frame) / 2)
+
+        input_data_utt = input_data[start_frame_extend:end_frame_extend]
+        total_frame_num += (end_frame_extend - start_frame_extend)
+        input_data_dict[speaker_name + '_' + utt_index] = input_data_utt
+
+        # update
+        end_frame_pre = end_frame
+
+    # compute mean & std per speaker (including silence)
+    frame_offset = 0
+    feature_dim = input_data.shape[1]
+    train_data = np.empty((total_frame_num, feature_dim), dtype=np.float64)
+    for i, input_data_utt in enumerate(input_data_dict.values()):
+        frame_num_utt = input_data_utt.shape[0]
+        train_data[frame_offset:frame_offset +
+                   frame_num_utt] = input_data_utt
+        frame_offset += frame_num_utt
+    train_mean = np.mean(train_data, axis=0, dtype=np.float64)
+    train_std = np.std(train_data, axis=0, dtype=np.float64)
+
+    if speaker_norm:
+        # normalize by mean & std per speaker
+        for key, input_data_utt in input_data_dict.items():
+            input_data_utt = (input_data_utt - train_mean) / train_std
+            input_data_dict[key] = input_data_utt
+
+    return input_data_dict, train_mean, train_std, total_frame_num
+
+
+def read_htk(htk_path):
+    """Read each HTK file.
+    Args:
+        htk_path: path to a HTK file
+    Returns:
+        input_data: np.ndarray, (frame_num, feature_dim)
+    """
+    with open(htk_path, "rb") as fh:
+        spam = fh.read(12)
+        frame_num, sampPeriod, sampSize, parmKind = unpack(">IIHH", spam)
+        # print(frame_num)  # frame num
+        # print(sampPeriod)  # 10ms
+        # print(sampSize)  # feature dim * 4 (byte)
+        # print(parmKind)
+        veclen = int(sampSize / 4)
+        fh.seek(12, 0)
+        input_data = np.fromfile(fh, 'f')
+        # input_data = input_data.reshape(int(len(input_data) / veclen), veclen)
+        input_data = input_data.reshape(-1, veclen)
+        input_data.byteswap(True)
+
+    return input_data
