@@ -11,6 +11,7 @@ from labels.ctc.dialog.character import read_sdb
 
 
 class TestCTCLabelDialogChar(unittest.TestCase):
+
     def test(self):
         prep = Prepare()
         label_dialog_core_paths = prep.trans(data_type='dialog_core')

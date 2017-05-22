@@ -6,13 +6,15 @@
 import os
 import sys
 import shutil
-import glob
+from glob import glob
 from tqdm import tqdm
+import shutil
+
 
 sys.path.append('../')
 sys.path.append('../../')
 from prepare_path import Prepare
-# from inputs.input_data_global_norm import read_htk
+from inputs.input_data import read_htk
 from labels.ctc.monolog.character import read_sdb
 from utils.util import mkdir
 
@@ -66,6 +68,17 @@ def main(label_type):
                             label_type=label_type,
                             save_path=label_train_save_path)
 
+    # read htk files, save input data & frame num dict
+    print('=> Processing input data...')
+    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
+                                                         'train/*.htk')))]
+    train_mean, train_std = read_htk(htk_paths=htk_paths,
+                                     save_path=input_train_save_path,
+                                     speaker_dict=speaker_dict,
+                                     global_norm=False,
+                                     is_training=True)
+
     ####################
     # train (plus)
     ####################
@@ -77,16 +90,33 @@ def main(label_type):
                             label_type=label_type,
                             save_path=label_train_plus_save_path)
 
+    # read htk files, save input data & frame num dict
+    print('=> Processing input data...')
+    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
+                                                         'train_plus/*.htk')))]
+    train_mean2, train_std2 = read_htk(htk_paths=htk_paths,
+                                       save_path=input_train_plus_save_path,
+                                       speaker_dict=speaker_dict,
+                                       global_norm=False,
+                                       is_training=True)
+
     ####################
     # dev
     ####################
-    print('---------- dev ----------')
-    # read labels, save labels as npy files
-    print('=> Processing ground truth labels...')
-    label_dev_paths = prep.trans(data_type='dev')
-    speaker_dict = read_sdb(label_paths=label_dev_paths,
-                            label_type=label_type,
-                            save_path=label_dev_save_path)
+    print('---------- dev (19 speakers) ----------')
+    print('=> copy for dev set (use dataset whose speaker_name starts "M" in default train set)')
+    for input_path in glob(os.path.join(prep.dataset_path, 'ctc', label_type, 'train/input/M*')):
+        print(input_path)
+        speaker_name = os.path.basename(input_path)
+        shutil.copytree(input_path, os.path.join(
+            prep.dataset_path, 'ctc', label_type, 'dev/input', speaker_name))
+
+    for label_path in glob(os.path.join(prep.dataset_path, 'ctc', label_type, 'train/label/M*')):
+        print(label_path)
+        speaker_name = os.path.basename(label_path)
+        shutil.copytree(label_path, os.path.join(
+            prep.dataset_path, 'ctc', label_type, 'dev/label', speaker_name))
 
     ####################
     # eval1
@@ -99,6 +129,19 @@ def main(label_type):
                             label_type=label_type,
                             save_path=label_eval1_save_path)
 
+    # read htk files, save input data & frame num dict
+    print('=> Processing input data...')
+    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
+                                                         'eval1/*.htk')))]
+    read_htk(htk_paths=htk_paths,
+             save_path=input_eval1_save_path,
+             speaker_dict=speaker_dict,
+             global_norm=False,
+             is_training=False,
+             train_mean=train_mean,
+             train_std=train_std)
+
     ####################
     # eval2
     ####################
@@ -109,6 +152,19 @@ def main(label_type):
     speaker_dict = read_sdb(label_paths=label_eval2_paths,
                             label_type=label_type,
                             save_path=label_eval2_save_path)
+
+    # read htk files, save input data & frame num dict
+    print('=> Processing input data...')
+    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
+                                                         'eval2/*.htk')))]
+    read_htk(htk_paths=htk_paths,
+             save_path=input_eval2_save_path,
+             speaker_dict=speaker_dict,
+             global_norm=False,
+             is_training=False,
+             train_mean=train_mean,
+             train_std=train_std)
 
     ####################
     # eval3
@@ -121,10 +177,23 @@ def main(label_type):
                             label_type=label_type,
                             save_path=label_eval3_save_path)
 
+    # read htk files, save input data & frame num dict
+    print('=> Processing input data...')
+    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
+                                                         'eval3/*.htk')))]
+    read_htk(htk_paths=htk_paths,
+             save_path=input_eval3_save_path,
+             speaker_dict=speaker_dict,
+             global_norm=False,
+             is_training=False,
+             train_mean=train_mean,
+             train_std=train_std)
+
     # make a confirmation file to prove that dataset was saved correctly
-    # with open(os.path.join(save_path, 'check.txt'), 'w') as f:
-    #     f.write('')
-    # print('Successfully completed!')
+    with open(os.path.join(save_path, 'check.txt'), 'w') as f:
+        f.write('')
+    print('Successfully completed!')
 
 
 if __name__ == '__main__':
@@ -133,8 +202,7 @@ if __name__ == '__main__':
     print('=           CSJ (CTC)           =')
     print('=================================')
 
-    # label_types = ['character', 'phone']
-    label_types = ['phone']
+    label_types = ['character', 'phone']
 
     for label_type in label_types:
         main(label_type)

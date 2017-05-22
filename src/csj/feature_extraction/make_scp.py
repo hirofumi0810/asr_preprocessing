@@ -3,7 +3,6 @@
 
 import os
 import sys
-import glob
 
 sys.path.append('../')
 sys.path.append('../../')
@@ -18,7 +17,6 @@ def main():
 
     wav_train_paths = prep.wav(data_type='train')
     wav_train_plus_paths = prep.wav(data_type='train_plus')
-    wav_dev_paths = prep.wav(data_type='dev')
     wav_eval1_paths = prep.wav(data_type='eval1')
     wav_eval2_paths = prep.wav(data_type='eval2')
     wav_eval3_paths = prep.wav(data_type='eval3')
@@ -27,7 +25,6 @@ def main():
 
     save_train_path = mkdir(os.path.join(prep.fbank_path, 'train'))
     save_train_plus_path = mkdir(os.path.join(prep.fbank_path, 'train_plus'))
-    save_dev_path = mkdir(os.path.join(prep.fbank_path, 'dev'))
     save_eval1_path = mkdir(os.path.join(prep.fbank_path, 'eval1'))
     save_eval2_path = mkdir(os.path.join(prep.fbank_path, 'eval2'))
     save_eval3_path = mkdir(os.path.join(prep.fbank_path, 'eval3'))
@@ -67,10 +64,6 @@ def main():
     if len(wav_train_plus_paths) != 2226:
         raise ValueError('File number is not correct (True: 2226, Now: %d).' %
                          len(wav_train_plus_paths))
-
-    ##############################
-    # dev
-    ##############################
 
     ##############################
     # eval1

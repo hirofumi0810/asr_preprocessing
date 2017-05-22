@@ -5,7 +5,7 @@
 
 import os
 import sys
-import glob
+from glob import glob
 
 sys.path.append('../')
 from utils.util import mkdir
@@ -68,7 +68,7 @@ class Prepare(object):
         self.wav_dialog_noncore_paths = []  # 80 (40 sessions)
 
         # core
-        for wav_path in glob.glob(os.path.join(self.wav_path, 'CORE/*/*/*.wav')):
+        for wav_path in glob(os.path.join(self.wav_path, 'CORE/*/*/*.wav')):
             speaker_name = wav_path.split('/')[-2]
             if speaker_name in eval1:
                 self.wav_eval1_paths.append(wav_path)
@@ -87,7 +87,7 @@ class Prepare(object):
                 self.wav_train_plus_paths.append(wav_path)
 
         # non core
-        for wav_path in glob.glob(os.path.join(self.wav_path, 'NONCORE/*/*/*/*.wav')):
+        for wav_path in glob(os.path.join(self.wav_path, 'NONCORE/*/*/*/*.wav')):
             speaker_name = wav_path.split('/')[-2]
             if speaker_name in eval1:
                 self.wav_eval1_paths.append(wav_path)
@@ -99,12 +99,14 @@ class Prepare(object):
                 continue
             elif speaker_name[0] in ['A', 'M']:
                 self.wav_train_paths.append(wav_path)
+                if speaker_name[0] == 'M':
+                    self.wav_dev_paths.append(wav_path)
             else:
                 self.wav_train_plus_paths.append(wav_path)
 
         # non core dialog
         self.wav_noncore_dialog_paths = []
-        for wav_path in glob.glob(os.path.join(self.wav_path, 'NONCORE-DIALOG/*/*.wav')):
+        for wav_path in glob(os.path.join(self.wav_path, 'NONCORE-DIALOG/*/*.wav')):
             speaker_name = wav_path.split('/')[-2]
             if speaker_name[0] == 'D':
                 if wav_path.split('.')[0][-1] in ['L', 'R']:
@@ -147,6 +149,13 @@ class Prepare(object):
                 ver1_path = wav_path.replace('.wav', '.sdb')
                 self.trans_train_plus_paths.append(
                     os.path.join(self.wav_path, ver1_path))
+
+        for index, wav_path in enumerate(self.wav_dev_paths):
+            self.wav_dev_paths[index] = os.path.join(
+                self.wav_path, wav_path)
+            trans_path = wav_path.replace('.wav', '.sdb')
+            self.trans_dev_paths.append(
+                os.path.join(self.wav_path, trans_path))
 
         for index, wav_path in enumerate(self.wav_eval1_paths):
             self.wav_eval1_paths[index] = os.path.join(self.wav_path, wav_path)
