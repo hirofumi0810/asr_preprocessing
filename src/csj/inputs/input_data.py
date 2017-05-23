@@ -49,7 +49,7 @@ def read_htk(htk_paths, speaker_dict, global_norm, is_training,
         total_frame_num_list.append(return_element[3])
 
     if is_training:
-        feature_dim = train_mean_list[0].shape[1]
+        feature_dim = train_mean_list[0].shape[0]
         # compute global mean
         print('===> Computing global mean over train data...')
         train_global_mean = np.empty((feature_dim,), dtype=np.float64)

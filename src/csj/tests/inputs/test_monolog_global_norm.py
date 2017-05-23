@@ -1,4 +1,3 @@
-
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -14,7 +13,7 @@ from inputs.input_data import read_htk
 from labels.ctc.monolog.character import read_sdb
 
 
-class TestInputSpeakerNorm(unittest.TestCase):
+class TestInputMonologGlobalNorm(unittest.TestCase):
 
     def test(self):
         prep = Prepare()
@@ -29,10 +28,12 @@ class TestInputSpeakerNorm(unittest.TestCase):
             htk_paths = [os.path.join(prep.fbank_path, htk_path)
                          for htk_path in sorted(glob(os.path.join(prep.fbank_path,
                                                                   data_type + '/*.htk')))]
+            is_training = True if data_type in [
+                'train', 'train_plus'] else False
             read_htk(htk_paths=htk_paths,
                      speaker_dict=speaker_dict,
-                     global_norm=False,
-                     is_training=True)
+                     global_norm=True,
+                     is_training=is_training)
 
 
 if __name__ == '__main__':

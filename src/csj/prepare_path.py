@@ -123,8 +123,8 @@ class Prepare(object):
         self.trans_eval1_paths = []
         self.trans_eval2_paths = []
         self.trans_eval3_paths = []
-        self.trans_dialog_core_paths = []
-        self.trans_dialog_noncore_paths = []
+        self.trans_dialog_core_paths = set([])
+        self.trans_dialog_noncore_paths = set([])
 
         # update for ver4 core data only)
         for index, wav_path in enumerate(self.wav_train_paths):
@@ -196,18 +196,22 @@ class Prepare(object):
             speaker_name = os.path.basename(wav_path).split('-')[0]
             ver4_path = os.path.join(self.ver4_path, speaker_name + '.sdb')
             if os.path.isfile(ver4_path):
-                self.trans_dialog_core_paths.append(ver4_path)
+                self.trans_dialog_core_paths.add(ver4_path)
             else:
                 ver1_path = wav_path.replace('.wav', '.sdb')
-                self.trans_dialog_core_paths.append(
+                self.trans_dialog_core_paths.add(
                     os.path.join(self.wav_path, ver1_path))
+        self.trans_dialog_core_paths = list(self.trans_dialog_core_paths)
 
         for index, wav_path in enumerate(self.wav_dialog_noncore_paths):
             self.wav_dialog_noncore_paths[index] = os.path.join(
                 self.wav_path, wav_path)
-            trans_path = wav_path.replace('.wav', '.sdb')
-            self.trans_dialog_noncore_paths.append(
+            speaker_name = os.path.basename(wav_path).split('-')[0]
+            trans_path = wav_path.replace(
+                '-L.wav', '.sdb').replace('-R.wav', '.sdb')
+            self.trans_dialog_noncore_paths.add(
                 os.path.join(self.wav_path, trans_path))
+        self.trans_dialog_noncore_paths = list(self.trans_dialog_noncore_paths)
 
     def wav(self, data_type):
         """Get paths to wav files.

@@ -68,7 +68,7 @@ def read_sdb(label_paths, label_type, save_path=None):
             if end_frame_pre is None:
                 end_frame_pre = end_frame
 
-            word = row[5]  # include kanji characters
+            kanji = row[5]  # include kanji characters
             yomi = row[10]
             pos_tag = row[11]
 

@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make dataset for CTC model (CSJ corpus)."""
+"""Make dataset for CTC model (CSJ corpus, monolog)."""
 
 import os
 import sys
@@ -105,18 +105,25 @@ def main(label_type):
     # dev
     ####################
     print('---------- dev (19 speakers) ----------')
-    print('=> copy for dev set (use dataset whose speaker_name starts "M" in default train set)')
-    for input_path in glob(os.path.join(prep.dataset_path, 'ctc', label_type, 'train/input/M*')):
-        print(input_path)
-        speaker_name = os.path.basename(input_path)
-        shutil.copytree(input_path, os.path.join(
-            prep.dataset_path, 'ctc', label_type, 'dev/input', speaker_name))
+    # read labels, save labels as npy files
+    print('=> Processing ground truth labels...')
+    label_dev_paths = prep.trans(data_type='dev')
+    speaker_dict = read_sdb(label_paths=label_dev_paths,
+                            label_type=label_type,
+                            save_path=label_dev_save_path)
 
-    for label_path in glob(os.path.join(prep.dataset_path, 'ctc', label_type, 'train/label/M*')):
-        print(label_path)
-        speaker_name = os.path.basename(label_path)
-        shutil.copytree(label_path, os.path.join(
-            prep.dataset_path, 'ctc', label_type, 'dev/label', speaker_name))
+    # read htk files, save input data & frame num dict
+    print('=> Processing input data...')
+    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
+                                                         'dev/*.htk')))]
+    read_htk(htk_paths=htk_paths,
+             save_path=input_dev_save_path,
+             speaker_dict=speaker_dict,
+             global_norm=False,
+             is_training=False,
+             train_mean=train_mean,
+             train_std=train_std)
 
     ####################
     # eval1
@@ -190,7 +197,7 @@ def main(label_type):
              train_mean=train_mean,
              train_std=train_std)
 
-    # make a confirmation file to prove that dataset was saved correctly
+    make a confirmation file to prove that dataset was saved correctly
     with open(os.path.join(save_path, 'check.txt'), 'w') as f:
         f.write('')
     print('Successfully completed!')
@@ -198,9 +205,9 @@ def main(label_type):
 
 if __name__ == '__main__':
 
-    print('=================================')
-    print('=           CSJ (CTC)           =')
-    print('=================================')
+    print('=====================================================')
+    print('=               CSJ for monolog (CTC)               =')
+    print('=====================================================')
 
     label_types = ['character', 'phone']
 
