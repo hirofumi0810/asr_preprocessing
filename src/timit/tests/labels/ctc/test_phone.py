@@ -7,10 +7,10 @@ import unittest
 sys.path.append('../../../')
 sys.path.append('../../../../')
 from prepare_path import Prepare
-from labels.attention.phone import read_phone
+from labels.ctc.phone import read_phone
 
 
-class TestAttentionPhone(unittest.TestCase):
+class TestCTCLabelPhone(unittest.TestCase):
     def test(self):
         prep = Prepare()
         label_train_paths = prep.phone(data_type='train')

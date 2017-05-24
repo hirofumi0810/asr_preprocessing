@@ -14,20 +14,21 @@ from labels.ctc.phone import read_phone
 
 
 class TestInputGlobalNorm(unittest.TestCase):
+
     def test(self):
         prep = Prepare()
 
         print('===== global norm =====')
         # train
-        htk_dev_paths = [os.path.join(prep.data_root_path, htk_dir)
-                         for htk_dir in sorted(glob.glob(os.path.join(prep.data_root_path, 'fbank/train/*.htk')))]
+        htk_dev_paths = [os.path.join(prep.fbank_path, htk_dir)
+                         for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'train/*.htk')))]
         train_mean, train_std = read_htk(htk_paths=htk_dev_paths,
                                          normalize=True,
-                                         is_training=False)
+                                         is_training=True)
 
         # dev
-        htk_dev_paths = [os.path.join(prep.data_root_path, htk_dir)
-                         for htk_dir in sorted(glob.glob(os.path.join(prep.data_root_path, 'fbank/dev/*.htk')))]
+        htk_dev_paths = [os.path.join(prep.fbank_path, htk_dir)
+                         for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'dev/*.htk')))]
         read_htk(htk_paths=htk_dev_paths,
                  normalize=True,
                  is_training=False,
@@ -35,8 +36,8 @@ class TestInputGlobalNorm(unittest.TestCase):
                  train_std=train_std)
 
         # test
-        htk_dev_paths = [os.path.join(prep.data_root_path, htk_dir)
-                         for htk_dir in sorted(glob.glob(os.path.join(prep.data_root_path, 'fbank/test/*.htk')))]
+        htk_dev_paths = [os.path.join(prep.fbank_path, htk_dir)
+                         for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'test/*.htk')))]
         read_htk(htk_paths=htk_dev_paths,
                  normalize=True,
                  is_training=False,

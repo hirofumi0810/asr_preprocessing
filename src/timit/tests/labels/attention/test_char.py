@@ -10,7 +10,7 @@ from prepare_path import Prepare
 from labels.attention.character import read_text
 
 
-class TestAttentionCharacter(unittest.TestCase):
+class TestAttentionLalbelChar(unittest.TestCase):
     def test(self):
         prep = Prepare()
         label_train_paths = prep.text(data_type='train')

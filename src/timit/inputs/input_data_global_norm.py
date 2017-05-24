@@ -3,14 +3,12 @@
 
 """Make input data for CTC network (TIMIT corpus)."""
 
-# import gc
 import os
 import pickle
 import numpy as np
 from tqdm import tqdm
 
-from utils.inputs.read_htk import read
-# np.seterr(all='ignore')
+from utils.inputs.segmentation import read_htk as read
 
 
 def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None, train_std=None):
@@ -45,7 +43,8 @@ def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None,
         train_data = np.empty((total_frame_num, feature_dim))
         for input_data_utt in tqdm(input_data_list):
             frame_num_utt = input_data_utt.shape[0]
-            train_data[frame_offset:frame_offset + frame_num_utt] = input_data_utt
+            train_data[frame_offset:frame_offset +
+                       frame_num_utt] = input_data_utt
             frame_offset += frame_num_utt
         train_mean = np.mean(train_data, axis=0)
         train_std = np.std(train_data, axis=0)
@@ -53,25 +52,28 @@ def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None,
         if save_path is not None:
             # save global mean & std
             statistics_save_path = '/'.join(save_path.split('/')[:-1])
-            np.save(os.path.join(statistics_save_path, 'train_mean.npy'), train_mean)
-            np.save(os.path.join(statistics_save_path, 'train_std.npy'), train_std)
-            # del train_data
-            # gc.collect()
+            np.save(os.path.join(statistics_save_path,
+                                 'train_mean.npy'), train_mean)
+            np.save(os.path.join(statistics_save_path,
+                                 'train_std.npy'), train_std)
 
     if save_path is not None:
         # save input data as npy files
         print('===> Saving input data...')
         frame_num_dict = {}
         for input_data, htk_path in zip(tqdm(input_data_list), htk_paths):
-            input_data_save_name = os.path.basename(htk_path).split('.')[0] + '.npy'
-            input_data_save_path = os.path.join(save_path, input_data_save_name)
+            input_data_save_name = os.path.basename(
+                htk_path).split('.')[0] + '.npy'
+            input_data_save_path = os.path.join(
+                save_path, input_data_save_name)
 
             # normalize by global mean & std over train data
             if normalize:
                 input_data = (input_data - train_mean) / train_std
 
             np.save(input_data_save_path, input_data)
-            frame_num_dict[os.path.basename(htk_path).split('.')[0]] = input_data.shape[0]
+            frame_num_dict[os.path.basename(htk_path).split('.')[
+                0]] = input_data.shape[0]
 
         # save a frame number dictionary
         frame_num_dict_save_path = '/'.join(save_path.split('/')[:-1])

@@ -10,7 +10,7 @@ from prepare_path import Prepare
 from labels.ctc.character import read_text
 
 
-class TestCTCCharacter(unittest.TestCase):
+class TestCTCLabelChar(unittest.TestCase):
     def test(self):
         prep = Prepare()
         label_train_paths = prep.text(data_type='train')
