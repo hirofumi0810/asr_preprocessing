@@ -15,8 +15,8 @@ from utils.labels.phone import phone2num
 
 # NOTE:
 # 42 phones,
-# SILENCE, LAUGHTER, VOCALIZED_NOISE, NOISE
-# = 42 + 4 = 46 labels
+# SIL, LAUGHTER, NOISE
+# = 42 + 3 = 45 labels
 
 
 def read_pronounce_dict(dict_path, mapping_file_path):
@@ -53,7 +53,8 @@ def read_pronounce_dict(dict_path, mapping_file_path):
             pronounce_dict[word.lower()] = phone_seq
 
     # add [vocalized-noise], [noise], [laughter] to the pronounce dictionary
-    pronounce_dict['[vocalized-noise]'] = 'VOCALIZED_NOISE'
+    # pronounce_dict['[vocalized-noise]'] = 'VOCALIZED_NOISE'
+    pronounce_dict['[vocalized-noise]'] = 'NOISE'
     pronounce_dict['[noise]'] = 'NOISE'
     pronounce_dict['[laughter]'] = 'LAUGHTER'
 
@@ -68,8 +69,8 @@ def read_pronounce_dict(dict_path, mapping_file_path):
     return pronounce_dict
 
 
-def read_transcript(label_paths, save_path=None):
-    """Read transcripts & save as npy files.
+def read_trans(label_paths, save_path=None):
+    """Read transcripts (*_trans.txt) & save files (.npy).
     Args:
         label_paths: list of paths to label files
         save_path: path to save labels. If None, don't save labels
@@ -118,17 +119,16 @@ def read_transcript(label_paths, save_path=None):
                     transcript = transcript[:-1]
 
                 # convert from character to phone
-                phone_list = ['SILENCE']
+                phone_list = ['SIL']
                 keys = pronounce_dict.keys()
                 for word in transcript.split(' '):
                     if word in keys:
                         phone_list.append(pronounce_dict[word])
-                        phone_list.append('SILENCE')
+                        phone_list.append('SIL')
                     else:
                         print(transcript.split(' '))
 
-                # convert to phone list where each element is phone (remove '
-                # ')
+                # convert to phone list where each element is phone(remove ' ')
                 phone_seq = ' '.join(phone_list)
                 phone_list = phone_seq.split(' ')
 
@@ -137,13 +137,14 @@ def read_transcript(label_paths, save_path=None):
                         print(phone_list)
                     phone_set.add(phone)
 
-                utterance_dict[utt_index] = [
+                utterance_dict[utt_index.zfill(4)] = [
                     start_frame, end_frame, phone_list]
             speaker_dict[speaker_name] = utterance_dict
 
     # make the mapping file (from phone to number)
     mapping_file_path = os.path.join(prep.run_root_path,
                                      'labels/ctc/phone2num.txt')
+    # if not os.path.isfile(mapping_file_path):
     with open(mapping_file_path, 'w') as f:
         for index, phone in enumerate(sorted(list(phone_set))):
             f.write('%s  %s\n' % (phone, str(index)))
@@ -168,6 +169,9 @@ def read_transcript(label_paths, save_path=None):
 
 
 def fix_transcript(transcript, speaker_name):
+    if transcript == '[noise]':
+        return ''
+
     # remove <b_aside>, <e_aside>, [silence]
     transcript = re.sub(r'\<b_aside\>', '', transcript)
     transcript = re.sub(r'\<e_aside\>', '', transcript)

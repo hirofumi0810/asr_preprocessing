@@ -6,35 +6,33 @@
 import os
 import sys
 import shutil
-import glob
+from glob import glob
 from tqdm import tqdm
 
 sys.path.append('../../')
 sys.path.append('../../../')
 from prepare_path import Prepare
-from inputs.input_data_speaker_norm import read_htk as read_htk_speaker_norm
-from inputs.input_data_global_norm import read_htk as read_htk_global_norm
-from labels.ctc.ldc97s62.character import read_transcript as read_char
-from labels.ctc.ldc97s62.phone import read_transcript as read_phone
-# from labels.ctc.ldc97s62.word import read_trans as read_word
-from utils.util import mkdir
+from inputs.input_data import read_htk as read_htk
+from labels.ctc.ldc97s62.character import read_trans as read_char
+from labels.ctc.ldc97s62.phone import read_trans as read_phone
+# from labels.ctc.ldc97s62.word import read_word as read_word
+from utils.util import mkdir, join
 
 
-def main(label_type, normalize_type):
+def main(label_type):
 
-    print('===== ' + label_type + ', ' + normalize_type + ' =====')
+    print('===== ' + label_type + ' =====')
     prep = Prepare()
-    save_path = mkdir(os.path.join(prep.dataset_path, 'ctc'))
-    save_path = mkdir(os.path.join(save_path, label_type))
+    save_path = join(prep.dataset_path, 'ctc')
+    save_path = join(save_path, label_type)
 
-    train_save_path = mkdir(os.path.join(save_path, 'train'))
-    # dev_save_path = mkdir(os.path.join(save_path, 'dev'))
+    train_save_path = join(save_path, 'train')
+    # dev_save_path = join(save_path, 'dev')
 
     # reset directory
     if not os.path.isfile(os.path.join(train_save_path, 'check.txt')):
         print('=> Deleting old dataset...')
         for c in tqdm(os.listdir(train_save_path)):
-            print(c)
             try:
                 shutil.rmtree(os.path.join(train_save_path, c))
             except:
@@ -43,10 +41,10 @@ def main(label_type, normalize_type):
         print('Already exists.')
         return 0
 
-    input_train_save_path = mkdir(os.path.join(train_save_path, 'input'))
-    label_train_save_path = mkdir(os.path.join(train_save_path, 'label'))
-    # input_dev_save_path = mkdir(os.path.join(dev_save_path, 'input'))
-    # label_dev_save_path = mkdir(os.path.join(dev_save_path, 'label'))
+    input_train_save_path = join(train_save_path, 'input')
+    label_train_save_path = join(train_save_path, 'label')
+    # input_dev_save_path = join(dev_save_path, 'input')
+    # label_dev_save_path = join(dev_save_path, 'label')
 
     ####################
     # train
@@ -61,24 +59,18 @@ def main(label_type, normalize_type):
         speaker_dict = read_phone(label_paths=label_train_paths,
                                   save_path=label_train_save_path)
 
-    # read htk files, save input data as npy files, save frame num dict as a
-    # pickle file
+    # read htk files, save input data & frame num dict
     print('=> Processing input data...')
-    htk_train_paths = [os.path.join(prep.train_data_path, htk_dir)
-                       for htk_dir in sorted(glob.glob(os.path.join(prep.train_data_path, 'fbank/*.htk')))]
-    if normalize_type == 'speaker_mean':
-        # normalize per speaker
-        read_htk_speaker_norm(htk_paths=htk_train_paths,
-                              save_path=input_train_save_path,
-                              speaker_dict=speaker_dict,
-                              normalize=True)
-    elif normalize_type == 'global_norm':
-        # normalize over train set
-        read_htk_global_norm(htk_paths=htk_train_paths,
-                             save_path=input_train_save_path,
-                             speaker_dict=speaker_dict,
-                             normalize=True,
-                             is_training=True)
+    htk_paths = [os.path.join(prep.train_data_path, htk_dir)
+                 for htk_dir in sorted(glob(os.path.join(prep.train_data_path,
+                                                         'fbank/*.htk')))]
+
+    # normalize over train set
+    train_mean, train_std = read_htk(htk_paths=htk_paths,
+                                     save_path=input_train_save_path,
+                                     speaker_dict=speaker_dict,
+                                     global_norm=False,
+                                     is_training=True)
 
     ####################
     # dev
@@ -98,8 +90,5 @@ if __name__ == '__main__':
     print('============================================================')
 
     label_types = ['phone', 'character']
-    # normalize_types = ['global_norm', 'speaker_mean']
-    normalize_types = ['global_norm']
-    for normalize_type in normalize_types:
-        for label_type in label_types:
-            main(label_type, normalize_type)
+    for label_type in label_types:
+        main(label_type)

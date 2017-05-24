@@ -5,7 +5,7 @@
 
 import os
 import sys
-import glob
+from glob import glob
 import shutil
 from tqdm import tqdm
 
@@ -18,10 +18,10 @@ from utils.util import mkdir
 def main():
 
     prep = Prepare()
-    sph_train_paths = prep.sph_train()
-    sph_train_fisher_paths = prep.sph_train_fisher()
-    sph_test_paths = prep.sph_test()
-    sph_test_callhome_paths = prep.sph_test_callhome()
+    sph_train_paths = prep.sph_train('ldc97s62')
+    sph_train_fisher_paths = prep.sph_train('fisher')
+    sph_test_paths = prep.sph_test('swbd')
+    sph_test_callhome_paths = prep.sph_test('callhome')
 
     wav_train_path = mkdir(os.path.join(prep.train_data_path, 'wav'))
     wav_train_fisher_path = mkdir(
@@ -54,7 +54,7 @@ def main():
 
     # train (Fisher)
     print('===== Fisher =====')
-    if len(glob.glob(os.path.join(wav_train_fisher_path, '*/*.wav'))) == 23398:
+    if len(glob(os.path.join(wav_train_fisher_path, '*/*.wav'))) == 23398:
         print('Already converted.')
     else:
         print('=> Deleting old dataset...')

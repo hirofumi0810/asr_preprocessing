@@ -14,8 +14,8 @@ from utils.util import mkdir
 from utils.labels.character import char2num
 
 
-def read_transcript(label_paths, save_path=None):
-    """Read transcripts & save as npy files.
+def read_txt(label_paths, save_path=None):
+    """Read transcripts (.txt) & save files (.npy).
     Args:
         label_paths: list of paths to label files
         save_path: path to save labels. If None, don't save labels

@@ -6,18 +6,17 @@
 import os
 import re
 import numpy as np
-import time
-from progressbar import ProgressBar
+from tqdm import tqdm
 
 from prepare_path import Prepare
-
 
 # TODO:
 # 笑いのマスクを作る
 # word embedding用の特徴量
 
+
 def read_word(label_paths, save_path=None):
-    """Read word segmentation files & save as npy files.
+    """Read word segmentation files (*_word.txt) & save as npy files.
     Args:
         label_paths: list of paths to label files
         save_path: path to save labels. If None, don't save labels
@@ -96,8 +95,6 @@ def read_word(label_paths, save_path=None):
     #
     # if save_path is not None:
     #     print('Saving target labels...')
-    #     p_save = ProgressBar(max_value=len(label_paths))
-    #     i_save = 0
     #     for speaker_name, utterance_dict in p_save(speaker_dict.items()):
     #         save_path_speaker = mkdir(os.path.join(save_path, speaker_name))
     #         for utt_index,  utt_info in utterance_dict.items():
@@ -110,9 +107,7 @@ def read_word(label_paths, save_path=None):
     #             # save as npy file
     #             np.save(os.path.join(save_path_speaker, save_file_name), phone_index_list)
     #
-    #         p_save.update(i_save + 1)
-    #         i_save += 1
-    #         time.sleep(0.01)
+    #
 
     return speaker_dict
 
