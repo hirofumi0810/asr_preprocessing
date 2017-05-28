@@ -18,12 +18,12 @@ from .fix_trans import fix_transcript
 
 # NOTE:
 # [character]
-# 145 kana characters, space(_),
-# = 145 + 1 + = 146 labels
+# 145 kana characters, noise(NZ), space(_),
+# = 145 + 2 + = 147 labels
 
 # [phone]
-# 39 phones, sil(_),
-# = 36 + 1 = 37 labels
+# 36 phones, noise(NZ), sil(_),
+# = 36 + 2 = 38 labels
 
 def read_sdb(label_paths, label_type, save_path=None):
     """Read transcripts (.sdb) & save files (.npy).
@@ -90,10 +90,10 @@ def read_sdb(label_paths, label_type, save_path=None):
                     continue
                 else:
                     # clean transcript
-                    transcript_fixed = fix_transcript(transcript)
+                    transcript_fixed = fix_transcript(transcript, speaker_name)
 
-                    # skip silence
-                    if transcript_fixed != '':
+                    # skip silence & noise only utterance
+                    if transcript_fixed != '' and transcript_fixed != 'NZ':
                         # merge silence around each utterance
                         transcript_fixed = '_' + transcript_fixed + '_'
 
@@ -132,6 +132,7 @@ def read_sdb(label_paths, label_type, save_path=None):
             for phone in phone_seq.split(' '):
                 phone_set.add(phone)
         kana2phone_dict['_'] = '_'
+        kana2phone_dict['NZ'] = 'NZ'
 
     # make the mapping file (from kana character(phone) to number)
     if label_type == 'character':
@@ -140,21 +141,21 @@ def read_sdb(label_paths, label_type, save_path=None):
         file_name = 'phone2num.txt'
     mapping_file_path = os.path.join(prep.run_root_path,
                                      'labels/ctc', file_name)
-    if not os.path.isfile(mapping_file_path):
-        with open(mapping_file_path, 'w') as f:
-            if label_type == 'character':
-                for index, char in enumerate(kana_list):
-                    f.write('%s  %s\n' % (char, str(index)))
-            elif label_type == 'phone':
-                for index, phone in enumerate(sorted(list(phone_set))):
-                    if index == 0:
-                        f.write('_  0\n')
-                    f.write('%s  %s\n' % (phone, str(index + 1)))
+    # if not os.path.isfile(mapping_file_path):
+    with open(mapping_file_path, 'w') as f:
+        if label_type == 'character':
+            kana_list += ['NZ']
+            for index, char in enumerate(kana_list):
+                f.write('%s  %s\n' % (char, str(index)))
+        elif label_type == 'phone':
+            phone_list = ['_'] + sorted(list(phone_set)) + ['NZ']
+            for index, phone in enumerate(phone_list):
+                f.write('%s  %s\n' % (phone, str(index)))
 
     # for debug
-    # for char in list(char_set):
-    #     if char not in kana_list:
-    #         print(char)
+    for char in list(char_set):
+        if char not in kana_list:
+            print(char)
 
     if save_path is not None:
         # save target labels

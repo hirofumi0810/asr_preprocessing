@@ -14,27 +14,38 @@ class TestCTCLabelDialogChar(unittest.TestCase):
 
     def test(self):
         prep = Prepare()
-        label_dialog_core_paths = prep.trans(data_type='dialog_core')
-        label_dialog_non_core_paths = prep.trans(data_type='dialog_noncore')
+        label_dialog_train_paths = prep.trans(data_type='dialog_train')
+        label_dialog_dev_paths = prep.trans(data_type='dialog_dev')
+        label_dialog_test_paths = prep.trans(data_type='dialog_test')
+        label_dialog_train_paths = set(label_dialog_train_paths)
+        for path in label_dialog_test_paths:
+            label_dialog_train_paths.remove(path)
+        label_dialog_train_paths = list(label_dialog_train_paths)
 
         print('===== dialog (character) =====')
         for social_signal_type in ['insert', 'insert2', 'insert3', 'remove']:
-            # core
-            read_sdb(label_paths=label_dialog_core_paths,
+            # train
+            read_sdb(label_paths=label_dialog_train_paths,
                      label_type='character',
                      speaker='L',
                      social_signal_type=social_signal_type)
-            read_sdb(label_paths=label_dialog_core_paths,
+            read_sdb(label_paths=label_dialog_train_paths,
+                     label_type='character',
+                     speaker='R',
+                     social_signal_type=social_signal_type)
+            read_sdb(label_paths=label_dialog_test_paths,
+                     label_type='character',
+                     speaker='L',
+                     social_signal_type=social_signal_type)
+
+            # dev
+            read_sdb(label_paths=label_dialog_dev_paths,
                      label_type='character',
                      speaker='R',
                      social_signal_type=social_signal_type)
 
-            # noncore
-            read_sdb(label_paths=label_dialog_non_core_paths,
-                     label_type='character',
-                     speaker='L',
-                     social_signal_type=social_signal_type)
-            read_sdb(label_paths=label_dialog_non_core_paths,
+            # test
+            read_sdb(label_paths=label_dialog_test_paths,
                      label_type='character',
                      speaker='R',
                      social_signal_type=social_signal_type)
