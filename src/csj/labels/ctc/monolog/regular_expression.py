@@ -63,6 +63,15 @@ def remove_disfluency(kana_seq):
     return kana_seq
 
 
+def remove_filler(kana_seq):
+    # フィラー,感情表出系感動詞
+    filler = re.match(r'(.*)\(F ([^)]+)\)(.*)', kana_seq)
+    while filler is not None:
+        kana_seq = filler.group(1) + filler.group(2) + filler.group(3)
+        filler = re.match(r'(.*)\(F ([^)]+)\)(.*)', kana_seq)
+    return kana_seq
+
+
 def remove_Xtag(kana_seq):
     # 非朗読対象発話 ( 朗読における言い間違い等 )
     Xtag = re.match(r'(.*)\(X ([^)]+)\)(.*)', kana_seq)
@@ -72,12 +81,20 @@ def remove_Xtag(kana_seq):
     return kana_seq
 
 
-def remove_filler(kana_seq):
-    # フィラー,感情表出系感動詞
-    filler = re.match(r'(.*)\(F ([^)]+)\)(.*)', kana_seq)
-    while filler is not None:
-        kana_seq = filler.group(1) + filler.group(2) + filler.group(3)
-        filler = re.match(r'(.*)\(F ([^)]+)\)(.*)', kana_seq)
+def remove_Atag(kana_seq):
+    # アルファベットや算用数字,記号の表記
+    Atag = re.match(r'(.*)\(A ([^)]+);([^)]+)\)(.*)', kana_seq)
+    while Atag is not None:
+        kana_seq = Atag.group(1) + Atag.group(3) + Atag.group(4)
+        Atag = re.match(r'(.*)\(A ([^)]+);([^)]+)\)(.*)', kana_seq)
+    return kana_seq
+
+
+def remove_Ktag(kana_seq):
+    Ktag = re.match(r'(.*)\(K ([^)]+);([^)]+)\)(.*)', kana_seq)
+    while Ktag is not None:
+        kana_seq = Ktag.group(1) + Ktag.group(3) + Ktag.group(4)
+        Ktag = re.match(r'(.*)\(K ([^)]+);([^)]+)\)(.*)', kana_seq)
     return kana_seq
 
 

@@ -4,17 +4,18 @@
 """Make labels for CTC model (monolog)."""
 
 import os
+import sys
 import re
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import jaconv
 
 from prepare_path import Prepare
 from utils.util import mkdir
 from utils.labels.character import kana2num
 from utils.labels.phone import phone2num
-from .fix_trans import fix_transcript
-
+from .fix_trans import fix_transcript, is_hiragana, is_katakana, is_kanji, is_alphabet
 
 # NOTE:
 # [character]
@@ -25,11 +26,20 @@ from .fix_trans import fix_transcript
 # 36 phones, noise(NZ), sil(_),
 # = 36 + 2 = 38 labels
 
-def read_sdb(label_paths, label_type, save_path=None):
+# [kanji]
+# ?? kanji characters, ?? kana characters, ?? hiragana characters,
+# noise(NZ), sil(_),
+# = ?? + ?? + ?? + 2 = ?? lables
+
+
+def read_sdb(label_paths, label_type, is_test=None,
+             save_map_file=None, save_path=None):
     """Read transcripts (.sdb) & save files (.npy).
     Args:
         label_paths: list of paths to label files
-        label_type: character or phone
+        label_type: character or phone or kanji
+        is_test: set to True when making the test set
+        save_map_file: if True, save the mapping file
         save_path: path to save labels. If None, don't save labels
     Returns:
         speaker_dict: dictionary of speakers
@@ -41,6 +51,7 @@ def read_sdb(label_paths, label_type, save_path=None):
     print('===> Reading target labels...')
     speaker_dict = {}
     char_set = set([])
+    all_char_set = set([])
     for label_path in tqdm(label_paths):
         col_names = [j for j in range(25)]
         df = pd.read_csv(label_path, names=col_names,
@@ -55,7 +66,7 @@ def read_sdb(label_paths, label_type, save_path=None):
         utterance_dict = {}
         utt_index_pre = 1
         start_frame_pre, end_frame_pre = None, None
-        transcript = ''
+        transcript, transcript_kanji = '', ''
         speaker_name = os.path.basename(label_path).split('.')[0]
         for key, row in df.iterrows():
             time_info = row[3].split(' ')
@@ -75,40 +86,62 @@ def read_sdb(label_paths, label_type, save_path=None):
             # stack word in the same utterance
             if utt_index == utt_index_pre:
                 transcript += yomi
+                transcript_kanji += kanji
                 utt_index_pre = utt_index
                 end_frame_pre = end_frame
                 continue
             else:
                 # count the number of kakko
+                left_kanji = transcript_kanji.count('(')
+                right_kanji = transcript_kanji.count(')')
+                if left_kanji != right_kanji:
+                    transcript += yomi
+                    transcript_kanji += kanji
+                    utt_index_pre = utt_index
+                    end_frame_pre = end_frame
+                    continue
+
                 left = transcript.count('(')
                 right = transcript.count(')')
-
                 if left != right:
                     transcript += yomi
+                    transcript_kanji += kanji
                     utt_index_pre = utt_index
                     end_frame_pre = end_frame
                     continue
                 else:
                     # clean transcript
                     transcript_fixed = fix_transcript(transcript, speaker_name)
+                    transcript_kanji_fixed = fix_transcript(transcript_kanji,
+                                                            speaker_name)
 
                     # skip silence & noise only utterance
                     if transcript_fixed != '' and transcript_fixed != 'NZ':
                         # merge silence around each utterance
                         transcript_fixed = '_' + transcript_fixed + '_'
+                        transcript_kanji_fixed = '_' + transcript_kanji_fixed + '_'
 
                         # remove double underbar
                         transcript_fixed = re.sub(
                             '__', '_', transcript_fixed)
+                        transcript_kanji_fixed = re.sub(
+                            '__', '_', transcript_kanji_fixed)
 
                         for char in list(transcript_fixed):
                             char_set.add(char)
+                        for char in list(transcript_kanji_fixed):
+                            all_char_set.add(char)
 
-                        utterance_dict[str(utt_index - 1).zfill(4)] = [
-                            start_frame_pre, end_frame_pre, transcript_fixed]
+                        if label_type == 'kanji':
+                            utterance_dict[str(utt_index - 1).zfill(4)] = [
+                                start_frame_pre, end_frame_pre, transcript_kanji_fixed]
+                        else:
+                            utterance_dict[str(utt_index - 1).zfill(4)] = [
+                                start_frame_pre, end_frame_pre, transcript_fixed]
 
                     # initialization
                     transcript = yomi
+                    transcript_kanji = kanji
                     utt_index_pre = utt_index
                     start_frame_pre = start_frame
                     end_frame_pre = end_frame
@@ -135,22 +168,37 @@ def read_sdb(label_paths, label_type, save_path=None):
         kana2phone_dict['NZ'] = 'NZ'
 
     # make the mapping file (from kana character(phone) to number)
-    if label_type == 'character':
+    if label_type == 'kanji':
+        file_name = 'kanji2num.txt'
+    elif label_type == 'character':
         file_name = 'char2num.txt'
     elif label_type == 'phone':
         file_name = 'phone2num.txt'
     mapping_file_path = os.path.join(prep.run_root_path,
                                      'labels/ctc', file_name)
-    # if not os.path.isfile(mapping_file_path):
-    with open(mapping_file_path, 'w') as f:
-        if label_type == 'character':
-            kana_list += ['NZ']
-            for index, char in enumerate(kana_list):
-                f.write('%s  %s\n' % (char, str(index)))
-        elif label_type == 'phone':
-            phone_list = ['_'] + sorted(list(phone_set)) + ['NZ']
-            for index, phone in enumerate(phone_list):
-                f.write('%s  %s\n' % (phone, str(index)))
+    if save_map_file:
+        with open(mapping_file_path, 'w') as f:
+            if label_type == 'kanji':
+                all_char_set.remove('N')
+                all_char_set.remove('Z')
+                kanji_set = set([])
+                for char in all_char_set:
+                    if (not is_hiragana(char)) and (not is_katakana(char)):
+                        kanji_set.add(char)
+                for char in kana_list[1:]:
+                    kanji_set.add(char)
+                    kanji_set.add(jaconv.kata2hira(char))
+                kanji_list = sorted(list(kanji_set)) + ['NZ']
+                for index, kanji in enumerate(kanji_list):
+                    f.write('%s  %s\n' % (kanji, str(index)))
+            elif label_type == 'character':
+                kana_list += ['NZ']
+                for index, char in enumerate(kana_list):
+                    f.write('%s  %s\n' % (char, str(index)))
+            elif label_type == 'phone':
+                phone_list = ['_'] + sorted(list(phone_set)) + ['NZ']
+                for index, phone in enumerate(phone_list):
+                    f.write('%s  %s\n' % (phone, str(index)))
 
     # for debug
     for char in list(char_set):
@@ -166,9 +214,26 @@ def read_sdb(label_paths, label_type, save_path=None):
                 start_frame, end_frame, transcript = utt_info
                 save_file_name = speaker_name + '_' + utt_index + '.npy'
 
-                if label_type == 'character':
+                if label_type == 'kanji':
+                    if not is_test:
+                        # convert from kana character to number
+                        index_list = kana2num(transcript, mapping_file_path)
+
+                        # save as npy file
+                        np.save(os.path.join(save_path, speaker_name,
+                                             save_file_name), index_list)
+                    else:
+                        # save as npy file
+                        np.save(os.path.join(save_path, speaker_name,
+                                             save_file_name), transcript)
+
+                elif label_type == 'character':
                     # convert from kana character to number
                     index_list = kana2num(transcript, mapping_file_path)
+
+                    # save as npy file
+                    np.save(os.path.join(save_path, speaker_name,
+                                         save_file_name), index_list)
 
                 elif label_type == 'phone':
                     # convert kana character to phone
@@ -203,8 +268,8 @@ def read_sdb(label_paths, label_type, save_path=None):
                     # convert from phone to number
                     index_list = phone2num(trans_phone_list, mapping_file_path)
 
-                # save as npy file
-                np.save(os.path.join(save_path, speaker_name,
-                                     save_file_name), index_list)
+                    # save as npy file
+                    np.save(os.path.join(save_path, speaker_name,
+                                         save_file_name), index_list)
 
     return speaker_dict

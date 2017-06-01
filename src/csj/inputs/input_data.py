@@ -85,7 +85,7 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
             statistics_save_path = '/'.join(save_path.split('/')[:-1])
             np.save(os.path.join(statistics_save_path, 'train_mean_male.npy'),
                     train_mean_male)
-            np.save(os.path.join(statistics_save_path, 'train_mean_male.npy'),
+            np.save(os.path.join(statistics_save_path, 'train_mean_female.npy'),
                     train_mean_female)
             np.save(os.path.join(statistics_save_path, 'train_std_male.npy'),
                     train_std_male)

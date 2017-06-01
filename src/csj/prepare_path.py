@@ -84,7 +84,7 @@ class Prepare(object):
         # core: 30 (15 sessions)
         # noncore: 80 (40 sessions)
         # total => 110 (55 sessions)
-        # excluded_speakersに含まれるものは除く
+        # exclude speakers included in exclude_speakersに含まれるものは除く
         # 102 (51 sessions)
         self.wav_dialog_train_paths = []  # 102-8=９４ files
         self.wav_dialog_dev_paths = []  # 7*2=１4 files

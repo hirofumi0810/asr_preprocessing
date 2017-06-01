@@ -62,12 +62,15 @@ def main(label_type, train_data_type):
     print('=> Processing ground truth labels...')
     if train_data_type == 'default':
         data_type = 'train'
+        save_map_file = False
     elif train_data_type == 'large':
         data_type = 'train_all'
+        save_map_file = True
     label_train_paths = prep.trans(data_type=data_type)
     speaker_dict = read_sdb(label_paths=label_train_paths,
                             label_type=label_type,
-                            save_path=label_train_save_path)
+                            save_path=label_train_save_path,
+                            save_map_file=save_map_file)
 
     # read htk files, save input data & frame num dict
     print('=> Processing input data...')
@@ -116,6 +119,7 @@ def main(label_type, train_data_type):
     label_eval1_paths = prep.trans(data_type='eval1')
     speaker_dict = read_sdb(label_paths=label_eval1_paths,
                             label_type=label_type,
+                            is_test=True,
                             save_path=label_eval1_save_path)
 
     # read htk files, save input data & frame num dict
@@ -142,6 +146,7 @@ def main(label_type, train_data_type):
     label_eval2_paths = prep.trans(data_type='eval2')
     speaker_dict = read_sdb(label_paths=label_eval2_paths,
                             label_type=label_type,
+                            is_test=True,
                             save_path=label_eval2_save_path)
 
     # read htk files, save input data & frame num dict
@@ -168,6 +173,7 @@ def main(label_type, train_data_type):
     label_eval3_paths = prep.trans(data_type='eval3')
     speaker_dict = read_sdb(label_paths=label_eval3_paths,
                             label_type=label_type,
+                            is_test=True,
                             save_path=label_eval3_save_path)
 
     # read htk files, save input data & frame num dict
@@ -197,6 +203,6 @@ if __name__ == '__main__':
     print('=               CSJ for monolog (CTC)               =')
     print('=====================================================')
 
-    for label_type in ['character', 'phone']:
-        for train_data_type in ['default', 'large']:
+    for label_type in ['kanji', 'character', 'phone']:
+        for train_data_type in ['large', 'default']:
             main(label_type, train_data_type)
