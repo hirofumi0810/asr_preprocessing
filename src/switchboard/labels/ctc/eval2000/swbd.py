@@ -120,12 +120,8 @@ def fix_transcript(transcript, speaker_name):
     laughter_expr = re.compile(r'(.*)\[laughter-([\S]+)\](.*)')
     while re.match(laughter_expr, transcript) is not None:
         laughter = re.match(laughter_expr, transcript)
-        # print(speaker_name)
-        # print(transcript)
         transcript = laughter.group(
             1) + 'L ' + laughter.group(2) + laughter.group(3)
-        # print(transcript)
-        # print('---')
 
     # NOTE:とりあえず今は L を消す
     transcript = re.sub(r'L', '', transcript)
@@ -138,23 +134,15 @@ def fix_transcript(transcript, speaker_name):
         r'(.*)<contraction e_form=\"\[[\S]+=>([\S]+)\]\[[\S]+=>([\S]+)\]\">([\S]+)(.*)')
     while re.match(abbr_expr2, transcript) is not None:
         abbr = re.match(abbr_expr2, transcript)
-        # print(speaker_name)
-        # print(transcript)
         transcript = abbr.group(1) + abbr.group(2) + \
             ' ' + abbr.group(3) + abbr.group(5)
-        # print(transcript)
-        # print('---')
 
     # e.g. can't -> cannot (1 word)
     abbr_expr1 = re.compile(
         r'(.*)<contraction e_form=\"\[[\S]+=>([\S]+)\]\">([\S]+)(.*)')
     while re.match(abbr_expr1, transcript) is not None:
         abbr = re.match(abbr_expr1, transcript)
-        # print(speaker_name)
-        # print(transcript)
         transcript = abbr.group(1) + abbr.group(2) + abbr.group(4)
-        # print(transcript)
-        # print('---')
 
     ####################
     # double bracket
@@ -163,11 +151,7 @@ def fix_transcript(transcript, speaker_name):
     bracket_expr = re.compile(r'(.*)\(\((.+)\)\)(.*)')
     while re.match(bracket_expr, transcript) is not None:
         bracket = re.match(bracket_expr, transcript)
-        # print(speaker_name)
-        # print(transcript)
         transcript = bracket.group(1) + bracket.group(2) + bracket.group(3)
-        # print(transcript)
-        # print('---')
 
     # e.g. ((is => is
     transcript = re.sub(r'\(\(', '', transcript)
@@ -184,35 +168,23 @@ def fix_transcript(transcript, speaker_name):
     middle_expr = re.compile(r'(.*) ([\S]+)\[([\S]+)\]([\S]+)- (.*)')
     while re.match(middle_expr, transcript) is not None:
         middle = re.match(middle_expr, transcript)
-        # print(speaker_name)
-        # print(transcript)
         transcript = middle.group(1) + ' ' + middle.group(2) + \
             middle.group(4) + '- ' + middle.group(5)
-        # print(transcript)
-        # print('---1')
 
     # e.g. -[w]here -> -here
     # e.g. -[a]nd -> -nd
     backward_expr = re.compile(r'(.*)-\[([\S]+)\](.*)')
     while re.match(backward_expr, transcript) is not None:
         backward = re.match(backward_expr, transcript)
-        # print(speaker_name)
-        # print(transcript)
         transcript = backward.group(1) + '-' + backward.group(3)
-        # print(transcript)
-        # print('---2')
 
     # e.g. ju[st] -> ju-
     # e.g. rein[carnating] -> rein-
     forward_expr = re.compile(r'(.*) ([\S]+)\[([\S]+)\] (.*)')
     while re.match(forward_expr, transcript) is not None:
         forward = re.match(forward_expr, transcript)
-        # print(speaker_name)
-        # print(transcript)
         transcript = forward.group(
             1) + ' ' + forward.group(2) + '- ' + forward.group(4)
-        # print(transcript)
-        # print('---3')
 
     ####################
     # exception

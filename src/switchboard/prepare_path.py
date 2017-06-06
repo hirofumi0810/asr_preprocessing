@@ -4,11 +4,12 @@
 """Prepare for making dataset."""
 
 import os
+from os.path import join
 import sys
 from glob import glob
 
 sys.path.append('../')
-from utils.util import mkdir
+from utils.util import mkdir_join
 
 
 class Prepare(object):
@@ -18,13 +19,13 @@ class Prepare(object):
 
         # path to switchboard data (set yourself)
         self.data_path = '/n/sd8/inaguma/corpus/switchboard/'
-        self.train_data_path = os.path.join(self.data_path, 'ldc97s62')
-        self.train_data_fisher_path = os.path.join(self.data_path, 'fisher')
-        self.test_data_path = os.path.join(
+        self.train_data_path = join(self.data_path, 'ldc97s62')
+        self.train_data_fisher_path = join(self.data_path, 'fisher')
+        self.test_data_path = join(
             self.data_path, 'eval2000')  # swbd + callhome
 
         # path to save directories (set yourself)
-        self.dataset_path = mkdir(os.path.join(self.data_path, 'dataset'))
+        self.dataset_path = mkdir_join(self.data_path, 'dataset')
 
         # absolute path to this directory (set yourself)
         self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/src/switchboard/'
@@ -37,69 +38,68 @@ class Prepare(object):
         # train (ldc97s62)
         ####################
         self.sph_train_paths = []
-        for sph_path in glob(os.path.join(self.train_data_path, '*/*/*/*.sph')):
-            self.sph_train_paths.append(
-                os.path.join(self.train_data_path, sph_path))
+        for sph_path in glob(join(self.train_data_path, '*/*/*/*.sph')):
+            self.sph_train_paths.append(join(self.train_data_path, sph_path))
 
-        self.pronounce_dict_path = os.path.join(
-            self.train_data_path, 'ldc97s62_new/transcriptions/swb_ms98_transcriptions/sw-ms98-dict.text')
+        self.pronounce_dict_path = join(
+            self.train_data_path, 'ldc97s62/transcriptions/swb_ms98_transcriptions/sw-ms98-dict.text')
         self.word_train_paths = []
         self.trans_train_paths = []
-        for text_path in glob(os.path.join(self.train_data_path,
-                                           'ldc97s62_new/transcriptions/swb_ms98_transcriptions/*/*/*.text')):
+        for text_path in glob(join(self.train_data_path,
+                                   'ldc97s62/transcriptions/swb_ms98_transcriptions/*/*/*.text')):
             if text_path.split('.')[0][-4:] == 'word':
-                self.word_train_paths.append(os.path.join(self.train_data_path,
-                                                          text_path))
+                self.word_train_paths.append(join(self.train_data_path,
+                                                  text_path))
             elif text_path.split('.')[0][-5:] == 'trans':
-                self.trans_train_paths.append(os.path.join(self.train_data_path,
-                                                           text_path))
+                self.trans_train_paths.append(join(self.train_data_path,
+                                                   text_path))
 
         ####################
         # train (fisher)
         ####################
         self.sph_train_fisher_paths = []
-        for sph_path in glob(os.path.join(self.train_data_fisher_path,
-                                          'fisher_english/audio/*/*.sph')):
+        for sph_path in glob(join(self.train_data_fisher_path,
+                                  'fisher_english/audio/*/*.sph')):
             self.sph_train_fisher_paths.append(
-                os.path.join(self.train_data_fisher_path, sph_path))
+                join(self.train_data_fisher_path, sph_path))
 
         self.trans_train_fisher_paths = []
-        for text_name in glob(os.path.join(self.train_data_fisher_path,
-                                           'fisher_english/data/trans/*/*.txt')):
+        for text_name in glob(join(self.train_data_fisher_path,
+                                   'fisher_english/data/trans/*/*.txt')):
             self.trans_train_fisher_paths.append(
-                os.path.join(self.train_data_fisher_path, text_name))
+                join(self.train_data_fisher_path, text_name))
 
         ########################################
         # test (eval2000 [swbd + callhome])
         ########################################
         self.sph_test_paths = []
         self.sph_test_callhome_paths = []
-        for file_path in glob(os.path.join(self.test_data_path,
-                                           'ldc2002s09/english/*')):
+        for file_path in glob(join(self.test_data_path,
+                                   'ldc2002s09/english/*')):
             file_name = os.path.basename(file_path)
             if file_name == 'hub5e_00.pem':
                 # hub5e_00.pem file is a segmentation file
                 pass
             elif file_name[:2] == 'sw':
                 self.sph_test_paths.append(
-                    os.path.join(self.test_data_path, file_path))
+                    join(self.test_data_path, file_path))
             elif file_name[:2] == 'en':
                 self.sph_test_callhome_paths.append(
-                    os.path.join(self.test_data_path, file_path))
+                    join(self.test_data_path, file_path))
 
         self.trans_test_swbd_paths = []
         self.trans_test_callhome_paths = []
-        for file_path in glob(os.path.join(self.test_data_path,
-                                           'ldc2002t43/reference/english/*')):
+        for file_path in glob(join(self.test_data_path,
+                                   'ldc2002t43/reference/english/*')):
             file_name = os.path.basename(file_path)
             # Switchboard evaluation transcript
             if file_name[:2] == 'sw':
                 self.trans_test_swbd_paths.append(
-                    os.path.join(self.test_data_path, file_path))
+                    join(self.test_data_path, file_path))
             # CallHome evaluation transcript
             elif file_name[:2] == 'en':
                 self.trans_test_callhome_paths.append(
-                    os.path.join(self.test_data_path, file_path))
+                    join(self.test_data_path, file_path))
 
     def sph_train(self, train_type='ldc97s62'):
         """Get paths to sph files of training data.
