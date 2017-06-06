@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
+from os.path import join, basename
 import sys
 
 sys.path.append('../')
 sys.path.append('../../')
 from prepare_path import Prepare
-from utils.util import mkdir
+from utils.util import mkdir_join
 from utils.config.make_config import setup
 
 
@@ -19,9 +19,9 @@ def main():
     wav_dev_paths = prep.wav(data_type='dev')
     wav_test_paths = prep.wav(data_type='test')
 
-    save_train_path = mkdir(os.path.join(prep.fbank_path, 'train'))
-    save_dev_path = mkdir(os.path.join(prep.fbank_path, 'dev'))
-    save_test_path = mkdir(os.path.join(prep.fbank_path, 'test'))
+    save_train_path = mkdir_join(prep.fbank_path, 'train')
+    save_dev_path = mkdir_join(prep.fbank_path, 'dev')
+    save_test_path = mkdir_join(prep.fbank_path, 'test')
 
     # HTK settings
     setup(corpus='timit',
@@ -46,9 +46,9 @@ def main():
     with open('wav2fbank_train.scp', 'w') as f:
         for wav_path in wav_train_paths:
             speaker_name = wav_path.split('/')[-2]
-            wav_index = os.path.basename(wav_path).split('.')[0]
-            save_path = os.path.join(
-                save_train_path, speaker_name + '_' + wav_index + '.htk')
+            wav_index = basename(wav_path).split('.')[0]
+            save_path = join(save_train_path, speaker_name +
+                             '_' + wav_index + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
     ####################
@@ -62,8 +62,8 @@ def main():
     with open('wav2fbank_dev.scp', 'w') as f:
         for wav_path in wav_dev_paths:
             speaker_name = wav_path.split('/')[-2]
-            wav_index = os.path.basename(wav_path).split('.')[0]
-            save_path = os.path.join(
+            wav_index = basename(wav_path).split('.')[0]
+            save_path = join(
                 save_dev_path, speaker_name + '_' + wav_index + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
@@ -78,9 +78,9 @@ def main():
     with open('wav2fbank_test.scp', 'w') as f:
         for wav_path in wav_test_paths:
             speaker_name = wav_path.split('/')[-2]
-            wav_index = os.path.basename(wav_path).split('.')[0]
-            save_path = os.path.join(
-                save_test_path, speaker_name + '_' + wav_index + '.htk')
+            wav_index = basename(wav_path).split('.')[0]
+            save_path = join(save_test_path, speaker_name +
+                             '_' + wav_index + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
 

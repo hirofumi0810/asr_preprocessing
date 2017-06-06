@@ -4,11 +4,12 @@
 """Make input data (CSJ corpus)."""
 
 import os
+from os.path import join
 import pickle
 import numpy as np
 from tqdm import tqdm
 
-from utils.util import mkdir, join
+from utils.util import mkdir_join
 from utils.inputs.segmentation import segment_htk, global_mean, global_std
 
 
@@ -36,7 +37,7 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
         train_std_male: global standard deviation of male over train data
         train_std_female: global standard deviation of female over train data
     """
-    # read each HTK file
+    # Read each HTK file
     print('===> Reading HTK files...')
     input_data_dict_list_male, total_frame_num_list_male = [], []
     train_mean_list_male, train_std_list_male = [], []
@@ -44,23 +45,26 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
     train_mean_list_female, train_std_list_female = [], []
     for htk_path in tqdm(htk_paths):
         speaker_name = os.path.basename(htk_path).split('.')[0]
-        return_tuple = segment_htk(htk_path, speaker_name, speaker_dict[speaker_name],
-                                   normalize=normalize, sil_duration=50)
-        input_data_dict_list, train_mean, train_std, total_frame_num_list = return_tuple
+        return_tuple = segment_htk(htk_path,
+                                   speaker_name,
+                                   speaker_dict[speaker_name],
+                                   normalize=normalize,
+                                   sil_duration=50)
+        input_data_dict, train_mean, train_std, total_frame_num = return_tuple
 
         if speaker_name[3] == 'M':
-            input_data_dict_list_male.append(input_data_dict_list)
+            input_data_dict_list_male.append(input_data_dict)
             train_mean_list_male.append(train_mean)
             train_std_list_male.append(train_std)
-            total_frame_num_list_male.append(total_frame_num_list)
+            total_frame_num_list_male.append(total_frame_num)
         elif speaker_name[3] == 'F':
-            input_data_dict_list_female.append(input_data_dict_list)
+            input_data_dict_list_female.append(input_data_dict)
             train_mean_list_female.append(train_mean)
             train_std_list_female.append(train_std)
-            total_frame_num_list_female.append(total_frame_num_list)
+            total_frame_num_list_female.append(total_frame_num)
 
     if is_training:
-        # compute global mean (each gender)
+        # Compute global mean (each gender)
         print('===> Computing global mean over train data...')
         print('=====> male...')
         train_mean_male = global_mean(train_mean_list_male,
@@ -69,7 +73,7 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
         train_mean_female = global_mean(train_mean_list_female,
                                         total_frame_num_list_female)
 
-        # compute global standard deviation (each gender)
+        # Compute global standard deviation (each gender)
         print('===> Computing global std over train data...')
         print('=====> male...')
         train_std_male = global_std(input_data_dict_list_male,
@@ -81,26 +85,26 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
                                       train_mean_female)
 
         if save_path is not None:
-            # save global mean & std (each gender)
+            # Save global mean & std (each gender)
             statistics_save_path = '/'.join(save_path.split('/')[:-1])
-            np.save(os.path.join(statistics_save_path, 'train_mean_male.npy'),
+            np.save(join(statistics_save_path, 'train_mean_male.npy'),
                     train_mean_male)
-            np.save(os.path.join(statistics_save_path, 'train_mean_female.npy'),
+            np.save(join(statistics_save_path, 'train_mean_female.npy'),
                     train_mean_female)
-            np.save(os.path.join(statistics_save_path, 'train_std_male.npy'),
+            np.save(join(statistics_save_path, 'train_std_male.npy'),
                     train_std_male)
-            np.save(os.path.join(statistics_save_path, 'train_std_female.npy'),
+            np.save(join(statistics_save_path, 'train_std_female.npy'),
                     train_std_female)
 
     if save_path is not None:
-        # save input data
+        # Save input data
         print('===> Saving input data...')
         frame_num_dict = {}
         for input_data_dict in tqdm(input_data_dict_list_male + input_data_dict_list_female):
             for key, input_data_utt in input_data_dict.items():
                 speaker_name, utt_index = key.split('_')
 
-                # normalize by global mean & std over train data (each gender)
+                # Normalize by global mean & std over train data (each gender)
                 if normalize == 'global':
                     if speaker_name[3] == 'M':
                         input_data_utt -= train_mean_male
@@ -109,17 +113,17 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
                         input_data_utt -= train_mean_female
                         input_data_utt /= train_std_female
 
-                join(save_path, speaker_name)
-                input_data_save_path = os.path.join(
+                mkdir_join(save_path, speaker_name)
+                input_data_save_path = join(
                     save_path, speaker_name, key + '.npy')
 
                 np.save(input_data_save_path, input_data_utt)
                 frame_num_dict[key] = input_data_utt.shape[0]
 
-        # save the frame number dictionary
+        # Save the frame number dictionary
         frame_num_dict_save_path = '/'.join(save_path.split('/')[:-1])
         print('===> Saving : frame_num.pickle')
-        with open(os.path.join(frame_num_dict_save_path, 'frame_num.pickle'), 'wb') as f:
+        with open(join(frame_num_dict_save_path, 'frame_num.pickle'), 'wb') as f:
             pickle.dump(frame_num_dict, f)
 
     return train_mean_male, train_mean_female, train_std_male, train_std_female

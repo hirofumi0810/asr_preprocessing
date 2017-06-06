@@ -1,49 +1,50 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make dataset for CTC model (TIMIT corpus)."""
+"""Make dataset for Attention model (TIMIT corpus)."""
 
 import os
+from os.path import join
 import sys
 import shutil
-import glob
+from glob import glob
 from tqdm import tqdm
 
 sys.path.append('../')
 sys.path.append('../../')
 from prepare_path import Prepare
 from inputs.input_data_global_norm import read_htk
-from labels.ctc.character import read_text
-from labels.ctc.phone import read_phone
-from utils.util import mkdir
+from labels.attention.character import read_text
+from labels.attention.phone import read_phone
+from utils.util import mkdir_join
 
 
 def main(label_type):
 
     print('===== ' + label_type + ' =====')
     prep = Prepare()
-    save_path = mkdir(os.path.join(prep.dataset_path, 'ctc'))
-    save_path = mkdir(os.path.join(save_path, label_type))
+    save_path = mkdir_join(prep.dataset_path, 'attention')
+    save_path = mkdir_join(save_path, label_type)
 
     # reset directory
-    if not os.path.isfile(os.path.join(save_path, 'check.txt')):
+    if not os.path.isfile(join(save_path, 'check.txt')):
         print('=> Deleting old dataset...')
         for c in tqdm(os.listdir(save_path)):
-            shutil.rmtree(os.path.join(save_path, c))
+            shutil.rmtree(join(save_path, c))
     else:
         print('Already exists.')
         return 0
 
-    train_save_path = mkdir(os.path.join(save_path, 'train'))
-    dev_save_path = mkdir(os.path.join(save_path, 'dev'))
-    test_save_path = mkdir(os.path.join(save_path, 'test'))
+    train_save_path = mkdir_join(save_path, 'train')
+    dev_save_path = mkdir_join(save_path, 'dev')
+    test_save_path = mkdir_join(save_path, 'test')
 
-    input_train_save_path = mkdir(os.path.join(train_save_path, 'input'))
-    label_train_save_path = mkdir(os.path.join(train_save_path, 'label'))
-    input_dev_save_path = mkdir(os.path.join(dev_save_path, 'input'))
-    label_dev_save_path = mkdir(os.path.join(dev_save_path, 'label'))
-    input_test_save_path = mkdir(os.path.join(test_save_path, 'input'))
-    label_test_save_path = mkdir(os.path.join(test_save_path, 'label'))
+    input_train_save_path = mkdir_join(train_save_path, 'input')
+    label_train_save_path = mkdir_join(train_save_path, 'label')
+    input_dev_save_path = mkdir_join(dev_save_path, 'input')
+    label_dev_save_path = mkdir_join(dev_save_path, 'label')
+    input_test_save_path = mkdir_join(test_save_path, 'input')
+    label_test_save_path = mkdir_join(test_save_path, 'label')
 
     ####################
     # train
@@ -52,8 +53,8 @@ def main(label_type):
     # read htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
-    htk_train_paths = [os.path.join(prep.fbank_path, htk_dir)
-                       for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'train/*.htk')))]
+    htk_train_paths = [join(prep.fbank_path, htk_dir)
+                       for htk_dir in sorted(glob(join(prep.fbank_path, 'train/*.htk')))]
     train_mean, train_std = read_htk(htk_paths=htk_train_paths,
                                      save_path=input_train_save_path,
                                      normalize=True,
@@ -78,8 +79,8 @@ def main(label_type):
     # read htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
-    htk_dev_paths = [os.path.join(prep.fbank_path, htk_dir)
-                     for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'dev/*.htk')))]
+    htk_dev_paths = [join(prep.fbank_path, htk_dir)
+                     for htk_dir in sorted(glob(join(prep.fbank_path, 'dev/*.htk')))]
     read_htk(htk_paths=htk_dev_paths,
              save_path=input_dev_save_path,
              normalize=True,
@@ -106,8 +107,8 @@ def main(label_type):
     # read htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
-    htk_test_paths = [os.path.join(prep.fbank_path, htk_dir)
-                      for htk_dir in sorted(glob.glob(os.path.join(prep.fbank_path, 'test/*.htk')))]
+    htk_test_paths = [join(prep.fbank_path, htk_dir)
+                      for htk_dir in sorted(glob(join(prep.fbank_path, 'test/*.htk')))]
     read_htk(htk_paths=htk_test_paths,
              save_path=input_test_save_path,
              normalize=True,
@@ -128,17 +129,17 @@ def main(label_type):
                    label_type=label_type)
 
     # make a confirmation file to prove that dataset was saved correctly
-    with open(os.path.join(save_path, 'check.txt'), 'w') as f:
+    with open(join(save_path, 'check.txt'), 'w') as f:
         f.write('')
     print('Successfully completed!')
 
 
 if __name__ == '__main__':
 
-    print('=================================')
-    print('=          TIMIT (CTC)          =')
-    print('=================================')
+    print('=======================================')
+    print('=          TIMIT (Attention)          =')
+    print('=======================================')
 
-    label_types = ['phone61', 'phone48', 'phone39', 'character']
+    label_types = ['character', 'phone61', 'phone48', 'phone39']
     for label_type in label_types:
         main(label_type)

@@ -4,9 +4,10 @@
 import sys
 import numpy as np
 from struct import unpack
+from tqdm import tqdm
 
 
-def segment_htk(htk_path, speaker_name, utt_dict, speaker_norm=False, sil_duration=50):
+def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
     """Segment each HTK file.
     Args:
         htk_path: path to a HTK file
@@ -14,7 +15,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, speaker_norm=False, sil_durati
         utt_dict: dictionary of utterance information of each speaker
             key => utterance index
             value => [start_frame, end_frame, transcript]
-        speaker_norm: if True, normalize inputs by mean & std per speaker
+        normalize : if speaker, normalize inputs by mean & std per speaker
         sil_duration: duration of silence at both ends
     Returns:
         input_data_dict:
@@ -116,7 +117,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, speaker_norm=False, sil_durati
     train_mean = np.mean(train_data, axis=0, dtype=np.float64)
     train_std = np.std(train_data, axis=0, dtype=np.float64)
 
-    if speaker_norm:
+    if normalize == 'speaker':
         # normalize by mean & std per speaker
         for key, input_data_utt in input_data_dict.items():
             input_data_utt = (input_data_utt - train_mean) / train_std
@@ -142,8 +143,70 @@ def read_htk(htk_path):
         veclen = int(sampSize / 4)
         fh.seek(12, 0)
         input_data = np.fromfile(fh, 'f')
-        # input_data = input_data.reshape(int(len(input_data) / veclen), veclen)
+        # input_data = input_data.reshape(int(len(input_data) / veclen),
+        # veclen)
         input_data = input_data.reshape(-1, veclen)
         input_data.byteswap(True)
 
     return input_data
+
+
+def global_mean(mean_list, total_frame_num_list):
+    """Calculate global mean of a number of means.
+    Args:
+        mean_list: list of mean of each speaker
+        total_frame_num_list: list of frame num of each mean
+    Returns:
+        global_mean_value: global mean value over overall data
+    """
+    feature_dim = mean_list[0].shape[0]
+    global_mean_value = np.empty((feature_dim,), dtype=np.float64)
+    total_frame_num = np.sum(total_frame_num_list)
+    for i in tqdm(range(len(mean_list))):
+        total_frame_num_speaker = total_frame_num_list[i]
+        global_mean_value += mean_list[i] * float(total_frame_num_speaker)
+    global_mean_value = global_mean_value / float(total_frame_num)
+    return global_mean_value
+
+
+def global_std(input_data_dict_list, total_frame_num_list, global_mean_value):
+    """Calculate global standard deviation of a number of stds.
+    Args:
+        input_data_dict_list: list of dictionaries of input data
+        total_frame_num_list: list of frame num of each std
+        global_mean_value: global mean value over overall data
+    Returns:
+        global_std_value: global std value over overall data
+    """
+    feature_dim = global_mean_value.shape[0]
+    global_std_value = np.empty((feature_dim,), dtype=np.float64)
+    total_frame_num = np.sum(total_frame_num_list)
+    for i, input_data_dict in enumerate(tqdm(input_data_dict_list)):
+        # compute square values between features & global mean per speaker
+        frame_offset = 0
+        total_frame_num_speaker = total_frame_num_list[i]
+        input_data_speaker = np.empty((total_frame_num_speaker, feature_dim))
+        for input_data_utt in input_data_dict.values():
+            frame_num_utt = input_data_utt.shape[0]
+            input_data_speaker[frame_offset:frame_offset +
+                               frame_num_utt] = input_data_utt
+            frame_offset += frame_num_utt
+        global_std_value += sqrt_sum(input_data_speaker, global_mean_value)
+    global_std_value = np.power(global_std_value / float(total_frame_num), 0.5)
+    return global_std_value
+
+
+def sqrt_sum(input_data, global_mean_value):
+    """Calculate square sum, sigma(each_input - global_mean_value)^2.
+    Args:
+        input_data: input data of each speaker
+        global_mean_value: global mean value over overall data
+    Returns:
+        value_sqrt_sum: square sum
+    """
+    feature_dim = input_data[0].shape[0]
+    value_sqrt_sum = np.zeros((feature_dim,))
+    for input_vec in input_data:
+        value_sqrt_sum += np.power((input_vec -
+                                    global_mean_value), 2, dtype=np.float64)
+    return value_sqrt_sum

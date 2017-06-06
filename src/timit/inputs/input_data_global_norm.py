@@ -3,7 +3,7 @@
 
 """Make input data for CTC network (TIMIT corpus)."""
 
-import os
+from os.path import join, basename
 import pickle
 import numpy as np
 from tqdm import tqdm
@@ -52,32 +52,28 @@ def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None,
         if save_path is not None:
             # save global mean & std
             statistics_save_path = '/'.join(save_path.split('/')[:-1])
-            np.save(os.path.join(statistics_save_path,
-                                 'train_mean.npy'), train_mean)
-            np.save(os.path.join(statistics_save_path,
-                                 'train_std.npy'), train_std)
+            np.save(join(statistics_save_path, 'train_mean.npy'), train_mean)
+            np.save(join(statistics_save_path, 'train_std.npy'), train_std)
 
     if save_path is not None:
         # save input data as npy files
         print('===> Saving input data...')
         frame_num_dict = {}
         for input_data, htk_path in zip(tqdm(input_data_list), htk_paths):
-            input_data_save_name = os.path.basename(
-                htk_path).split('.')[0] + '.npy'
-            input_data_save_path = os.path.join(
-                save_path, input_data_save_name)
+            input_data_save_name = basename(htk_path).split('.')[0] + '.npy'
+            input_data_save_path = join(save_path, input_data_save_name)
 
             # normalize by global mean & std over train data
             if normalize:
                 input_data = (input_data - train_mean) / train_std
 
             np.save(input_data_save_path, input_data)
-            frame_num_dict[os.path.basename(htk_path).split('.')[
+            frame_num_dict[basename(htk_path).split('.')[
                 0]] = input_data.shape[0]
 
         # save a frame number dictionary
         frame_num_dict_save_path = '/'.join(save_path.split('/')[:-1])
-        with open(os.path.join(frame_num_dict_save_path, 'frame_num.pickle'), 'wb') as f:
+        with open(join(frame_num_dict_save_path, 'frame_num.pickle'), 'wb') as f:
             print('===> Saving : frame_num.pickle')
             pickle.dump(frame_num_dict, f)
 

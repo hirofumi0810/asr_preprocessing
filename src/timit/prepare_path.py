@@ -4,8 +4,9 @@
 """Prepare for making dataset."""
 
 import os
+from os.path import join
 import sys
-import glob
+from glob import glob
 
 sys.path.append('../')
 from utils.util import mkdir
@@ -18,8 +19,8 @@ class Prepare(object):
 
         # path to timit data (set yourself)
         self.data_path = '/n/sd8/inaguma/corpus/timit/original/'
-        self.train_data_path = os.path.join(self.data_path, 'train')
-        self.test_data_path = os.path.join(self.data_path, 'test')
+        self.train_data_path = join(self.data_path, 'train')
+        self.test_data_path = join(self.data_path, 'test')
 
         # path to save directories (set yourself)
         self.dataset_path = mkdir('/n/sd8/inaguma/corpus/timit/dataset/')
@@ -39,29 +40,29 @@ class Prepare(object):
         self.text_train_paths = []
         self.word_train_paths = []
         self.phone_train_paths = []
-        for file_path in glob.glob(os.path.join(self.train_data_path, '*/*/*')):
+        for file_path in glob(join(self.train_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
             ext = os.path.splitext(file_name)[1]
             if os.path.basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
                     self.wav_train_paths.append(
-                        os.path.join(self.train_data_path, file_path))
+                        join(self.train_data_path, file_path))
                 elif ext == '.txt':
                     self.text_train_paths.append(
-                        os.path.join(self.train_data_path, file_path))
+                        join(self.train_data_path, file_path))
                 elif ext == '.wrd':
                     self.word_train_paths.append(
-                        os.path.join(self.train_data_path, file_path))
+                        join(self.train_data_path, file_path))
                 elif ext == '.phn':
                     self.phone_train_paths.append(
-                        os.path.join(self.train_data_path, file_path))
+                        join(self.train_data_path, file_path))
 
         ####################
         # dev
         ####################
         # read speaker list
         speakers_dev = []
-        with open(os.path.join(self.run_root_path, 'dev_speaker_list.txt'), 'r') as f:
+        with open(join(self.run_root_path, 'dev_speaker_list.txt'), 'r') as f:
             for line in f:
                 line = line.strip()
                 speakers_dev.append(line)
@@ -70,7 +71,7 @@ class Prepare(object):
         self.text_dev_paths = []
         self.word_dev_paths = []
         self.phone_dev_paths = []
-        for file_path in glob.glob(os.path.join(self.test_data_path, '*/*/*')):
+        for file_path in glob(join(self.test_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
             ext = os.path.splitext(file_name)[1]
 
@@ -79,23 +80,23 @@ class Prepare(object):
             elif os.path.basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
                     self.wav_dev_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
                 elif ext == '.txt':
                     self.text_dev_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
                 elif ext == '.wrd':
                     self.word_dev_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
                 elif ext == '.phn':
                     self.phone_dev_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
 
         ####################
         # test
         ####################
         # read speaker list
         speakers_test = []
-        with open(os.path.join(self.run_root_path, 'test_speaker_list.txt'), 'r') as f:
+        with open(join(self.run_root_path, 'test_speaker_list.txt'), 'r') as f:
             for line in f:
                 line = line.strip()
                 speakers_test.append(line)
@@ -104,7 +105,7 @@ class Prepare(object):
         self.text_test_paths = []
         self.word_test_paths = []
         self.phone_test_paths = []
-        for file_path in glob.glob(os.path.join(self.test_data_path, '*/*/*')):
+        for file_path in glob(join(self.test_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
             ext = os.path.splitext(file_name)[1]
 
@@ -113,16 +114,16 @@ class Prepare(object):
             elif os.path.basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
                     self.wav_test_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
                 elif ext == '.txt':
                     self.text_test_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
                 elif ext == '.wrd':
                     self.word_test_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
                 elif ext == '.phn':
                     self.phone_test_paths.append(
-                        os.path.join(self.test_data_path, file_path))
+                        join(self.test_data_path, file_path))
 
     def wav(self, data_type):
         """Get paths to wav files.
@@ -185,19 +186,19 @@ if __name__ == '__main__':
     prep = Prepare()
 
     print('===== train =====')
-    print(len(prep.wav, data_type='train'))
-    print(len(prep.text, data_type='train'))
-    print(len(prep.word, data_type='train'))
-    print(len(prep.phone, data_type='train'))
+    print(len(prep.wav(data_type='train')))
+    print(len(prep.text(data_type='train')))
+    print(len(prep.word(data_type='train')))
+    print(len(prep.phone(data_type='train')))
 
     print('===== dev ======')
-    print(len(prep.wav, data_type='dev'))
-    print(len(prep.text, data_type='dev'))
-    print(len(prep.word, data_type='dev'))
-    print(len(prep.phone, data_type='dev'))
+    print(len(prep.wav(data_type='dev')))
+    print(len(prep.text(data_type='dev')))
+    print(len(prep.word(data_type='dev')))
+    print(len(prep.phone(data_type='dev')))
 
     print('===== test =====')
-    print(len(prep.wav, data_type='test'))
-    print(len(prep.text, data_type='test'))
-    print(len(prep.word, data_type='test'))
-    print(len(prep.phone, data_type='test'))
+    print(len(prep.wav(data_type='test')))
+    print(len(prep.text(data_type='test')))
+    print(len(prep.word(data_type='test')))
+    print(len(prep.phone(data_type='test')))

@@ -4,13 +4,24 @@
 import os
 
 
-def mkdir(path):
-    """Make directory if the directory does not exist.
+def mkdir(path_to_dir):
+    """Make a new directory if the directory does not exist.
     Args:
-        path: path to directory
+        path_to_dir: path to a directory
     Returns:
-        path: path to directory
+        path: path to the new directory
     """
-    if not os.path.isdir(path):
-        os.mkdir(path)
-    return path
+    if not os.path.isdir(path_to_dir):
+        os.mkdir(path_to_dir)
+    return path_to_dir
+
+
+def mkdir_join(path_to_dir, dir_name):
+    """concat 2 paths and make a new direcory if the direcory does not exist.
+    Args:
+        path_to_dir: path to a diretcory
+        dir_name: a direcory name
+    Returns:
+        path to the new directory
+    """
+    return mkdir(os.path.join(path_to_dir, dir_name))

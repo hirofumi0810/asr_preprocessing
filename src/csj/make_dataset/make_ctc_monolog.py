@@ -4,6 +4,7 @@
 """Make dataset for CTC model (CSJ corpus, monolog)."""
 
 import os
+from os.path import join
 import sys
 import shutil
 from glob import glob
@@ -16,43 +17,43 @@ sys.path.append('../../')
 from prepare_path import Prepare
 from inputs.input_data import read_htk
 from labels.ctc.monolog.character import read_sdb
-from utils.util import mkdir, join
+from utils.util import mkdir, mkdir_join
 
 
 def main(label_type, train_data_type):
 
     print('===== ' + label_type + ' (' + train_data_type + ') =====')
     prep = Prepare()
-    save_path = mkdir(os.path.join(prep.dataset_path, 'monolog'))
-    save_path = mkdir(os.path.join(save_path, 'ctc'))
-    save_path = mkdir(os.path.join(save_path, label_type))
-    save_path = mkdir(os.path.join(save_path, train_data_type))
+    save_path = mkdir_join(prep.dataset_path, 'monolog')
+    save_path = mkdir_join(save_path, 'ctc')
+    save_path = mkdir_join(save_path, label_type)
+    save_path = mkdir_join(save_path, train_data_type)
 
     # reset directory
-    if not os.path.isfile(os.path.join(save_path, 'check.txt')):
+    if not os.path.isfile(join(save_path, 'check.txt')):
         print('=> Deleting old dataset...')
         for c in tqdm(os.listdir(save_path)):
-            shutil.rmtree(os.path.join(save_path, c))
+            shutil.rmtree(join(save_path, c))
     else:
         print('Already exists.')
         return 0
 
-    train_save_path = join(save_path, 'train')
-    dev_save_path = join(save_path, 'dev')
-    eval1_save_path = join(save_path, 'eval1')
-    eval2_save_path = join(save_path, 'eval2')
-    eval3_save_path = join(save_path, 'eval3')
+    train_save_path = mkdir_join(save_path, 'train')
+    dev_save_path = mkdir_join(save_path, 'dev')
+    eval1_save_path = mkdir_join(save_path, 'eval1')
+    eval2_save_path = mkdir_join(save_path, 'eval2')
+    eval3_save_path = mkdir_join(save_path, 'eval3')
 
-    input_train_save_path = join(train_save_path, 'input')
-    label_train_save_path = join(train_save_path, 'label')
-    input_dev_save_path = join(dev_save_path, 'input')
-    label_dev_save_path = join(dev_save_path, 'label')
-    input_eval1_save_path = join(eval1_save_path, 'input')
-    label_eval1_save_path = join(eval1_save_path, 'label')
-    input_eval2_save_path = join(eval2_save_path, 'input')
-    label_eval2_save_path = join(eval2_save_path, 'label')
-    input_eval3_save_path = join(eval3_save_path, 'input')
-    label_eval3_save_path = join(eval3_save_path, 'label')
+    input_train_save_path = mkdir_join(train_save_path, 'input')
+    label_train_save_path = mkdir_join(train_save_path, 'label')
+    input_dev_save_path = mkdir_join(dev_save_path, 'input')
+    label_dev_save_path = mkdir_join(dev_save_path, 'label')
+    input_eval1_save_path = mkdir_join(eval1_save_path, 'input')
+    label_eval1_save_path = mkdir_join(eval1_save_path, 'label')
+    input_eval2_save_path = mkdir_join(eval2_save_path, 'input')
+    label_eval2_save_path = mkdir_join(eval2_save_path, 'label')
+    input_eval3_save_path = mkdir_join(eval3_save_path, 'input')
+    label_eval3_save_path = mkdir_join(eval3_save_path, 'label')
 
     ################
     # train
@@ -74,9 +75,9 @@ def main(label_type, train_data_type):
 
     # read htk files, save input data & frame num dict
     print('=> Processing input data...')
-    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
-                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
-                                                         data_type, '*.htk')))]
+    htk_paths = [join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(join(prep.fbank_path,
+                                                 data_type, '*.htk')))]
     return_tuple = read_htk(htk_paths=htk_paths,
                             save_path=input_train_save_path,
                             speaker_dict=speaker_dict,
@@ -97,9 +98,9 @@ def main(label_type, train_data_type):
 
     # read htk files, save input data & frame num dict
     print('=> Processing input data...')
-    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
-                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
-                                                         'dev/*.htk')))]
+    htk_paths = [join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(join(prep.fbank_path,
+                                                 'dev/*.htk')))]
     read_htk(htk_paths=htk_paths,
              save_path=input_dev_save_path,
              speaker_dict=speaker_dict,
@@ -124,9 +125,9 @@ def main(label_type, train_data_type):
 
     # read htk files, save input data & frame num dict
     print('=> Processing input data...')
-    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
-                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
-                                                         'eval1/*.htk')))]
+    htk_paths = [join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(join(prep.fbank_path,
+                                                 'eval1/*.htk')))]
     read_htk(htk_paths=htk_paths,
              save_path=input_eval1_save_path,
              speaker_dict=speaker_dict,
@@ -151,9 +152,9 @@ def main(label_type, train_data_type):
 
     # read htk files, save input data & frame num dict
     print('=> Processing input data...')
-    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
-                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
-                                                         'eval2/*.htk')))]
+    htk_paths = [join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(join(prep.fbank_path,
+                                                 'eval2/*.htk')))]
     read_htk(htk_paths=htk_paths,
              save_path=input_eval2_save_path,
              speaker_dict=speaker_dict,
@@ -178,9 +179,9 @@ def main(label_type, train_data_type):
 
     # read htk files, save input data & frame num dict
     print('=> Processing input data...')
-    htk_paths = [os.path.join(prep.fbank_path, htk_dir)
-                 for htk_dir in sorted(glob(os.path.join(prep.fbank_path,
-                                                         'eval3/*.htk')))]
+    htk_paths = [join(prep.fbank_path, htk_dir)
+                 for htk_dir in sorted(glob(join(prep.fbank_path,
+                                                 'eval3/*.htk')))]
     read_htk(htk_paths=htk_paths,
              save_path=input_eval3_save_path,
              speaker_dict=speaker_dict,
@@ -192,7 +193,7 @@ def main(label_type, train_data_type):
              train_std_female=train_std_female)
 
     # make a confirmation file to prove that dataset was saved correctly
-    with open(os.path.join(save_path, 'check.txt'), 'w') as f:
+    with open(join(save_path, 'check.txt'), 'w') as f:
         f.write('')
     print('Successfully completed!')
 

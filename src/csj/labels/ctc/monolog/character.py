@@ -4,7 +4,7 @@
 """Make labels for CTC model (monolog)."""
 
 import os
-import sys
+from os.path import join
 import re
 import numpy as np
 import pandas as pd
@@ -12,7 +12,7 @@ from tqdm import tqdm
 import jaconv
 
 from prepare_path import Prepare
-from utils.util import mkdir
+from utils.util import mkdir_join
 from utils.labels.character import kana2num
 from utils.labels.phone import phone2num
 from .fix_trans import fix_transcript, is_hiragana, is_katakana, is_kanji, is_alphabet
@@ -209,7 +209,7 @@ def read_sdb(label_paths, label_type, is_test=None,
         # save target labels
         print('===> Saving target labels...')
         for speaker_name, utterance_dict in tqdm(speaker_dict.items()):
-            mkdir(os.path.join(save_path, speaker_name))
+            mkdir_join(save_path, speaker_name)
             for utt_index, utt_info in utterance_dict.items():
                 start_frame, end_frame, transcript = utt_info
                 save_file_name = speaker_name + '_' + utt_index + '.npy'
@@ -220,20 +220,20 @@ def read_sdb(label_paths, label_type, is_test=None,
                         index_list = kana2num(transcript, mapping_file_path)
 
                         # save as npy file
-                        np.save(os.path.join(save_path, speaker_name,
-                                             save_file_name), index_list)
+                        np.save(join(save_path, speaker_name,
+                                     save_file_name), index_list)
                     else:
                         # save as npy file
-                        np.save(os.path.join(save_path, speaker_name,
-                                             save_file_name), transcript)
+                        np.save(join(save_path, speaker_name,
+                                     save_file_name), transcript)
 
                 elif label_type == 'character':
                     # convert from kana character to number
                     index_list = kana2num(transcript, mapping_file_path)
 
                     # save as npy file
-                    np.save(os.path.join(save_path, speaker_name,
-                                         save_file_name), index_list)
+                    np.save(join(save_path, speaker_name,
+                                 save_file_name), index_list)
 
                 elif label_type == 'phone':
                     # convert kana character to phone
@@ -269,7 +269,7 @@ def read_sdb(label_paths, label_type, is_test=None,
                     index_list = phone2num(trans_phone_list, mapping_file_path)
 
                     # save as npy file
-                    np.save(os.path.join(save_path, speaker_name,
-                                         save_file_name), index_list)
+                    np.save(join(save_path, speaker_name,
+                                 save_file_name), index_list)
 
     return speaker_dict
