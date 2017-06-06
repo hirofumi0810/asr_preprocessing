@@ -32,13 +32,11 @@
 - [ ] **character**
 - [ ] **word**
 
-### evaluatin data (eval2000 - swbd)
-- [ ] **CTC**
-- [ ] **Attention**
-
-### evaluatin data (eval2000 - CallHome)
-- [ ] **CTC**
-- [ ] **Attention**
+### Evaluation data (eval2000)
+- [ ] **CTC (SWB)**
+- [ ] **Attention (SWB)**
+- [ ] **CTC (CallHome)**
+- [ ] **Attention (CallHome)**
 
 
 ## CSJ

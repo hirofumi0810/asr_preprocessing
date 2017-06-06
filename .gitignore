@@ -5,6 +5,7 @@ __pychache__
 *.pyc
 svc
 erato
+erato2
 
 dialog
 char2num_insert.txt
