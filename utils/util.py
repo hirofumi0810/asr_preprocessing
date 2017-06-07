@@ -11,7 +11,7 @@ def mkdir(path_to_dir):
     Returns:
         path: path to the new directory
     """
-    if not os.path.isdir(path_to_dir):
+    if path_to_dir is not None and (not os.path.isdir(path_to_dir)):
         os.mkdir(path_to_dir)
     return path_to_dir
 

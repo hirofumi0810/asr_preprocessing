@@ -3,6 +3,10 @@
 
 """Make input data for CTC network (TIMIT corpus)."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 from os.path import join, basename
 import pickle
 import numpy as np

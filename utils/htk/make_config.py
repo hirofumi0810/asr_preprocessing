@@ -1,13 +1,16 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from os.path import join
 
-def setup(corpus, feature, dim, sampling_rate=16000, window=0.025, slide=0.01, energy=True,
-          delta=True, deltadelta=True, window_func='hamming'):
+
+def setup(corpus, feature, channels, save_path, sampling_rate=16000, window=0.025, slide=0.01,
+          energy=True, delta=True, deltadelta=True, window_func='hamming'):
     """Setting for HTK.
     Args:
         feature: fbank or mfcc
-        dim:
+        channels:
+        save_path:
         sampling_rate:
         window:
         slide:
@@ -17,19 +20,19 @@ def setup(corpus, feature, dim, sampling_rate=16000, window=0.025, slide=0.01, e
         window_func:
 """
 
-    with open('config', 'w') as f:
+    with open(join(save_path, 'config_fbank'), 'w') as f:
         if corpus == 'timit':
             f.write('SOURCEFORMAT = NIST\n')
         else:
             f.write('SOURCEFORMAT = WAV\n')
 
-        # sampling rate
+        # Sampling rate
         if sampling_rate == 16000:
             f.write('SOURCERATE = 625\n')
         elif sampling_rate == 8000:
             f.write('SOURCERATE = 1250\n')
 
-        # target features
+        # Target features
         target = feature.upper()
         if energy:
             target += '_E'
@@ -42,20 +45,20 @@ def setup(corpus, feature, dim, sampling_rate=16000, window=0.025, slide=0.01, e
         # f.write('DELTAWINDOW = 2')
         # f.write('ACCWINDOW = 2')
 
-        # extract per slide
+        # Extract per slide
         f.write('TARGETRATE = %.1f\n' % (slide * 10000000))
 
         f.write('SAVECOMPRESSED = F\n')
         f.write('SAVEWITHCRC = F\n')
 
-        # window size
+        # Window size
         f.write('WINDOWSIZE = %.1f\n' % (window * 10000000))
 
-        # window function
+        # Window function
         if window_func == 'hamming':
             f.write('USEHAMMING = T\n')  # hamming window
 
         f.write('PREEMCOEF = 0.97\n')
-        f.write('NUMCHANS = %d\n' % dim)
+        f.write('NUMCHANS = %d\n' % channels)
         f.write('ENORMALISE = F\n')
         f.write('ZMEANSOURCE = T\n')

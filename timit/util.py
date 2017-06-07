@@ -1,6 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 
 def map_phone2phone(phone_list, label_type, map_file_path):
     """Map from 61 phones to 39 or 48 phones.

@@ -1,32 +1,36 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from os.path import join, basename
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import sys
+from os.path import join, basename, abspath
 
 sys.path.append('../')
-sys.path.append('../../')
-from prepare_path import Prepare
+import prepare_path
 from utils.util import mkdir_join
-from utils.config.make_config import setup
+from utils.htk.make_config import setup
 
 
-def main():
+def main(timit_path, dataset_save_path, input_feature_save_path):
 
-    prep = Prepare()
-
+    prep = prepare_path.Prepare(timit_path, dataset_save_path,
+                                run_root_path=abspath('./'))
     wav_train_paths = prep.wav(data_type='train')
     wav_dev_paths = prep.wav(data_type='dev')
     wav_test_paths = prep.wav(data_type='test')
 
-    save_train_path = mkdir_join(prep.fbank_path, 'train')
-    save_dev_path = mkdir_join(prep.fbank_path, 'dev')
-    save_test_path = mkdir_join(prep.fbank_path, 'test')
+    save_train_path = mkdir_join(input_feature_save_path, 'train')
+    save_dev_path = mkdir_join(input_feature_save_path, 'dev')
+    save_test_path = mkdir_join(input_feature_save_path, 'test')
 
     # HTK settings
     setup(corpus='timit',
           feature='fbank',
-          dim=40,
+          channels=40,
+          save_path=abspath('./config'),
           sampling_rate=16000,
           window=0.025,
           slide=0.01,
@@ -43,7 +47,7 @@ def main():
     elif len(wav_train_paths) != 3696:
         raise ValueError('File number is not correct (True: 3696, Now: %d).' %
                          len(wav_train_paths))
-    with open('wav2fbank_train.scp', 'w') as f:
+    with open('config/wav2fbank_train.scp', 'w') as f:
         for wav_path in wav_train_paths:
             speaker_name = wav_path.split('/')[-2]
             wav_index = basename(wav_path).split('.')[0]
@@ -59,7 +63,7 @@ def main():
     elif len(wav_dev_paths) != 400:
         raise ValueError('File number is not correct (True: 400, Now: %d).' %
                          len(wav_dev_paths))
-    with open('wav2fbank_dev.scp', 'w') as f:
+    with open('config/wav2fbank_dev.scp', 'w') as f:
         for wav_path in wav_dev_paths:
             speaker_name = wav_path.split('/')[-2]
             wav_index = basename(wav_path).split('.')[0]
@@ -75,7 +79,7 @@ def main():
     elif len(wav_test_paths) != 192:
         raise ValueError('File number is not correct (True: 192, Now: %d).' %
                          len(wav_test_paths))
-    with open('wav2fbank_test.scp', 'w') as f:
+    with open('config/wav2fbank_test.scp', 'w') as f:
         for wav_path in wav_test_paths:
             speaker_name = wav_path.split('/')[-2]
             wav_index = basename(wav_path).split('.')[0]
@@ -85,4 +89,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    args = sys.argv
+    if len(args) != 4:
+        raise ValueError
+
+    timit_path = args[1]
+    dataset_save_path = args[2]
+    input_feature_save_path = args[3]
+
+    main(timit_path, dataset_save_path, input_feature_save_path)

@@ -1,13 +1,17 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import sys
 import glob
 import unittest
 
+sys.path.append('../')
 sys.path.append('../../')
-sys.path.append('../../../')
 from prepare_path import Prepare
 from inputs.input_data_global_norm import read_htk
 from labels.ctc.phone import read_phone

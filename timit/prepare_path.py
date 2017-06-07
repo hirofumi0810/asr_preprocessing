@@ -3,31 +3,37 @@
 
 """Prepare for making dataset."""
 
-import os
-from os.path import join
-import sys
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+from os.path import join, basename, splitext
 from glob import glob
 
+import sys
 sys.path.append('../')
 from utils.util import mkdir
 
 
 class Prepare(object):
-    """Prepare for making dataset."""
+    """Prepare for making dataset.
+    Args:
+        timit_path:
+        dataset_save_path:
+    """
 
-    def __init__(self):
+    def __init__(self, timit_path, dataset_save_path=None, run_root_path=None):
 
-        # path to timit data (set yourself)
-        self.data_path = '/n/sd8/inaguma/corpus/timit/original/'
+        # Path to timit data (set yourself)
+        self.data_path = timit_path
         self.train_data_path = join(self.data_path, 'train')
         self.test_data_path = join(self.data_path, 'test')
 
-        # path to save directories (set yourself)
-        self.dataset_path = mkdir('/n/sd8/inaguma/corpus/timit/dataset/')
-        self.fbank_path = mkdir('/n/sd8/inaguma/corpus/timit/fbank/')
+        # Path to save directories (set yourself)
+        self.dataset_save_path = mkdir(dataset_save_path)
 
-        # absolute path to this directory (set yourself)
-        self.run_root_path = '/n/sd8/inaguma/src/asr/asr_preprocessing/src/timit/'
+        # Absolute path to this directory (set yourself)
+        self.run_root_path = run_root_path
 
         self.__make()
 
@@ -42,8 +48,8 @@ class Prepare(object):
         self.phone_train_paths = []
         for file_path in glob(join(self.train_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
-            ext = os.path.splitext(file_name)[1]
-            if os.path.basename(file_name)[0: 2] in ['sx', 'si']:
+            ext = splitext(file_name)[1]
+            if basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
                     self.wav_train_paths.append(
                         join(self.train_data_path, file_path))
@@ -60,9 +66,9 @@ class Prepare(object):
         ####################
         # dev
         ####################
-        # read speaker list
+        # Read speaker list
         speakers_dev = []
-        with open(join(self.run_root_path, 'dev_speaker_list.txt'), 'r') as f:
+        with open(join(self.run_root_path, 'config/dev_speaker_list.txt'), 'r') as f:
             for line in f:
                 line = line.strip()
                 speakers_dev.append(line)
@@ -73,11 +79,11 @@ class Prepare(object):
         self.phone_dev_paths = []
         for file_path in glob(join(self.test_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
-            ext = os.path.splitext(file_name)[1]
+            ext = splitext(file_name)[1]
 
             if speaker_name not in speakers_dev:
                 continue
-            elif os.path.basename(file_name)[0: 2] in ['sx', 'si']:
+            elif basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
                     self.wav_dev_paths.append(
                         join(self.test_data_path, file_path))
@@ -94,9 +100,9 @@ class Prepare(object):
         ####################
         # test
         ####################
-        # read speaker list
+        # Read speaker list
         speakers_test = []
-        with open(join(self.run_root_path, 'test_speaker_list.txt'), 'r') as f:
+        with open(join(self.run_root_path, 'config/test_speaker_list.txt'), 'r') as f:
             for line in f:
                 line = line.strip()
                 speakers_test.append(line)
@@ -107,11 +113,11 @@ class Prepare(object):
         self.phone_test_paths = []
         for file_path in glob(join(self.test_data_path, '*/*/*')):
             region_name, speaker_name, file_name = file_path.split('/')[-3:]
-            ext = os.path.splitext(file_name)[1]
+            ext = splitext(file_name)[1]
 
             if speaker_name not in speakers_test:
                 continue
-            elif os.path.basename(file_name)[0: 2] in ['sx', 'si']:
+            elif basename(file_name)[0: 2] in ['sx', 'si']:
                 if ext == '.wav':
                     self.wav_test_paths.append(
                         join(self.test_data_path, file_path))
@@ -183,7 +189,11 @@ class Prepare(object):
 
 
 if __name__ == '__main__':
-    prep = Prepare()
+
+    timit_path = '/n/sd8/inaguma/corpus/timit/original/'
+    dataset_save_path = '/n/sd8/inaguma/corpus/timit/dataset/'
+
+    prep = Prepare(timit_path, dataset_save_path)
 
     print('===== train =====')
     print(len(prep.wav(data_type='train')))
