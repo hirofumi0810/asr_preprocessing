@@ -14,10 +14,9 @@ from utils.util import mkdir_join
 from utils.htk.make_config import setup
 
 
-def main(timit_path, dataset_save_path, input_feature_save_path):
+def main(timit_path, input_feature_save_path, run_root_path):
 
-    prep = prepare_path.Prepare(timit_path, dataset_save_path,
-                                run_root_path=abspath('./'))
+    prep = prepare_path.Prepare(timit_path, run_root_path)
     wav_train_paths = prep.wav(data_type='train')
     wav_dev_paths = prep.wav(data_type='dev')
     wav_test_paths = prep.wav(data_type='test')
@@ -47,7 +46,7 @@ def main(timit_path, dataset_save_path, input_feature_save_path):
     elif len(wav_train_paths) != 3696:
         raise ValueError('File number is not correct (True: 3696, Now: %d).' %
                          len(wav_train_paths))
-    with open('config/wav2fbank_train.scp', 'w') as f:
+    with open(join(run_root_path, 'config/wav2fbank_train.scp'), 'w') as f:
         for wav_path in wav_train_paths:
             speaker_name = wav_path.split('/')[-2]
             wav_index = basename(wav_path).split('.')[0]
@@ -63,7 +62,7 @@ def main(timit_path, dataset_save_path, input_feature_save_path):
     elif len(wav_dev_paths) != 400:
         raise ValueError('File number is not correct (True: 400, Now: %d).' %
                          len(wav_dev_paths))
-    with open('config/wav2fbank_dev.scp', 'w') as f:
+    with open(join(run_root_path, 'config/wav2fbank_dev.scp'), 'w') as f:
         for wav_path in wav_dev_paths:
             speaker_name = wav_path.split('/')[-2]
             wav_index = basename(wav_path).split('.')[0]
@@ -79,7 +78,7 @@ def main(timit_path, dataset_save_path, input_feature_save_path):
     elif len(wav_test_paths) != 192:
         raise ValueError('File number is not correct (True: 192, Now: %d).' %
                          len(wav_test_paths))
-    with open('config/wav2fbank_test.scp', 'w') as f:
+    with open(join(run_root_path, 'config/wav2fbank_test.scp'), 'w') as f:
         for wav_path in wav_test_paths:
             speaker_name = wav_path.split('/')[-2]
             wav_index = basename(wav_path).split('.')[0]
@@ -89,12 +88,13 @@ def main(timit_path, dataset_save_path, input_feature_save_path):
 
 
 if __name__ == '__main__':
+
     args = sys.argv
     if len(args) != 4:
         raise ValueError
 
     timit_path = args[1]
-    dataset_save_path = args[2]
-    input_feature_save_path = args[3]
+    input_feature_save_path = args[2]
+    run_root_path = args[3]
 
-    main(timit_path, dataset_save_path, input_feature_save_path)
+    main(timit_path, input_feature_save_path, run_root_path)

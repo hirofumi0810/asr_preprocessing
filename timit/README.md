@@ -21,7 +21,7 @@ In general, 61 phones are used for training stage, and the model is evaluated by
 The non-HTK version will be added in the future.
 The configure file is in ./config/config_fbank. The default input feature is 40 channel log-mel filterbank features and energy (+Δ, ΔΔ). Please change it or ./make_script.py by yourself.
 
-2. Set to the path to the TIMIT dataset and the path to save dataset in make.sh and run
+2. Set to the path to TIMIT corpus and paths to save input features & dataset in make.sh and run
 ```
 ./make.sh
 ```

@@ -23,11 +23,11 @@ from labels.attention.phone import read_phone
 from utils.util import mkdir_join
 
 
-def main(dataset_save_path, input_feature_save_path, label_type):
+def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
+         label_type):
 
     print('===== ' + label_type + ' =====')
-    prep = prepare_path.Prepare(dataset_save_path, input_feature_save_path,
-                                run_root_path=os.path.abspath('./'))
+    prep = prepare_path.Prepare(timit_path, run_root_path)
     save_path = mkdir_join(dataset_save_path, 'attention')
     save_path = mkdir_join(save_path, label_type)
 
@@ -58,8 +58,9 @@ def main(dataset_save_path, input_feature_save_path, label_type):
     # Read htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
-    htk_train_paths = [join(input_feature_save_path, htk_dir)
-                       for htk_dir in sorted(glob(join(input_feature_save_path, 'train/*.htk')))]
+    htk_train_paths = [join(input_feature_path, htk_dir)
+                       for htk_dir in sorted(glob(join(input_feature_path,
+                                                       'train/*.htk')))]
     train_mean, train_std = read_htk(htk_paths=htk_train_paths,
                                      save_path=input_train_save_path,
                                      normalize=True,
@@ -86,8 +87,9 @@ def main(dataset_save_path, input_feature_save_path, label_type):
     # Read htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
-    htk_dev_paths = [join(input_feature_save_path, htk_dir)
-                     for htk_dir in sorted(glob(join(input_feature_save_path, 'dev/*.htk')))]
+    htk_dev_paths = [join(input_feature_path, htk_dir)
+                     for htk_dir in sorted(glob(join(input_feature_path,
+                                                     'dev/*.htk')))]
     read_htk(htk_paths=htk_dev_paths,
              save_path=input_dev_save_path,
              normalize=True,
@@ -116,8 +118,9 @@ def main(dataset_save_path, input_feature_save_path, label_type):
     # Read htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
-    htk_test_paths = [join(input_feature_save_path, htk_dir)
-                      for htk_dir in sorted(glob(join(input_feature_save_path, 'test/*.htk')))]
+    htk_test_paths = [join(input_feature_path, htk_dir)
+                      for htk_dir in sorted(glob(join(input_feature_path,
+                                                      'test/*.htk')))]
     read_htk(htk_paths=htk_test_paths,
              save_path=input_test_save_path,
              normalize=True,
@@ -148,12 +151,18 @@ def main(dataset_save_path, input_feature_save_path, label_type):
 if __name__ == '__main__':
 
     args = sys.argv
-    if len(args) != 3:
+    if len(args) != 5:
         raise ValueError
 
-    dataset_save_path = args[1]
-    input_feature_save_path = args[2]
+    timit_path = args[1]
+    dataset_save_path = args[2]
+    input_feature_path = args[3]
+    run_root_path = args[4]
 
     label_types = ['character', 'phone61', 'phone48', 'phone39']
     for label_type in label_types:
-        main(dataset_save_path, input_feature_save_path, label_type)
+        main(timit_path,
+             dataset_save_path,
+             input_feature_path,
+             run_root_path,
+             label_type)

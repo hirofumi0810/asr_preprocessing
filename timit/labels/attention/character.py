@@ -34,11 +34,11 @@ def read_text(label_paths, run_root_path, save_path=None):
         with open(label_path, 'r') as f:
             line = f.readlines()[-1]
 
-            # convert 「"」, 「!」, 「?」, 「:」, 「;」, 「-」 to @(<UNK>)
-            # convert to lowercase
+            # Convert 「"」, 「!」, 「?」, 「:」, 「;」, 「-」 to @(<UNK>)
+            # Convert to lowercase
             line = re.sub(r'[\"!?:;-]+', '@', line.strip().lower())
 
-            # convert space to "_"
+            # Convert space to "_"
             transcript = '<' + '_'.join(line.split(' ')[2:]) + '>'
 
         for c in list(transcript):
@@ -46,7 +46,7 @@ def read_text(label_paths, run_root_path, save_path=None):
 
         text_dict[label_path] = transcript
 
-    # make mapping file (from character to number)
+    # Make mapping file (from character to number)
     mapping_file_path = join(run_root_path, 'labels/attention/char2num.txt')
     char_set.discard('@')
     char_set.discard('<')
@@ -60,15 +60,15 @@ def read_text(label_paths, run_root_path, save_path=None):
             f.write('%s  %s\n' % ('>', str(index + 3)))
 
     if save_path is not None:
-        # save target labels
+        # Save target labels
         print('===> Saving target labels...')
         for label_path, transcript in tqdm(text_dict.items()):
             speaker_name = label_path.split('/')[-2]
             file_name = label_path.split('/')[-1].split('.')[0]
             save_file_name = speaker_name + '_' + file_name + '.npy'
 
-            # convert form character to number
+            # Convert form character to number
             char_index_list = char2num(transcript,  mapping_file_path)
 
-            # save as npy file
+            # Save as npy file
             np.save(join(save_path, save_file_name), char_index_list)

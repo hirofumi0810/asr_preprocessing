@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, basename, splitext
+from os.path import join, basename, splitext, abspath
 from glob import glob
 
 import sys
@@ -18,21 +18,19 @@ from utils.util import mkdir
 class Prepare(object):
     """Prepare for making dataset.
     Args:
-        timit_path:
-        dataset_save_path:
+        timit_path: path to timit corpus
+        run_root_path: path to ./make.sh
+        dataset_save_path: path to save dataset
     """
 
-    def __init__(self, timit_path, dataset_save_path=None, run_root_path=None):
+    def __init__(self, timit_path, run_root_path):
 
-        # Path to timit data (set yourself)
+        # Path to timit data
         self.data_path = timit_path
         self.train_data_path = join(self.data_path, 'train')
         self.test_data_path = join(self.data_path, 'test')
 
-        # Path to save directories (set yourself)
-        self.dataset_save_path = mkdir(dataset_save_path)
-
-        # Absolute path to this directory (set yourself)
+        # Absolute path to this directory
         self.run_root_path = run_root_path
 
         self.__make()
@@ -68,7 +66,8 @@ class Prepare(object):
         ####################
         # Read speaker list
         speakers_dev = []
-        with open(join(self.run_root_path, 'config/dev_speaker_list.txt'), 'r') as f:
+        with open(join(self.run_root_path,
+                       'config/dev_speaker_list.txt'), 'r') as f:
             for line in f:
                 line = line.strip()
                 speakers_dev.append(line)
@@ -102,7 +101,8 @@ class Prepare(object):
         ####################
         # Read speaker list
         speakers_test = []
-        with open(join(self.run_root_path, 'config/test_speaker_list.txt'), 'r') as f:
+        with open(join(self.run_root_path,
+                       'config/test_speaker_list.txt'), 'r') as f:
             for line in f:
                 line = line.strip()
                 speakers_test.append(line)
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     timit_path = '/n/sd8/inaguma/corpus/timit/original/'
     dataset_save_path = '/n/sd8/inaguma/corpus/timit/dataset/'
 
-    prep = Prepare(timit_path, dataset_save_path)
+    prep = Prepare(timit_path, abspath('./'))
 
     print('===== train =====')
     print(len(prep.wav(data_type='train')))

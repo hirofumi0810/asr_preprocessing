@@ -24,7 +24,7 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
         save_path: path to save labels. If None, don't save labels
     """
     if label_type not in ['phone39', 'phone48', 'phone61']:
-        raise ValueError('Error: data_type is "phone39" or "phone48" or "phone61".')
+        raise ValueError('data_type is "phone39" or "phone48" or "phone61".')
 
     print('===> Reading & Saving target labels...')
     p2p_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
@@ -60,7 +60,7 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
                         elif label_type == 'phone39':
                             phone_set.add(line[2])
                     else:
-                        # ignore "q" if phone39 or phone48
+                        # Ignore "q" if phone39 or phone48
                         if label_type == 'phone61':
                             phone_set.add(line[0])
 

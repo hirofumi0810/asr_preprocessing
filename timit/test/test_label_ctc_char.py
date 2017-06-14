@@ -22,11 +22,11 @@ class TestCTCLabelChar(unittest.TestCase):
 
         print('===== character =====')
         read_text(label_paths=label_train_paths,
-                  run_root_path=os.path.abspath('../'))
+                  run_root_path=prep.run_root_path)
         read_text(label_paths=label_dev_paths,
-                  run_root_path=os.path.abspath('../'))
+                  run_root_path=prep.run_root_path)
         read_text(label_paths=label_test_paths,
-                  run_root_path=os.path.abspath('../'))
+                  run_root_path=prep.run_root_path)
 
 
 if __name__ == '__main__':

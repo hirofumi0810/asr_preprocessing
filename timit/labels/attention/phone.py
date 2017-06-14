@@ -24,10 +24,14 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
         save_path: path to save labels. If None, don't save labels
     """
     if label_type not in ['phone39', 'phone48', 'phone61']:
-        raise ValueError('Error: data_type is "phone39" or "phone48" or "phone61".')
+        raise ValueError(
+            'data_type is "phone39" or "phone48" or "phone61".')
 
     print('===> Reading & Saving target labels...')
-    p2p_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
+    phone2phone_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
+    phone2num_map_file_path = join(
+        run_root_path,
+        'labels/attention/phone2num_' + label_type[5:7] + '.txt')
     for label_path in tqdm(label_paths):
         speaker_name = label_path.split('/')[-2]
         file_name = label_path.split('/')[-1].split('.')[0]
@@ -37,19 +41,18 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().split(' ')
-                # start_frame = line[0]
+                # Start_frame = line[0]
                 # end_frame = line[1]
                 phone_list.append(line[2])
 
-        # map from 61 phones to 31 phones
-        phone_list = map_phone2phone(phone_list, label_type, p2p_map_file_path)
+        # Map from 61 phones to 31 phones
+        phone_list = map_phone2phone(phone_list, label_type,
+                                     phone2phone_map_file_path)
 
-        # make the mapping file
-        p2n_map_file_path = join(
-            run_root_path, 'labels/attention/phone2num_' + label_type[5:7] + '.txt')
-        if not isfile(p2n_map_file_path):
+        # Make the mapping file
+        if not isfile(phone2num_map_file_path):
             phone_set = set([])
-            with open(p2p_map_file_path, 'r') as f:
+            with open(phone2phone_map_file_path, 'r') as f:
                 for line in f:
                     line = line.strip().split()
                     if line[1] != 'nan':
@@ -60,21 +63,21 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
                         elif label_type == 'phone39':
                             phone_set.add(line[2])
                     else:
-                        # ignore "q" if phone39 or phone48
+                        # Ignore "q" if phone39 or phone48
                         if label_type == 'phone61':
                             phone_set.add(line[0])
 
-            # save mapping file
-            with open(p2n_map_file_path, 'w') as f:
+            # Save mapping file
+            with open(phone2num_map_file_path, 'w') as f:
                 for index, phone in enumerate(sorted(list(phone_set))):
                     f.write('%s  %s\n' % (phone, str(index)))
                 f.write('%s  %s\n' % ('<', str(index + 1)))
                 f.write('%s  %s\n' % ('>', str(index + 2)))
 
-        # convert from phone to number
+        # Convert from phone to number
         phone_list = ['<'] + phone_list + ['>']  # add SOS & EOS
-        phone_list = phone2num(phone_list, p2n_map_file_path)
+        phone_list = phone2num(phone_list, phone2num_map_file_path)
 
         if save_path is not None:
-            # save phone labels as npy file
+            # Save phone labels as npy file
             np.save(join(save_path, save_file_name), phone_list)

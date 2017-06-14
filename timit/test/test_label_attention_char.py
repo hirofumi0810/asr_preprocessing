@@ -15,7 +15,7 @@ from prepare_path import Prepare
 from labels.attention.character import read_text
 
 
-class TestAttentionLalbelChar(unittest.TestCase):
+class TestAttentionLabelChar(unittest.TestCase):
     def test(self):
 
         prep = Prepare(timit_path='/n/sd8/inaguma/corpus/timit/original/',
@@ -26,11 +26,11 @@ class TestAttentionLalbelChar(unittest.TestCase):
 
         print('===== character =====')
         read_text(label_paths=label_train_paths,
-                  run_root_path=os.path.abspath('../'))
+                  run_root_path=prep.run_root_path)
         read_text(label_paths=label_dev_paths,
-                  run_root_path=os.path.abspath('../'))
+                  run_root_path=prep.run_root_path)
         read_text(label_paths=label_test_paths,
-                  run_root_path=os.path.abspath('../'))
+                  run_root_path=prep.run_root_path)
 
 
 if __name__ == '__main__':

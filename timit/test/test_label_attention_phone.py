@@ -26,35 +26,35 @@ class TestAttentionLabelPhone(unittest.TestCase):
 
         print('===== phone61 =====')
         read_phone(label_paths=label_train_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone61')
         read_phone(label_paths=label_dev_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone61')
         read_phone(label_paths=label_test_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone61')
 
         print('===== phone48 =====')
         read_phone(label_paths=label_train_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone48')
         read_phone(label_paths=label_dev_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone48')
         read_phone(label_paths=label_test_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone48')
 
         print('===== phone39 =====')
         read_phone(label_paths=label_train_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone39')
         read_phone(label_paths=label_dev_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone39')
         read_phone(label_paths=label_test_paths,
-                   run_root_path=os.path.abspath('../'),
+                   run_root_path=prep.run_root_path,
                    label_type='phone39')
 
 
