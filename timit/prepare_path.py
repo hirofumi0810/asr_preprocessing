@@ -7,10 +7,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 from os.path import join, basename, splitext, abspath
 from glob import glob
 
-import sys
 sys.path.append('../')
 from utils.util import mkdir
 
@@ -64,7 +64,7 @@ class Prepare(object):
         ####################
         # dev
         ####################
-        # Read speaker list
+        # Load speaker list
         speakers_dev = []
         with open(join(self.run_root_path,
                        'config/dev_speaker_list.txt'), 'r') as f:
@@ -99,7 +99,7 @@ class Prepare(object):
         ####################
         # test
         ####################
-        # Read speaker list
+        # Load speaker list
         speakers_test = []
         with open(join(self.run_root_path,
                        'config/test_speaker_list.txt'), 'r') as f:
@@ -148,7 +148,7 @@ class Prepare(object):
     def text(self, data_type):
         """Get paths to sentence-level transcription files.
         Args:
-            data_type: train or dev or test
+            data_type: string, train or dev or test
         Returns:
             paths to transcription files
         """
@@ -162,7 +162,7 @@ class Prepare(object):
     def word(self, data_type):
         """Get paths to word-level transcription files.
         Args:
-            data_type: train or dev or test
+            data_type: string, train or dev or test
         Returns:
             paths to transcription files
         """
@@ -176,7 +176,7 @@ class Prepare(object):
     def phone(self, data_type):
         """Get paths to phone-level transcription files.
         Args:
-            data_type: train or dev or test
+            data_type: string, train or dev or test
         Returns:
             paths to transcription files
         """
@@ -191,7 +191,6 @@ class Prepare(object):
 if __name__ == '__main__':
 
     timit_path = '/n/sd8/inaguma/corpus/timit/original/'
-    dataset_save_path = '/n/sd8/inaguma/corpus/timit/dataset/'
 
     prep = Prepare(timit_path, abspath('./'))
 

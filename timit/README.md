@@ -17,7 +17,7 @@ The scripts to make datasets for CTC and Attention Mechanism are prepared now. T
 In general, 61 phones are used for training stage, and the model is evaluated by using 39 phones.
 
 ## Usage
-1. At first, please download HTK from [here](http://htk.eng.cam.ac.uk/download.shtml) and set the path to HCopy in make.sh. Feature extraction is based on HTK toolkit.
+1. At first, please download & install HTK from [here](http://htk.eng.cam.ac.uk/download.shtml) and set the path to HCopy in make.sh. Feature extraction is based on HTK toolkit.
 The non-HTK version will be added in the future.
 The configure file is in ./config/config_fbank. The default input feature is 40 channel log-mel filterbank features and energy (+Δ, ΔΔ). Please change it or ./make_script.py by yourself.
 

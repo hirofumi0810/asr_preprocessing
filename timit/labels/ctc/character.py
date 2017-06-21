@@ -19,7 +19,7 @@ def read_text(label_paths, run_root_path, save_path=None):
     """Read text transcript.
     Args:
         label_paths: list of paths to label files
-        run_root_path: path to make.sh
+        run_root_path: absolute path of make.sh
         save_path: path to save labels. If None, don't save labels
     """
     print('===> Reading target labels...')

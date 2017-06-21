@@ -9,14 +9,14 @@ import sys
 from os.path import join, basename, abspath
 
 sys.path.append('../')
-import prepare_path
+from prepare_path import Prepare
 from utils.util import mkdir_join
 from utils.htk.make_config import setup
 
 
 def main(timit_path, input_feature_save_path, run_root_path):
 
-    prep = prepare_path.Prepare(timit_path, run_root_path)
+    prep = Prepare(timit_path, run_root_path)
     wav_train_paths = prep.wav(data_type='train')
     wav_dev_paths = prep.wav(data_type='dev')
     wav_test_paths = prep.wav(data_type='test')

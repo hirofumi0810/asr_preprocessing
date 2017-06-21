@@ -23,7 +23,7 @@ echo '--------------------------'
 HTK_PATH='/misc/local/htk-3.4/bin/HCopy'
 
 # Make a mapping file from wav to htk
-python make_scp.py $TIMIT_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
+python make_scp.py $TIMIT_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
 CONFIG_PATH="./config/config_fbank"
 
 # Convert from wav to htk files

@@ -12,14 +12,14 @@ def char2num(str_char, map_file_path):
     """
     char_list = list(str_char)
 
-    # read the mapping file
+    # Lead the mapping file
     map_dict = {}
     with open(map_file_path, 'r') as f:
         for line in f:
             line = line.strip().split()
             map_dict[line[0]] = int(line[1])
 
-    # convert from character to number
+    # Convert from character to number
     for i in range(len(char_list)):
         char_list[i] = map_dict[char_list[i]]
 
@@ -37,7 +37,7 @@ def kana2num(str_char, map_file_path):
     kana_list = list(str_char)
     num_list = []
 
-    # read the mapping file
+    # Lead the mapping file
     map_dict = {}
     with open(map_file_path, 'r') as f:
         for line in f:
@@ -46,7 +46,7 @@ def kana2num(str_char, map_file_path):
 
     i = 0
     while i < len(kana_list):
-        # check whether next kana character is a double consonant
+        # Check whether next kana character is a double consonant
         if i != len(kana_list) - 1:
             if kana_list[i] + kana_list[i + 1] in map_dict.keys():
                 num_list.append(int(map_dict[kana_list[i] + kana_list[i + 1]]))
@@ -75,14 +75,14 @@ def num2char(num_list, map_file_path):
     Returns:
         str_char: string of characters
     """
-    # read the mapping file
+    # Lead the mapping file
     map_dict = {}
     with open(map_file_path, 'r') as f:
         for line in f:
             line = line.strip().split()
             map_dict[int(line[1])] = line[0]
 
-    # convert from indices to the corresponding characters
+    # Convert from indices to the corresponding characters
     char_list = []
     for i in range(len(num_list)):
         char_list.append(map_dict[num_list[i]])

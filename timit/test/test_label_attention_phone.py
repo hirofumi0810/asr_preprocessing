@@ -18,6 +18,8 @@ from labels.attention.phone import read_phone
 class TestAttentionLabelPhone(unittest.TestCase):
     def test(self):
 
+        print('===== Attention label test (phone) =====')
+
         prep = Prepare(timit_path='/n/sd8/inaguma/corpus/timit/original/',
                        run_root_path=os.path.abspath('../'))
         label_train_paths = prep.phone(data_type='train')

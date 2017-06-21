@@ -18,13 +18,14 @@ from labels.attention.character import read_text
 class TestAttentionLabelChar(unittest.TestCase):
     def test(self):
 
+        print('===== Attention label test (character) =====')
+
         prep = Prepare(timit_path='/n/sd8/inaguma/corpus/timit/original/',
                        run_root_path=os.path.abspath('../'))
         label_train_paths = prep.text(data_type='train')
         label_dev_paths = prep.text(data_type='dev')
         label_test_paths = prep.text(data_type='test')
 
-        print('===== character =====')
         read_text(label_paths=label_train_paths,
                   run_root_path=prep.run_root_path)
         read_text(label_paths=label_dev_paths,

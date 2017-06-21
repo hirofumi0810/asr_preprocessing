@@ -1,6 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import sys
 import unittest
@@ -13,6 +17,8 @@ from labels.ctc.phone import read_phone
 
 class TestCTCLabelPhone(unittest.TestCase):
     def test(self):
+
+        print('===== CTC label test (phone) =====')
 
         prep = Prepare(timit_path='/n/sd8/inaguma/corpus/timit/original/',
                        run_root_path=os.path.abspath('../'))

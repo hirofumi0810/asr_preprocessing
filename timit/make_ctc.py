@@ -15,7 +15,7 @@ from glob import glob
 from tqdm import tqdm
 
 sys.path.append('../')
-import prepare_path
+from prepare_path import Prepare
 from inputs.input_data_global_norm import read_htk
 from labels.ctc.character import read_text
 from labels.ctc.phone import read_phone
@@ -26,7 +26,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
          label_type):
 
     print('===== ' + label_type + ' =====')
-    prep = prepare_path.Prepare(timit_path, run_root_path)
+    prep = Prepare(timit_path, run_root_path)
     save_path = mkdir_join(dataset_save_path, 'ctc')
     save_path = mkdir_join(save_path, label_type)
 
@@ -54,7 +54,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
     # train
     ####################
     print('---------- train ----------')
-    # Read htk files, save input data as npy files, save frame num dict as a
+    # Load htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
     htk_train_paths = [join(input_feature_path, htk_dir)
@@ -65,8 +65,8 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
                                      normalize=True,
                                      is_training=True)
 
-    # Read labels, save labels as npy files
-    print('=> Processing ground truth labels...')
+    # Load target labels and save labels as npy files
+    print('=> Processing transcripts...')
     if label_type == 'character':
         label_train_paths = prep.text(data_type='train')
         read_text(label_paths=label_train_paths,
@@ -83,7 +83,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
     # dev
     ####################
     print('---------- dev ----------')
-    # Read htk files, save input data as npy files, save frame num dict as a
+    # Load htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
     htk_dev_paths = [join(input_feature_path, htk_dir)
@@ -96,7 +96,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
              train_mean=train_mean,
              train_std=train_std)
 
-    # Read labels, save labels as npy files
+    # Load target labels and save labels as npy files
     print('=> Processing ground truth labels...')
     if label_type == 'character':
         label_dev_paths = prep.text(data_type='dev')
@@ -114,7 +114,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
     # test
     ####################
     print('---------- test ----------')
-    # Read htk files, save input data as npy files, save frame num dict as a
+    # Load htk files, save input data as npy files, save frame num dict as a
     # pickle file
     print('=> Processing input data...')
     htk_test_paths = [join(input_feature_path, htk_dir)
@@ -127,7 +127,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
              train_mean=train_mean,
              train_std=train_std)
 
-    # Read labels, save labels as npy files
+    # Load target labels and save labels as npy files
     print('=> Processing ground truth labels...')
     if label_type == 'character':
         label_test_paths = prep.text(data_type='test')
@@ -158,8 +158,7 @@ if __name__ == '__main__':
     input_feature_path = args[3]
     run_root_path = args[4]
 
-    label_types = ['character', 'phone61', 'phone48', 'phone39']
-    for label_type in label_types:
+    for label_type in ['character', 'phone61', 'phone48', 'phone39']:
         main(timit_path,
              dataset_save_path,
              input_feature_path,
