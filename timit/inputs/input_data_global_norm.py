@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make input data for CTC network (TIMIT corpus)."""
+"""Make input data (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -77,8 +77,8 @@ def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None,
 
         # Save a frame number dictionary
         frame_num_dict_save_path = '/'.join(save_path.split('/')[:-1])
-        with open(join(frame_num_dict_save_path, 'frame_num_dict.pickle'), 'wb') as f:
-            print('===> Saving : frame_num_dict.pickle')
+        with open(join(frame_num_dict_save_path, 'frame_num.pickle'), 'wb') as f:
+            print('===> Saving : frame_num.pickle')
             pickle.dump(frame_num_dict, f)
 
     return train_mean, train_std

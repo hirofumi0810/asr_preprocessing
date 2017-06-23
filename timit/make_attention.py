@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make dataset for Attention model (TIMIT corpus)."""
+"""Make dataset for the Attention model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -72,12 +72,14 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
         label_train_paths = prep.text(data_type='train')
         read_text(label_paths=label_train_paths,
                   run_root_path=abspath('./'),
+                  save_map_file=True,
                   save_path=label_train_save_path)
     else:
         label_train_paths = prep.phone(data_type='train')
         read_phone(label_paths=label_train_paths,
                    label_type=label_type,
                    run_root_path=abspath('./'),
+                   save_map_file=True,
                    save_path=label_train_save_path)
 
     ####################

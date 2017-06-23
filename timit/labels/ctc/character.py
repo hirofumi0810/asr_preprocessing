@@ -1,25 +1,30 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make label for CTC model (TIMIT corpus)."""
+"""Make label for the CTC model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, isfile
+from os.path import join
 import re
 import numpy as np
 from tqdm import tqdm
 
 from utils.labels.character import char2num
 
+# NOTE:
+# 26 alphabets(a-z), space(_), comma(,), period(.), apostorophe(')
+# = 26 + 4 = 30 labels
 
-def read_text(label_paths, run_root_path, save_path=None):
+
+def read_text(label_paths, run_root_path, save_map_file=False, save_path=None):
     """Read text transcript.
     Args:
         label_paths: list of paths to label files
         run_root_path: absolute path of make.sh
+        save_map_file: if True, save the mapping file
         save_path: path to save labels. If None, don't save labels
     """
     print('===> Reading target labels...')
@@ -36,9 +41,6 @@ def read_text(label_paths, run_root_path, save_path=None):
             # Convert space to "_"
             transcript = '_' + '_'.join(line.split(' ')[2:]) + '_'
 
-            # As a result, 26 alphabets(a-z), space(_), comma(,), period(.),
-            # apostorophe(') = 30 labels
-
         for c in list(transcript):
             char_set.add(c)
 
@@ -46,7 +48,7 @@ def read_text(label_paths, run_root_path, save_path=None):
 
     # Make mapping file (from character to number)
     mapping_file_path = join(run_root_path, 'labels/ctc/char2num.txt')
-    if not isfile(mapping_file_path):
+    if save_map_file:
         with open(mapping_file_path, 'w') as f:
             for index, char in enumerate(sorted(list(char_set))):
                 f.write('%s  %s\n' % (char, str(index)))

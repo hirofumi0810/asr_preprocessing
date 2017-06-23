@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make label for Attention model (TIMIT corpus)."""
+"""Make label for the Attention model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, isfile
+from os.path import join
 import numpy as np
 from tqdm import tqdm
 
@@ -15,12 +15,14 @@ from utils.labels.phone import phone2num
 from util import map_phone2phone
 
 
-def read_phone(label_paths, label_type, run_root_path, save_path=None):
+def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
+               save_path=None):
     """Read phone transcript.
     Args:
         label_paths: list of paths to label files
         label_type: phone39 or phone48 or phone61
         run_root_path: path to make.sh
+        save_map_file: if True, save the mapping file
         save_path: path to save labels. If None, don't save labels
     """
     if label_type not in ['phone39', 'phone48', 'phone61']:
@@ -50,7 +52,7 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
                                      phone2phone_map_file_path)
 
         # Make the mapping file
-        if not isfile(phone2num_map_file_path):
+        if save_map_file:
             phone_set = set([])
             with open(phone2phone_map_file_path, 'r') as f:
                 for line in f:
@@ -69,13 +71,11 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
 
             # Save mapping file
             with open(phone2num_map_file_path, 'w') as f:
-                for index, phone in enumerate(sorted(list(phone_set))):
+                for index, phone in enumerate(['<', '>'] + sorted(list(phone_set))):
                     f.write('%s  %s\n' % (phone, str(index)))
-                f.write('%s  %s\n' % ('<', str(index + 1)))
-                f.write('%s  %s\n' % ('>', str(index + 2)))
 
         # Convert from phone to number
-        phone_list = ['<'] + phone_list + ['>']  # add SOS & EOS
+        phone_list = ['<'] + phone_list + ['>']  # add <SOS> & <EOS>
         phone_list = phone2num(phone_list, phone2num_map_file_path)
 
         if save_path is not None:

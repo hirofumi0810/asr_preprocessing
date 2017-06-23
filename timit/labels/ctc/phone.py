@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make label for CTC model (TIMIT corpus)."""
+"""Make label for the CTC model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, isfile
+from os.path import join
 import numpy as np
 from tqdm import tqdm
 
@@ -15,12 +15,14 @@ from utils.labels.phone import phone2num
 from util import map_phone2phone
 
 
-def read_phone(label_paths, label_type, run_root_path, save_path=None):
+def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
+               save_path=None):
     """Read phone transcript.
     Args:
         label_paths: list of paths to label files
         label_type: phone39 or phone48 or phone61
         run_root_path: path to make.sh
+        save_map_file: if True, save the mapping file
         save_path: path to save labels. If None, don't save labels
     """
     if label_type not in ['phone39', 'phone48', 'phone61']:
@@ -47,7 +49,7 @@ def read_phone(label_paths, label_type, run_root_path, save_path=None):
         # Make the mapping file
         p2n_map_file_path = join(
             run_root_path, 'labels/ctc/phone2num_' + label_type[5:7] + '.txt')
-        if not isfile(p2n_map_file_path):
+        if save_map_file:
             phone_set = set([])
             with open(p2p_map_file_path, 'r') as f:
                 for line in f:
