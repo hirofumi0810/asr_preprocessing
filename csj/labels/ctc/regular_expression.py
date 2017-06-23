@@ -3,15 +3,21 @@
 
 """Functions of regular expression for hierarchical structure."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import re
 
 
 def remove_pause(kana_seq):
     # 0.2 秒以上のポーズ
-    pause = re.match(r'(.*)<P:\d{5}\.\d{3}-\d{5}\.\d{3}>(.*)', kana_seq)
+    expr = r'(.*)<P:\d{5}\.\d{3}-\d{5}\.\d{3}>(.*)'
+    pause = re.match(expr, kana_seq)
     while pause is not None:
-        kana_seq = pause.group(1) + ' ' + pause.group(2)
-        pause = re.match(r'(.*)<P:\d{5}\.\d{3}-\d{5}\.\d{3}>(.*)', kana_seq)
+        # 空白は入れない（言語的な情報が減るため）
+        kana_seq = pause.group(1) + pause.group(2)
+        pause = re.match(expr, kana_seq)
     return kana_seq
 
 

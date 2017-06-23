@@ -42,7 +42,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
             print('Warning: time stamp is reversed.')
             print('speaker name: %s' % speaker_name)
             print('utterance index: %s & %s' %
-                  (utt_index, utt_dict_sorted[index + 1][0]))
+                  (str(utt_index), utt_dict_sorted[index + 1][0]))
 
         # first utterance
         if index == 0:
@@ -56,7 +56,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
                 print('Warning: utterances are overlapping.')
                 print('speaker name: %s' % speaker_name)
                 print('utterance index: %s & %s' %
-                      (utt_index, utt_dict_sorted[index + 1][0]))
+                      (str(utt_index), utt_dict_sorted[index + 1][0]))
 
             if start_frame_next - end_frame >= sil_duration * 2:
                 end_frame_extend = end_frame + sil_duration
@@ -90,7 +90,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
                 print('Warning: utterances are overlapping.')
                 print('speaker: %s' % speaker_name)
                 print('utt index: %s & %s' %
-                      (utt_index, utt_dict_sorted[index + 1][0]))
+                      (str(utt_index), utt_dict_sorted[index + 1][0]))
 
             if start_frame_next - end_frame >= sil_duration * 2:
                 end_frame_extend = end_frame + sil_duration
@@ -100,7 +100,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
 
         input_data_utt = input_data[start_frame_extend:end_frame_extend]
         total_frame_num += (end_frame_extend - start_frame_extend)
-        input_data_dict[speaker_name + '_' + utt_index] = input_data_utt
+        input_data_dict[speaker_name + '_' + str(utt_index)] = input_data_utt
 
         # update
         end_frame_pre = end_frame

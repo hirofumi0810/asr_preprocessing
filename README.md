@@ -1,14 +1,4 @@
 # TODO
-## TIMIT
-#### CTC
-- [x] **phone (39, 48, 61)**
-- [x] **character**
-
-#### Attention
-- [x] **phone (39, 48, 61)**
-- [x] **character**
-
-
 ## Switchboard
 ### 300h Training data (LDC97S62)
 #### CTC
@@ -41,13 +31,9 @@
 
 ## CSJ
 #### CTC
-- [ ] **phone**
-- [ ] **character**
 - [ ] **word**
 
 #### Attention
-- [ ] **phone**
-- [ ] **character**
 - [ ] **word**
 
 

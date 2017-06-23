@@ -3,8 +3,11 @@
 
 """Make input data (CSJ corpus)."""
 
-import os
-from os.path import join
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+from os.path import join, basename
 import pickle
 import numpy as np
 from tqdm import tqdm
@@ -37,14 +40,14 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
         train_std_male: global standard deviation of male over train data
         train_std_female: global standard deviation of female over train data
     """
-    # Read each HTK file
-    print('===> Reading HTK files...')
+    # Load each HTK file
+    print('===> Loading HTK files...')
     input_data_dict_list_male, total_frame_num_list_male = [], []
     train_mean_list_male, train_std_list_male = [], []
     input_data_dict_list_female, total_frame_num_list_female = [], []
     train_mean_list_female, train_std_list_female = [], []
     for htk_path in tqdm(htk_paths):
-        speaker_name = os.path.basename(htk_path).split('.')[0]
+        speaker_name = basename(htk_path).split('.')[0]
         return_tuple = segment_htk(htk_path,
                                    speaker_name,
                                    speaker_dict[speaker_name],
