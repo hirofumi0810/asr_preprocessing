@@ -1,18 +1,18 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
 import numpy as np
 from struct import unpack
 from tqdm import tqdm
 
 
-def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
+def segment_htk(htk_path, speaker_name, utterance_dict, normalize,
+                sil_duration=50):
     """Segment each HTK file.
     Args:
         htk_path: path to a HTK file
         speaker_name: speaker name
-        utt_dict: dictionary of utterance information of each speaker
+        utterance_dict: dictionary of utterance information of each speaker
             key => utterance index
             value => [start_frame, end_frame, transcript]
         normalize : if speaker, normalize inputs by mean & std per speaker
@@ -25,26 +25,27 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
         train_std: standard deviation per speaker
         total_frame_num: total frame num per speaker
     """
-    # read the htk file
-    input_data = read_htk(htk_path)
+    # Load the htk file
+    input_data = load_htk(htk_path)
 
-    # divide into each utterance
+    # Divide into each utterance
     input_data_dict = {}
     total_frame_num = 0
     end_frame_pre = 0
-    utt_num = len(utt_dict.keys())
-    utt_dict_sorted = sorted(utt_dict.items(), key=lambda x: x[0])
+    utt_num = len(utterance_dict.keys())
+    utt_dict_sorted = sorted(utterance_dict.items(), key=lambda x: x[0])
     for index, (utt_index, utt_info) in enumerate(utt_dict_sorted):
         start_frame, end_frame = utt_info[0], utt_info[1]
 
-        # error check
+        # Error check
         if start_frame > end_frame:
+            print(utterance_dict)
             print('Warning: time stamp is reversed.')
             print('speaker name: %s' % speaker_name)
             print('utterance index: %s & %s' %
                   (str(utt_index), utt_dict_sorted[index + 1][0]))
 
-        # first utterance
+        # First utterance
         if index == 0:
             if start_frame >= sil_duration:
                 start_frame_extend = start_frame - sil_duration
@@ -64,7 +65,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
                 end_frame_extend = end_frame + \
                     int((start_frame_next - end_frame) / 2)
 
-        # last utterance
+        # Last utterance
         elif index == utt_num - 1:
             if start_frame - end_frame_pre >= sil_duration * 2:
                 start_frame_extend = start_frame - sil_duration
@@ -77,7 +78,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
             else:
                 end_frame_extend = input_data.shape[0]  # last frame
 
-        # middle utterances
+        # Middle utterances
         else:
             if start_frame - end_frame_pre >= sil_duration * 2:
                 start_frame_extend = start_frame - sil_duration
@@ -102,10 +103,10 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
         total_frame_num += (end_frame_extend - start_frame_extend)
         input_data_dict[speaker_name + '_' + str(utt_index)] = input_data_utt
 
-        # update
+        # Update
         end_frame_pre = end_frame
 
-    # compute mean & std per speaker (including silence)
+    # Compute mean & std per speaker (including silence)
     frame_offset = 0
     feature_dim = input_data.shape[1]
     train_data = np.empty((total_frame_num, feature_dim), dtype=np.float64)
@@ -118,7 +119,7 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
     train_std = np.std(train_data, axis=0, dtype=np.float64)
 
     if normalize == 'speaker':
-        # normalize by mean & std per speaker
+        # Normalize by mean & std per speaker
         for key, input_data_utt in input_data_dict.items():
             input_data_utt = (input_data_utt - train_mean) / train_std
             input_data_dict[key] = input_data_utt
@@ -126,8 +127,8 @@ def segment_htk(htk_path, speaker_name, utt_dict, normalize, sil_duration=50):
     return input_data_dict, train_mean, train_std, total_frame_num
 
 
-def read_htk(htk_path):
-    """Read each HTK file.
+def load_htk(htk_path):
+    """Load each HTK file.
     Args:
         htk_path: path to a HTK file
     Returns:
@@ -182,7 +183,7 @@ def global_std(input_data_dict_list, total_frame_num_list, global_mean_value):
     global_std_value = np.empty((feature_dim,), dtype=np.float64)
     total_frame_num = np.sum(total_frame_num_list)
     for i, input_data_dict in enumerate(tqdm(input_data_dict_list)):
-        # compute square values between features & global mean per speaker
+        # Compute square values between features & global mean per speaker
         frame_offset = 0
         total_frame_num_speaker = total_frame_num_list[i]
         input_data_speaker = np.empty((total_frame_num_speaker, feature_dim))

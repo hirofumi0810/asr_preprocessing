@@ -16,10 +16,10 @@ from utils.util import mkdir_join
 from utils.inputs.segmentation import segment_htk, global_mean, global_std
 
 
-def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
+def load_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
              train_mean_male=None, train_mean_female=None,
              train_std_male=None, train_std_female=None):
-    """Read HTK files.
+    """Load HTK files.
     Args:
         htk_paths: list of paths to HTK files
         speaker_dict: dictionary of speakers
@@ -89,14 +89,13 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
 
         if save_path is not None:
             # Save global mean & std (each gender)
-            statistics_save_path = '/'.join(save_path.split('/')[:-1])
-            np.save(join(statistics_save_path, 'train_mean_male.npy'),
+            np.save(join(save_path, 'train_mean_male.npy'),
                     train_mean_male)
-            np.save(join(statistics_save_path, 'train_mean_female.npy'),
+            np.save(join(save_path, 'train_mean_female.npy'),
                     train_mean_female)
-            np.save(join(statistics_save_path, 'train_std_male.npy'),
+            np.save(join(save_path, 'train_std_male.npy'),
                     train_std_male)
-            np.save(join(statistics_save_path, 'train_std_female.npy'),
+            np.save(join(save_path, 'train_std_female.npy'),
                     train_std_female)
 
     if save_path is not None:
@@ -124,9 +123,8 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
                 frame_num_dict[key] = input_data_utt.shape[0]
 
         # Save the frame number dictionary
-        frame_num_dict_save_path = '/'.join(save_path.split('/')[:-1])
         print('===> Saving : frame_num.pickle')
-        with open(join(frame_num_dict_save_path, 'frame_num.pickle'), 'wb') as f:
+        with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
             pickle.dump(frame_num_dict, f)
 
     return train_mean_male, train_mean_female, train_std_male, train_std_female

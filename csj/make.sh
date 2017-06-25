@@ -39,7 +39,6 @@ CONFIG_PATH="./config/config_fbank"
 echo '--------------------------'
 echo '|          CTC            |'
 echo '--------------------------'
-python make_attention.py $CSJ_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
 python make_ctc.py $CSJ_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
 
 
@@ -47,3 +46,4 @@ python make_ctc.py $CSJ_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_RO
 echo '--------------------------'
 echo '|        Attention        |'
 echo '--------------------------'
+python make_attention.py $CSJ_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH

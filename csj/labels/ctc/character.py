@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make labels for CTC model (CSJ corpus)."""
+"""Make target labels for the CTC model (CSJ corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -35,9 +35,9 @@ from .fix_trans import is_hiragana, is_katakana, is_kanji, is_alphabet
 # = ?? + ?? + ?? + 2 = 3386 lables
 
 
-def read_sdb(label_paths, label_type, run_root_path, is_test=None,
+def load_sdb(label_paths, label_type, run_root_path, is_test=None,
              save_map_file=False, save_path=None):
-    """Read transcripts (.sdb) & save files (.npy).
+    """Load transcripts (.sdb) & save files (.npy).
     Args:
         label_paths: list of paths to label files
         label_type: character or phone or kanji

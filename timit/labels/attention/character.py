@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make label for the Attention model (TIMIT corpus)."""
+"""Make target labels for the Attention model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -21,15 +21,15 @@ from utils.labels.character import char2num
 # = 26 + 2 + 7 = 35 labels
 
 
-def read_text(label_paths, run_root_path, save_map_file=False, save_path=None):
-    """Read text transcript.
+def load_text(label_paths, run_root_path, save_map_file=False, save_path=None):
+    """Load text transcript.
     Args:
         label_paths: list of paths to label files
         run_root_path: absolute path of make.sh
         save_map_file: if True, save the mapping file
         save_path: path to save labels. If None, don't save labels
     """
-    print('===> Reading target labels...')
+    print('===> Loadding target labels...')
     text_dict = {}
     char_set = set([])
     for label_path in tqdm(label_paths):
@@ -59,6 +59,7 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None):
     char_set.discard('!')
     char_set.discard('<')
     char_set.discard('>')
+
     if save_map_file:
         with open(mapping_file_path, 'w') as f:
             char_list = ['_', '<', '>'] + sorted(list(char_set))

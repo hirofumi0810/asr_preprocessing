@@ -3,20 +3,9 @@
 __pychache__
 *.log
 *.pyc
+
 svc
 erato
-erato2
 
+# csj
 dialog
-char2num_insert.txt
-char2num_insert2.txt
-char2num_insert3.txt
-phone2num_insert.txt
-phone2num_insert2.txt
-phone2num_insert3.txt
-test_dialog_char.py
-test_dialog_phone.py
-test_dialog_global_norm.py
-test_dialog_speaker_norm.py
-make_ctc_dialog.py
-make_attention_dialog.py

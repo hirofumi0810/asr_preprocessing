@@ -12,11 +12,12 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 
-from utils.inputs.segmentation import read_htk as read
+from utils.inputs.segmentation import load_htk as load
 
 
-def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None, train_std=None):
-    """Read HTK files.
+def load_htk(htk_paths, normalize, is_training, save_path=None,
+             train_mean=None, train_std=None):
+    """Load HTK files.
     Args:
         htk_paths: list of paths to HTK files
         save_path: path to save npy files
@@ -28,11 +29,11 @@ def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None,
         train_mean: mean over train data, return only when training
         train_std: standard deviation over train data, return only when training
     """
-    # Load each HTK file (multiprocessing)
-    print('===> Reading HTK files...')
+    # Load each HTK file
+    print('===> Loading HTK files...')
     input_data_list = []
     for htk_path in tqdm(htk_paths):
-        input_data_list.append(read(htk_path))
+        input_data_list.append(load(htk_path))
 
     if normalize and is_training:
         # Count total frame num
@@ -55,9 +56,8 @@ def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None,
 
         if save_path is not None:
             # Save global mean & std
-            statistics_save_path = '/'.join(save_path.split('/')[:-1])
-            np.save(join(statistics_save_path, 'train_mean.npy'), train_mean)
-            np.save(join(statistics_save_path, 'train_std.npy'), train_std)
+            np.save(join(save_path, 'train_mean.npy'), train_mean)
+            np.save(join(save_path, 'train_std.npy'), train_std)
 
     if save_path is not None:
         # Save input data as npy files
@@ -76,8 +76,7 @@ def read_htk(htk_paths, normalize, is_training, save_path=None, train_mean=None,
                 0]] = input_data.shape[0]
 
         # Save a frame number dictionary
-        frame_num_dict_save_path = '/'.join(save_path.split('/')[:-1])
-        with open(join(frame_num_dict_save_path, 'frame_num.pickle'), 'wb') as f:
+        with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
             print('===> Saving : frame_num.pickle')
             pickle.dump(frame_num_dict, f)
 

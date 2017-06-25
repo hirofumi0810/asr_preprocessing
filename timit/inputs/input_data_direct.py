@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make input data for CTC network (TIMIT corpus)."""
+"""Make input data for the CTC model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -17,7 +17,7 @@ from python_speech_features import fbank, logfbank, hz2mel
 from utils import mkdir
 
 
-def read_wav(input_paths, save_path, is_train=False, train_mean=None, train_std=None):
+def load_wav(input_paths, save_path, is_train=False, train_mean=None, train_std=None):
 
     if (not is_train) and (train_mean == None or train_std == None):
         raise ValueError('Error: Set mean & std!')
@@ -35,7 +35,7 @@ def read_wav(input_paths, save_path, is_train=False, train_mean=None, train_std=
         p = mp.Pool(mp.cpu_count() - 1)
         args = [(input_path, save_path, False, train_mean, train_std, 0)
                 for input_path in input_paths]
-        result_tuple = p.map(read_each_wav, args)
+        result_tuple = p.map(load_each_wav, args)
 
         # compute max frame num
         all_frame_num = 0
@@ -68,7 +68,7 @@ def read_wav(input_paths, save_path, is_train=False, train_mean=None, train_std=
         p = mp.Pool(mp.cpu_count() - 1)
         args = [(input_path, save_path, False, train_mean, train_std, 0)
                 for input_path in input_paths]
-        result_tuple = p.map(read_each_wav, args)
+        result_tuple = p.map(load_each_wav, args)
 
         # compute max frame num
         max_frame_num = 0
@@ -88,7 +88,7 @@ def read_wav(input_paths, save_path, is_train=False, train_mean=None, train_std=
     p = mp.Pool(mp.cpu_count() - 1)
     args = [(input_path, save_path, True, train_mean, train_std, max_frame_num)
             for input_path in input_paths]
-    p.map(read_each_wav, args)
+    p.map(load_each_wav, args)
 
     with open(os.path.join(save_path, 'frame_num.pickle'), 'wb') as f:
         print('saving : frame_num.pickle')
@@ -97,7 +97,7 @@ def read_wav(input_paths, save_path, is_train=False, train_mean=None, train_std=
     return train_mean, train_std
 
 
-def read_each_wav(args):
+def load_each_wav(args):
     input_path, save_path, is_save, train_mean, train_std, max_frame_num = args
 
     # if is_save:

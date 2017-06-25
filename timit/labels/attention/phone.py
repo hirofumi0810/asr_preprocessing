@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make label for the Attention model (TIMIT corpus)."""
+"""Make target labels for the Attention model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -15,9 +15,9 @@ from utils.labels.phone import phone2num
 from util import map_phone2phone
 
 
-def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
+def load_phone(label_paths, label_type, run_root_path, save_map_file=False,
                save_path=None):
-    """Read phone transcript.
+    """Load phone transcript.
     Args:
         label_paths: list of paths to label files
         label_type: phone39 or phone48 or phone61
@@ -29,7 +29,7 @@ def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
         raise ValueError(
             'data_type is "phone39" or "phone48" or "phone61".')
 
-    print('===> Reading & Saving target labels...')
+    print('===> Loading & Saving target labels...')
     phone2phone_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
     phone2num_map_file_path = join(
         run_root_path,

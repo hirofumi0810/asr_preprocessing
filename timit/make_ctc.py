@@ -7,18 +7,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-from os.path import join, abspath
+from os.path import join, abspath, isfile
 import sys
 import shutil
 from glob import glob
-from tqdm import tqdm
 
 sys.path.append('../')
 from prepare_path import Prepare
-from inputs.input_data_global_norm import read_htk
-from labels.ctc.character import read_text
-from labels.ctc.phone import read_phone
+from inputs.input_data_global_norm import load_htk
+from labels.ctc.character import load_text
+from labels.ctc.phone import load_phone
 from utils.util import mkdir_join
 
 
@@ -27,126 +25,122 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
 
     print('===== ' + label_type + ' =====')
     prep = Prepare(timit_path, run_root_path)
-    save_path = mkdir_join(dataset_save_path, 'ctc')
-    save_path = mkdir_join(save_path, label_type)
+    input_save_path = mkdir_join(dataset_save_path, 'inputs')
+    label_save_path = mkdir_join(dataset_save_path, 'labels')
+    label_save_path = mkdir_join(label_save_path, 'ctc')
+    label_save_path = mkdir_join(label_save_path, label_type)
 
-    # Reset directory
-    if not os.path.isfile(join(save_path, 'check.txt')):
+    ####################
+    # inputs
+    ####################
+    if not isfile(join(input_save_path, 'complete.txt')):
         print('=> Deleting old dataset...')
-        for c in tqdm(os.listdir(save_path)):
-            shutil.rmtree(join(save_path, c))
-    else:
-        print('Already exists.')
-        return 0
+        shutil.rmtree(input_save_path)
 
-    train_save_path = mkdir_join(save_path, 'train')
-    dev_save_path = mkdir_join(save_path, 'dev')
-    test_save_path = mkdir_join(save_path, 'test')
+        input_save_path = mkdir_join(dataset_save_path, 'inputs')
+        input_train_save_path = mkdir_join(input_save_path, 'train')
+        input_dev_save_path = mkdir_join(input_save_path, 'dev')
+        input_test_save_path = mkdir_join(input_save_path, 'test')
 
-    input_train_save_path = mkdir_join(train_save_path, 'input')
-    label_train_save_path = mkdir_join(train_save_path, 'label')
-    input_dev_save_path = mkdir_join(dev_save_path, 'input')
-    label_dev_save_path = mkdir_join(dev_save_path, 'label')
-    input_test_save_path = mkdir_join(test_save_path, 'input')
-    label_test_save_path = mkdir_join(test_save_path, 'label')
+        print('=> Processing input data...')
+        # Load htk files, and save input data and frame num dict
+        htk_train_paths = [join(input_feature_path, htk_dir)
+                           for htk_dir in sorted(glob(join(input_feature_path,
+                                                           'train/*.htk')))]
+        htk_dev_paths = [join(input_feature_path, htk_dir)
+                         for htk_dir in sorted(glob(join(input_feature_path,
+                                                         'dev/*.htk')))]
+        htk_test_paths = [join(input_feature_path, htk_dir)
+                          for htk_dir in sorted(glob(join(input_feature_path,
+                                                          'test/*.htk')))]
 
-    ####################
-    # train
-    ####################
-    print('---------- train ----------')
-    # Load htk files, save input data as npy files, save frame num dict as a
-    # pickle file
-    print('=> Processing input data...')
-    htk_train_paths = [join(input_feature_path, htk_dir)
-                       for htk_dir in sorted(glob(join(input_feature_path,
-                                                       'train/*.htk')))]
-    train_mean, train_std = read_htk(htk_paths=htk_train_paths,
-                                     save_path=input_train_save_path,
-                                     normalize=True,
-                                     is_training=True)
+        print('---------- train ----------')
+        train_mean, train_std = load_htk(htk_paths=htk_train_paths,
+                                         save_path=input_train_save_path,
+                                         normalize=True,
+                                         is_training=True)
 
-    # Load target labels and save labels as npy files
-    print('=> Processing transcripts...')
-    if label_type == 'character':
-        label_train_paths = prep.text(data_type='train')
-        read_text(label_paths=label_train_paths,
-                  run_root_path=abspath('./'),
-                  save_map_file=True,
-                  save_path=label_train_save_path)
-    else:
-        label_train_paths = prep.phone(data_type='train')
-        read_phone(label_paths=label_train_paths,
-                   label_type=label_type,
-                   run_root_path=abspath('./'),
-                   save_map_file=True,
-                   save_path=label_train_save_path)
+        print('---------- dev ----------')
+        load_htk(htk_paths=htk_dev_paths,
+                 save_path=input_dev_save_path,
+                 normalize=True,
+                 is_training=False,
+                 train_mean=train_mean,
+                 train_std=train_std)
+
+        print('---------- test ----------')
+        load_htk(htk_paths=htk_test_paths,
+                 save_path=input_test_save_path,
+                 normalize=True,
+                 is_training=False,
+                 train_mean=train_mean,
+                 train_std=train_std)
+
+        # Make a confirmation file to prove that dataset was saved correctly
+        with open(join(input_save_path, 'complete.txt'), 'w') as f:
+            f.write('')
 
     ####################
-    # dev
+    # labels
     ####################
-    print('---------- dev ----------')
-    # Load htk files, save input data as npy files, save frame num dict as a
-    # pickle file
-    print('=> Processing input data...')
-    htk_dev_paths = [join(input_feature_path, htk_dir)
-                     for htk_dir in sorted(glob(join(input_feature_path,
-                                                     'dev/*.htk')))]
-    read_htk(htk_paths=htk_dev_paths,
-             save_path=input_dev_save_path,
-             normalize=True,
-             is_training=False,
-             train_mean=train_mean,
-             train_std=train_std)
+    if not isfile(join(label_save_path, 'complete.txt')):
+        print('=> Deleting old dataset...')
+        shutil.rmtree(label_save_path)
 
-    # Load target labels and save labels as npy files
-    print('=> Processing ground truth labels...')
-    if label_type == 'character':
-        label_dev_paths = prep.text(data_type='dev')
-        read_text(label_paths=label_dev_paths,
-                  run_root_path=abspath('./'),
-                  save_path=label_dev_save_path)
-    else:
-        label_dev_paths = prep.phone(data_type='dev')
-        read_phone(label_paths=label_dev_paths,
-                   label_type=label_type,
-                   run_root_path=abspath('./'),
-                   save_path=label_dev_save_path)
+        label_save_path = mkdir_join(dataset_save_path, 'labels')
+        label_save_path = mkdir_join(label_save_path, 'ctc')
+        label_save_path = mkdir_join(label_save_path, label_type)
 
-    ####################
-    # test
-    ####################
-    print('---------- test ----------')
-    # Load htk files, save input data as npy files, save frame num dict as a
-    # pickle file
-    print('=> Processing input data...')
-    htk_test_paths = [join(input_feature_path, htk_dir)
-                      for htk_dir in sorted(glob(join(input_feature_path,
-                                                      'test/*.htk')))]
-    read_htk(htk_paths=htk_test_paths,
-             save_path=input_test_save_path,
-             normalize=True,
-             is_training=False,
-             train_mean=train_mean,
-             train_std=train_std)
+        label_train_save_path = mkdir_join(label_save_path, 'train')
+        label_dev_save_path = mkdir_join(label_save_path, 'dev')
+        label_test_save_path = mkdir_join(label_save_path, 'test')
 
-    # Load target labels and save labels as npy files
-    print('=> Processing ground truth labels...')
-    if label_type == 'character':
-        label_test_paths = prep.text(data_type='test')
-        read_text(label_paths=label_test_paths,
-                  run_root_path=abspath('./'),
-                  save_path=label_test_save_path)
-    else:
-        label_test_paths = prep.phone(data_type='test')
-        read_phone(label_paths=label_test_paths,
-                   label_type=label_type,
-                   run_root_path=abspath('./'),
-                   save_path=label_test_save_path)
+        print('=> Processing transcripts...')
+        # Load target labels and save labels as npy files
+        print('---------- train ----------')
+        if label_type == 'character':
+            label_train_paths = prep.text(data_type='train')
+            load_text(label_paths=label_train_paths,
+                      run_root_path=abspath('./'),
+                      save_map_file=True,
+                      save_path=label_train_save_path)
+        else:
+            label_train_paths = prep.phone(data_type='train')
+            load_phone(label_paths=label_train_paths,
+                       label_type=label_type,
+                       run_root_path=abspath('./'),
+                       save_map_file=True,
+                       save_path=label_train_save_path)
 
-    # Make a confirmation file to prove that dataset was saved correctly
-    with open(join(save_path, 'check.txt'), 'w') as f:
-        f.write('')
-    print('Successfully completed!')
+        print('---------- dev ----------')
+        if label_type == 'character':
+            label_dev_paths = prep.text(data_type='dev')
+            load_text(label_paths=label_dev_paths,
+                      run_root_path=abspath('./'),
+                      save_path=label_dev_save_path)
+        else:
+            label_dev_paths = prep.phone(data_type='dev')
+            load_phone(label_paths=label_dev_paths,
+                       label_type=label_type,
+                       run_root_path=abspath('./'),
+                       save_path=label_dev_save_path)
+
+        print('---------- test ----------')
+        if label_type == 'character':
+            label_test_paths = prep.text(data_type='test')
+            load_text(label_paths=label_test_paths,
+                      run_root_path=abspath('./'),
+                      save_path=label_test_save_path)
+        else:
+            label_test_paths = prep.phone(data_type='test')
+            load_phone(label_paths=label_test_paths,
+                       label_type=label_type,
+                       run_root_path=abspath('./'),
+                       save_path=label_test_save_path)
+
+        # Make a confirmation file to prove that dataset was saved correctly
+        with open(join(label_save_path, 'complete.txt'), 'w') as f:
+            f.write('')
 
 
 if __name__ == '__main__':

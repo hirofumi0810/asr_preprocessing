@@ -1,25 +1,21 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make dataset for Attention model (CSJ corpus)."""
+"""Make dataset for the Attention model (CSJ corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-from os.path import join
+from os.path import join, isfile
 import sys
 import shutil
 from glob import glob
-from tqdm import tqdm
-
 
 sys.path.append('../')
-sys.path.append('../../')
 from prepare_path import Prepare
-from inputs.input_data import read_htk
-from labels.attention.character import read_sdb
+from inputs.input_data import load_htk
+from labels.attention.character import load_sdb
 from utils.util import mkdir_join
 
 
@@ -28,182 +24,174 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
 
     print('===== ' + label_type + ' (' + train_data_type + ') =====')
     prep = Prepare(csj_path, run_root_path)
-    save_path = mkdir_join(dataset_save_path, 'attention')
-    save_path = mkdir_join(save_path, label_type)
-    save_path = mkdir_join(save_path, train_data_type)
+    input_save_path = mkdir_join(dataset_save_path, 'inputs')
+    input_save_path = mkdir_join(input_save_path, train_data_type)
+    label_save_path = mkdir_join(dataset_save_path, 'labels')
+    label_save_path = mkdir_join(label_save_path, 'attention')
+    label_save_path = mkdir_join(label_save_path, label_type)
+    label_save_path = mkdir_join(label_save_path, train_data_type)
 
-    # Reset directory
-    if not os.path.isfile(join(save_path, 'check.txt')):
-        print('=> Deleting old dataset...')
-        for c in tqdm(os.listdir(save_path)):
-            shutil.rmtree(join(save_path, c))
-    else:
-        print('Already exists.')
-        return 0
-
-    train_save_path = mkdir_join(save_path, 'train')
-    dev_save_path = mkdir_join(save_path, 'dev')
-    eval1_save_path = mkdir_join(save_path, 'eval1')
-    eval2_save_path = mkdir_join(save_path, 'eval2')
-    eval3_save_path = mkdir_join(save_path, 'eval3')
-
-    input_train_save_path = mkdir_join(train_save_path, 'input')
-    label_train_save_path = mkdir_join(train_save_path, 'label')
-    input_dev_save_path = mkdir_join(dev_save_path, 'input')
-    label_dev_save_path = mkdir_join(dev_save_path, 'label')
-    input_eval1_save_path = mkdir_join(eval1_save_path, 'input')
-    label_eval1_save_path = mkdir_join(eval1_save_path, 'label')
-    input_eval2_save_path = mkdir_join(eval2_save_path, 'input')
-    label_eval2_save_path = mkdir_join(eval2_save_path, 'label')
-    input_eval3_save_path = mkdir_join(eval3_save_path, 'input')
-    label_eval3_save_path = mkdir_join(eval3_save_path, 'label')
-
-    ################
-    # train
-    ################
-    print('---------- train ----------')
-    # Load target labels and save labels as npy files
-    print('=> Processing transcripts...')
     if train_data_type == 'default':
-        data_type = 'train'
+        train = 'train'
         save_map_file = False
     elif train_data_type == 'large':
-        data_type = 'train_large'
+        train = 'train_large'
         save_map_file = True
-    label_train_paths = prep.trans(data_type=data_type)
-    speaker_dict = read_sdb(label_paths=label_train_paths,
-                            label_type=label_type,
-                            run_root_path=run_root_path,
-                            save_path=label_train_save_path,
-                            save_map_file=save_map_file)
-
-    # Load htk files, save input data & frame num dict
-    print('=> Processing input data...')
-    htk_paths = [join(input_feature_path, htk_dir)
-                 for htk_dir in sorted(glob(join(input_feature_path,
-                                                 data_type, '*.htk')))]
-    return_tuple = read_htk(htk_paths=htk_paths,
-                            save_path=input_train_save_path,
-                            speaker_dict=speaker_dict,
-                            normalize='speaker',
-                            is_training=True)
-    train_mean_male, train_mean_female, train_std_male, train_std_female = return_tuple
 
     ####################
-    # dev
+    # labels
     ####################
-    print('---------- dev ----------')
-    # Load target labels and save labels as npy files
-    print('=> Processing ground truth labels...')
-    label_dev_paths = prep.trans(data_type='dev')
-    speaker_dict = read_sdb(label_paths=label_dev_paths,
-                            label_type=label_type,
-                            run_root_path=run_root_path,
-                            save_path=label_dev_save_path)
+    if not isfile(join(label_save_path, 'complete.txt')):
+        print('=> Deleting old dataset...')
+        shutil.rmtree(label_save_path)
 
-    # Load htk files, save input data & frame num dict
-    print('=> Processing input data...')
-    htk_paths = [join(input_feature_path, htk_dir)
-                 for htk_dir in sorted(glob(join(input_feature_path,
-                                                 'dev/*.htk')))]
-    read_htk(htk_paths=htk_paths,
-             save_path=input_dev_save_path,
-             speaker_dict=speaker_dict,
-             normalize='speaker',
-             is_training=False,
-             train_mean_male=train_mean_male,
-             train_std_male=train_std_male,
-             train_mean_female=train_mean_female,
-             train_std_female=train_std_female)
+        label_save_path = mkdir_join(dataset_save_path, 'labels')
+        label_save_path = mkdir_join(label_save_path, 'attention')
+        label_save_path = mkdir_join(label_save_path, label_type)
+        label_save_path = mkdir_join(label_save_path, train_data_type)
 
-    ####################
-    # eval1
-    ####################
-    print('---------- eval1 ----------')
-    # Load target labels and save labels as npy files
-    print('=> Processing ground truth labels...')
-    label_eval1_paths = prep.trans(data_type='eval1')
-    speaker_dict = read_sdb(label_paths=label_eval1_paths,
-                            label_type=label_type,
-                            run_root_path=run_root_path,
-                            is_test=True,
-                            save_path=label_eval1_save_path)
+        label_train_save_path = mkdir_join(label_save_path, 'train')
+        label_dev_save_path = mkdir_join(label_save_path, 'dev')
+        label_eval1_save_path = mkdir_join(label_save_path, 'eval1')
+        label_eval2_save_path = mkdir_join(label_save_path, 'eval2')
+        label_eval3_save_path = mkdir_join(label_save_path, 'eval3')
 
-    # Load htk files, save input data & frame num dict
-    print('=> Processing input data...')
-    htk_paths = [join(input_feature_path, htk_dir)
-                 for htk_dir in sorted(glob(join(input_feature_path,
-                                                 'eval1/*.htk')))]
-    read_htk(htk_paths=htk_paths,
-             save_path=input_eval1_save_path,
-             speaker_dict=speaker_dict,
-             normalize='speaker',
-             is_training=False,
-             train_mean_male=train_mean_male,
-             train_std_male=train_std_male,
-             train_mean_female=train_mean_female,
-             train_std_female=train_std_female)
+        print('=> Processing transcripts...')
+        # Load target labels and save labels as npy files
+        print('---------- train ----------')
+        label_train_paths = prep.trans(data_type=train)
+        speaker_dict_train = load_sdb(label_paths=label_train_paths,
+                                      label_type=label_type,
+                                      run_root_path=run_root_path,
+                                      save_path=label_train_save_path,
+                                      save_map_file=save_map_file)
 
-    ####################
-    # eval2
-    ####################
-    print('---------- eval2 ----------')
-    # Load target labels and save labels as npy files
-    print('=> Processing ground truth labels...')
-    label_eval2_paths = prep.trans(data_type='eval2')
-    speaker_dict = read_sdb(label_paths=label_eval2_paths,
-                            label_type=label_type,
-                            run_root_path=run_root_path,
-                            is_test=True,
-                            save_path=label_eval2_save_path)
+        print('---------- dev ----------')
+        label_dev_paths = prep.trans(data_type='dev')
+        speaker_dict_dev = load_sdb(label_paths=label_dev_paths,
+                                    label_type=label_type,
+                                    run_root_path=run_root_path,
+                                    save_path=label_dev_save_path)
 
-    # Load htk files, save input data & frame num dict
-    print('=> Processing input data...')
-    htk_paths = [join(input_feature_path, htk_dir)
-                 for htk_dir in sorted(glob(join(input_feature_path,
-                                                 'eval2/*.htk')))]
-    read_htk(htk_paths=htk_paths,
-             save_path=input_eval2_save_path,
-             speaker_dict=speaker_dict,
-             normalize='speaker',
-             is_training=False,
-             train_mean_male=train_mean_male,
-             train_std_male=train_std_male,
-             train_mean_female=train_mean_female,
-             train_std_female=train_std_female)
+        print('---------- eval1 ----------')
+        label_eval1_paths = prep.trans(data_type='eval1')
+        speaker_dict_eval1 = load_sdb(label_paths=label_eval1_paths,
+                                      label_type=label_type,
+                                      run_root_path=run_root_path,
+                                      is_test=True,
+                                      save_path=label_eval1_save_path)
+
+        print('---------- eval2 ----------')
+        label_eval2_paths = prep.trans(data_type='eval2')
+        speaker_dict_eval2 = load_sdb(label_paths=label_eval2_paths,
+                                      label_type=label_type,
+                                      run_root_path=run_root_path,
+                                      is_test=True,
+                                      save_path=label_eval2_save_path)
+
+        print('---------- eval3 ----------')
+        label_eval3_paths = prep.trans(data_type='eval3')
+        speaker_dict_eval3 = load_sdb(label_paths=label_eval3_paths,
+                                      label_type=label_type,
+                                      run_root_path=run_root_path,
+                                      is_test=True,
+                                      save_path=label_eval3_save_path)
+
+        # Make a confirmation file to prove that dataset was saved correctly
+        with open(join(label_save_path, 'complete.txt'), 'w') as f:
+            f.write('')
 
     ####################
-    # eval3
+    # inputs
     ####################
-    print('---------- eval3 ----------')
-    # Load target labels and save labels as npy files
-    print('=> Processing ground truth labels...')
-    label_eval3_paths = prep.trans(data_type='eval3')
-    speaker_dict = read_sdb(label_paths=label_eval3_paths,
-                            label_type=label_type,
-                            run_root_path=run_root_path,
-                            is_test=True,
-                            save_path=label_eval3_save_path)
+    if not isfile(join(input_save_path, 'complete.txt')):
+        print('=> Deleting old dataset...')
+        shutil.rmtree(input_save_path)
 
-    # Load htk files, save input data & frame num dict
-    print('=> Processing input data...')
-    htk_paths = [join(input_feature_path, htk_dir)
-                 for htk_dir in sorted(glob(join(input_feature_path,
-                                                 'eval3/*.htk')))]
-    read_htk(htk_paths=htk_paths,
-             save_path=input_eval3_save_path,
-             speaker_dict=speaker_dict,
-             normalize='speaker',
-             is_training=False,
-             train_mean_male=train_mean_male,
-             train_std_male=train_std_male,
-             train_mean_female=train_mean_female,
-             train_std_female=train_std_female)
+        input_save_path = mkdir_join(dataset_save_path, 'inputs')
+        input_save_path = mkdir_join(input_save_path, train_data_type)
+        input_train_save_path = mkdir_join(input_save_path, 'train')
+        input_dev_save_path = mkdir_join(input_save_path, 'dev')
+        input_eval1_save_path = mkdir_join(input_save_path, 'eval1')
+        input_eval2_save_path = mkdir_join(input_save_path, 'eval2')
+        input_eval3_save_path = mkdir_join(input_save_path, 'eval3')
 
-    # Make a confirmation file to prove that dataset was saved correctly
-    with open(join(save_path, 'check.txt'), 'w') as f:
-        f.write('')
-    print('Successfully completed!')
+        print('=> Processing input data...')
+        # Load htk files, and save input data and frame num dict
+        htk_train_paths = [join(input_feature_path, htk_dir)
+                           for htk_dir in sorted(glob(join(input_feature_path,
+                                                           train, '*.htk')))]
+        htk_dev_paths = [join(input_feature_path, htk_dir)
+                         for htk_dir in sorted(glob(join(input_feature_path,
+                                                         'dev/*.htk')))]
+        htk_eval1_paths = [join(input_feature_path, htk_dir)
+                           for htk_dir in sorted(glob(join(input_feature_path,
+                                                           'eval1/*.htk')))]
+        htk_eval2_paths = [join(input_feature_path, htk_dir)
+                           for htk_dir in sorted(glob(join(input_feature_path,
+                                                           'eval2/*.htk')))]
+        htk_eval3_paths = [join(input_feature_path, htk_dir)
+                           for htk_dir in sorted(glob(join(input_feature_path,
+                                                           'eval3/*.htk')))]
+
+        print('---------- train ----------')
+        return_tuple = load_htk(htk_paths=htk_train_paths,
+                                save_path=input_train_save_path,
+                                speaker_dict=speaker_dict_train,
+                                normalize='speaker',
+                                is_training=True)
+        train_mean_male = return_tuple[0]
+        train_mean_female = return_tuple[1]
+        train_std_male = return_tuple[2]
+        train_std_female = return_tuple[3]
+
+        print('---------- dev ----------')
+        load_htk(htk_paths=htk_dev_paths,
+                 save_path=input_dev_save_path,
+                 speaker_dict=speaker_dict_dev,
+                 normalize='speaker',
+                 is_training=False,
+                 train_mean_male=train_mean_male,
+                 train_std_male=train_std_male,
+                 train_mean_female=train_mean_female,
+                 train_std_female=train_std_female)
+
+        print('---------- eval1 ----------')
+        load_htk(htk_paths=htk_eval1_paths,
+                 save_path=input_eval1_save_path,
+                 speaker_dict=speaker_dict_eval1,
+                 normalize='speaker',
+                 is_training=False,
+                 train_mean_male=train_mean_male,
+                 train_std_male=train_std_male,
+                 train_mean_female=train_mean_female,
+                 train_std_female=train_std_female)
+
+        print('---------- eval2 ----------')
+        load_htk(htk_paths=htk_eval2_paths,
+                 save_path=input_eval2_save_path,
+                 speaker_dict=speaker_dict_eval2,
+                 normalize='speaker',
+                 is_training=False,
+                 train_mean_male=train_mean_male,
+                 train_std_male=train_std_male,
+                 train_mean_female=train_mean_female,
+                 train_std_female=train_std_female)
+
+        print('---------- eval3 ----------')
+        load_htk(htk_paths=htk_eval3_paths,
+                 save_path=input_eval3_save_path,
+                 speaker_dict=speaker_dict_eval3,
+                 normalize='speaker',
+                 is_training=False,
+                 train_mean_male=train_mean_male,
+                 train_std_male=train_std_male,
+                 train_mean_female=train_mean_female,
+                 train_std_female=train_std_female)
+
+        # Make a confirmation file to prove that dataset was saved correctly
+        with open(join(input_save_path, 'check.txt'), 'w') as f:
+            f.write('')
 
 
 if __name__ == '__main__':

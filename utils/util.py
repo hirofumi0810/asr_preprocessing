@@ -1,6 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 
 
@@ -24,4 +28,6 @@ def mkdir_join(path_to_dir, dir_name):
     Returns:
         path to the new directory
     """
+    if path_to_dir is None:
+        return path_to_dir
     return mkdir(os.path.join(path_to_dir, dir_name))
