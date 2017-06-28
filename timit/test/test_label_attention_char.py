@@ -9,10 +9,9 @@ import os
 import sys
 import unittest
 
-sys.path.append('../')
 sys.path.append('../../')
-from prepare_path import Prepare
-from labels.attention.character import read_text
+from timit.prepare_path import Prepare
+from timit.labels.attention.character import read_text
 
 
 class TestAttentionLabelChar(unittest.TestCase):

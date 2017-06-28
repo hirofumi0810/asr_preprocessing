@@ -21,15 +21,15 @@ from utils.labels.character import char2num
 # = 26 + 7 = 33 labels
 
 
-def load_text(label_paths, run_root_path, save_map_file=False, save_path=None):
-    """Load text transcript.
+def read_text(label_paths, run_root_path, save_map_file=False, save_path=None):
+    """Read text transcript.
     Args:
         label_paths: list of paths to label files
         run_root_path: absolute path of make.sh
         save_map_file: if True, save the mapping file
         save_path: path to save labels. If None, don't save labels
     """
-    print('===> Loading target labels...')
+    print('===> Reading target labels...')
     text_dict = {}
     char_set = set([])
     for label_path in tqdm(label_paths):

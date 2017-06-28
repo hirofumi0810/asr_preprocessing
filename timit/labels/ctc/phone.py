@@ -15,9 +15,9 @@ from utils.labels.phone import phone2num
 from util import map_phone2phone
 
 
-def load_phone(label_paths, label_type, run_root_path, save_map_file=False,
+def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
                save_path=None):
-    """Load phone transcript.
+    """Read phone transcript.
     Args:
         label_paths: list of paths to label files
         label_type: phone39 or phone48 or phone61
@@ -28,7 +28,7 @@ def load_phone(label_paths, label_type, run_root_path, save_map_file=False,
     if label_type not in ['phone39', 'phone48', 'phone61']:
         raise ValueError('data_type is "phone39" or "phone48" or "phone61".')
 
-    print('===> Loading & Saving target labels...')
+    print('===> Reading & Saving target labels...')
     p2p_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
     for label_path in tqdm(label_paths):
         speaker_name = label_path.split('/')[-2]

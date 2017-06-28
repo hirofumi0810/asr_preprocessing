@@ -14,9 +14,9 @@ from glob import glob
 
 sys.path.append('../')
 from prepare_path import Prepare
-from inputs.input_data_global_norm import load_htk
-from labels.ctc.character import load_text
-from labels.ctc.phone import load_phone
+from inputs.input_data_global_norm import read_htk
+from labels.ctc.character import read_text
+from labels.ctc.phone import read_phone
 from utils.util import mkdir_join
 
 
@@ -43,7 +43,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
         input_test_save_path = mkdir_join(input_save_path, 'test')
 
         print('=> Processing input data...')
-        # Load htk files, and save input data and frame num dict
+        # Read htk files, and save input data and frame num dict
         htk_train_paths = [join(input_feature_path, htk_dir)
                            for htk_dir in sorted(glob(join(input_feature_path,
                                                            'train/*.htk')))]
@@ -55,13 +55,13 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
                                                           'test/*.htk')))]
 
         print('---------- train ----------')
-        train_mean, train_std = load_htk(htk_paths=htk_train_paths,
+        train_mean, train_std = read_htk(htk_paths=htk_train_paths,
                                          save_path=input_train_save_path,
                                          normalize=True,
                                          is_training=True)
 
         print('---------- dev ----------')
-        load_htk(htk_paths=htk_dev_paths,
+        read_htk(htk_paths=htk_dev_paths,
                  save_path=input_dev_save_path,
                  normalize=True,
                  is_training=False,
@@ -69,7 +69,7 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
                  train_std=train_std)
 
         print('---------- test ----------')
-        load_htk(htk_paths=htk_test_paths,
+        read_htk(htk_paths=htk_test_paths,
                  save_path=input_test_save_path,
                  normalize=True,
                  is_training=False,
@@ -96,17 +96,17 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
         label_test_save_path = mkdir_join(label_save_path, 'test')
 
         print('=> Processing transcripts...')
-        # Load target labels and save labels as npy files
+        # Read target labels and save labels as npy files
         print('---------- train ----------')
         if label_type == 'character':
             label_train_paths = prep.text(data_type='train')
-            load_text(label_paths=label_train_paths,
+            read_text(label_paths=label_train_paths,
                       run_root_path=abspath('./'),
                       save_map_file=True,
                       save_path=label_train_save_path)
         else:
             label_train_paths = prep.phone(data_type='train')
-            load_phone(label_paths=label_train_paths,
+            read_phone(label_paths=label_train_paths,
                        label_type=label_type,
                        run_root_path=abspath('./'),
                        save_map_file=True,
@@ -115,12 +115,12 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
         print('---------- dev ----------')
         if label_type == 'character':
             label_dev_paths = prep.text(data_type='dev')
-            load_text(label_paths=label_dev_paths,
+            read_text(label_paths=label_dev_paths,
                       run_root_path=abspath('./'),
                       save_path=label_dev_save_path)
         else:
             label_dev_paths = prep.phone(data_type='dev')
-            load_phone(label_paths=label_dev_paths,
+            read_phone(label_paths=label_dev_paths,
                        label_type=label_type,
                        run_root_path=abspath('./'),
                        save_path=label_dev_save_path)
@@ -128,12 +128,12 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
         print('---------- test ----------')
         if label_type == 'character':
             label_test_paths = prep.text(data_type='test')
-            load_text(label_paths=label_test_paths,
+            read_text(label_paths=label_test_paths,
                       run_root_path=abspath('./'),
                       save_path=label_test_save_path)
         else:
             label_test_paths = prep.phone(data_type='test')
-            load_phone(label_paths=label_test_paths,
+            read_phone(label_paths=label_test_paths,
                        label_type=label_type,
                        run_root_path=abspath('./'),
                        save_path=label_test_save_path)

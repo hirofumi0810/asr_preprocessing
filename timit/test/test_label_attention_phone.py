@@ -9,10 +9,9 @@ import os
 import sys
 import unittest
 
-sys.path.append('../')
 sys.path.append('../../')
-from prepare_path import Prepare
-from labels.attention.phone import read_phone
+from timit.prepare_path import Prepare
+from timit.labels.attention.phone import read_phone
 
 
 class TestAttentionLabelPhone(unittest.TestCase):

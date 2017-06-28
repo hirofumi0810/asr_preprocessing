@@ -10,9 +10,8 @@ import sys
 from glob import glob
 import unittest
 
-sys.path.append('../')
 sys.path.append('../../')
-from inputs.input_data_global_norm import read_htk
+from timit.inputs.input_data_global_norm import read_htk
 
 train_mean = None
 train_std = None
