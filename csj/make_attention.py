@@ -13,23 +13,25 @@ import shutil
 from glob import glob
 
 sys.path.append('../')
-from prepare_path import Prepare
-from inputs.input_data import load_htk
-from labels.attention.character import load_sdb
+from csj.prepare_path import Prepare
+from csj.inputs.input_data import read_htk
+from csj.labels.attention.character import read_sdb
 from utils.util import mkdir_join
 
 
 def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
-         label_type, train_data_type):
+         train_data_type):
 
-    print('===== ' + label_type + ' (' + train_data_type + ') =====')
+    print('===== ' + train_data_type + ' =====')
     prep = Prepare(csj_path, run_root_path)
     input_save_path = mkdir_join(dataset_save_path, 'inputs')
     input_save_path = mkdir_join(input_save_path, train_data_type)
     label_save_path = mkdir_join(dataset_save_path, 'labels')
     label_save_path = mkdir_join(label_save_path, 'attention')
-    label_save_path = mkdir_join(label_save_path, label_type)
     label_save_path = mkdir_join(label_save_path, train_data_type)
+    kanji_label_save_path = mkdir_join(label_save_path, 'kanji')
+    kana_label_save_path = mkdir_join(label_save_path, 'kana')
+    phone_label_save_path = mkdir_join(label_save_path, 'phone')
 
     if train_data_type == 'default':
         train = 'train'
@@ -47,55 +49,94 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
 
         label_save_path = mkdir_join(dataset_save_path, 'labels')
         label_save_path = mkdir_join(label_save_path, 'attention')
-        label_save_path = mkdir_join(label_save_path, label_type)
         label_save_path = mkdir_join(label_save_path, train_data_type)
+        kanji_label_save_path = mkdir_join(label_save_path, 'kanji')
+        kana_label_save_path = mkdir_join(label_save_path, 'kana')
+        phone_label_save_path = mkdir_join(label_save_path, 'phone')
 
-        label_train_save_path = mkdir_join(label_save_path, 'train')
-        label_dev_save_path = mkdir_join(label_save_path, 'dev')
-        label_eval1_save_path = mkdir_join(label_save_path, 'eval1')
-        label_eval2_save_path = mkdir_join(label_save_path, 'eval2')
-        label_eval3_save_path = mkdir_join(label_save_path, 'eval3')
+        kanji_label_train_save_path = mkdir_join(
+            kanji_label_save_path, 'train')
+        kanji_label_dev_save_path = mkdir_join(
+            kanji_label_save_path, 'dev')
+        kanji_label_eval1_save_path = mkdir_join(
+            kanji_label_save_path, 'eval1')
+        kanji_label_eval2_save_path = mkdir_join(
+            kanji_label_save_path, 'eval2')
+        kanji_label_eval3_save_path = mkdir_join(
+            kanji_label_save_path, 'eval3')
+
+        kana_label_train_save_path = mkdir_join(
+            kana_label_save_path, 'train')
+        kana_label_dev_save_path = mkdir_join(
+            kana_label_save_path, 'dev')
+        kana_label_eval1_save_path = mkdir_join(
+            kana_label_save_path, 'eval1')
+        kana_label_eval2_save_path = mkdir_join(
+            kana_label_save_path, 'eval2')
+        kana_label_eval3_save_path = mkdir_join(
+            kana_label_save_path, 'eval3')
+
+        phone_label_train_save_path = mkdir_join(
+            phone_label_save_path, 'train')
+        phone_label_dev_save_path = mkdir_join(
+            phone_label_save_path, 'dev')
+        phone_label_eval1_save_path = mkdir_join(
+            phone_label_save_path, 'eval1')
+        phone_label_eval2_save_path = mkdir_join(
+            phone_label_save_path, 'eval2')
+        phone_label_eval3_save_path = mkdir_join(
+            phone_label_save_path, 'eval3')
 
         print('=> Processing transcripts...')
-        # Load target labels and save labels as npy files
+        # Read target labels and save labels as npy files
         print('---------- train ----------')
         label_train_paths = prep.trans(data_type=train)
-        speaker_dict_train = load_sdb(label_paths=label_train_paths,
-                                      label_type=label_type,
-                                      run_root_path=run_root_path,
-                                      save_path=label_train_save_path,
-                                      save_map_file=save_map_file)
+        speaker_dict_train = read_sdb(
+            label_paths=label_train_paths,
+            run_root_path=run_root_path,
+            kanji_save_path=kanji_label_train_save_path,
+            kana_save_path=kana_label_train_save_path,
+            phone_save_path=phone_label_train_save_path,
+            save_map_file=save_map_file)
 
         print('---------- dev ----------')
         label_dev_paths = prep.trans(data_type='dev')
-        speaker_dict_dev = load_sdb(label_paths=label_dev_paths,
-                                    label_type=label_type,
-                                    run_root_path=run_root_path,
-                                    save_path=label_dev_save_path)
+        speaker_dict_dev = read_sdb(
+            label_paths=label_dev_paths,
+            run_root_path=run_root_path,
+            kanji_save_path=kanji_label_dev_save_path,
+            kana_save_path=kana_label_dev_save_path,
+            phone_save_path=phone_label_dev_save_path,)
 
         print('---------- eval1 ----------')
         label_eval1_paths = prep.trans(data_type='eval1')
-        speaker_dict_eval1 = load_sdb(label_paths=label_eval1_paths,
-                                      label_type=label_type,
-                                      run_root_path=run_root_path,
-                                      is_test=True,
-                                      save_path=label_eval1_save_path)
+        speaker_dict_eval1 = read_sdb(
+            label_paths=label_eval1_paths,
+            run_root_path=run_root_path,
+            is_test=True,
+            skanji_save_path=kanji_label_eval1_save_path,
+            kana_save_path=kana_label_eval1_save_path,
+            phone_save_path=phone_label_eval1_save_path,)
 
         print('---------- eval2 ----------')
         label_eval2_paths = prep.trans(data_type='eval2')
-        speaker_dict_eval2 = load_sdb(label_paths=label_eval2_paths,
-                                      label_type=label_type,
-                                      run_root_path=run_root_path,
-                                      is_test=True,
-                                      save_path=label_eval2_save_path)
+        speaker_dict_eval2 = read_sdb(
+            label_paths=label_eval2_paths,
+            run_root_path=run_root_path,
+            is_test=True,
+            kanji_save_path=kanji_label_eval2_save_path,
+            kana_save_path=kana_label_eval2_save_path,
+            phone_save_path=phone_label_eval2_save_path,)
 
         print('---------- eval3 ----------')
         label_eval3_paths = prep.trans(data_type='eval3')
-        speaker_dict_eval3 = load_sdb(label_paths=label_eval3_paths,
-                                      label_type=label_type,
-                                      run_root_path=run_root_path,
-                                      is_test=True,
-                                      save_path=label_eval3_save_path)
+        speaker_dict_eval3 = read_sdb(
+            label_paths=label_eval3_paths,
+            run_root_path=run_root_path,
+            is_test=True,
+            kanji_save_path=kanji_label_eval3_save_path,
+            kana_save_path=kana_label_eval3_save_path,
+            phone_save_path=phone_label_eval3_save_path,)
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:
@@ -117,7 +158,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
         input_eval3_save_path = mkdir_join(input_save_path, 'eval3')
 
         print('=> Processing input data...')
-        # Load htk files, and save input data and frame num dict
+        # Read htk files, and save input data and frame num dict
         htk_train_paths = [join(input_feature_path, htk_dir)
                            for htk_dir in sorted(glob(join(input_feature_path,
                                                            train, '*.htk')))]
@@ -135,7 +176,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
                                                            'eval3/*.htk')))]
 
         print('---------- train ----------')
-        return_tuple = load_htk(htk_paths=htk_train_paths,
+        return_tuple = read_htk(htk_paths=htk_train_paths,
                                 save_path=input_train_save_path,
                                 speaker_dict=speaker_dict_train,
                                 normalize='speaker',
@@ -146,7 +187,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
         train_std_female = return_tuple[3]
 
         print('---------- dev ----------')
-        load_htk(htk_paths=htk_dev_paths,
+        read_htk(htk_paths=htk_dev_paths,
                  save_path=input_dev_save_path,
                  speaker_dict=speaker_dict_dev,
                  normalize='speaker',
@@ -157,7 +198,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
                  train_std_female=train_std_female)
 
         print('---------- eval1 ----------')
-        load_htk(htk_paths=htk_eval1_paths,
+        read_htk(htk_paths=htk_eval1_paths,
                  save_path=input_eval1_save_path,
                  speaker_dict=speaker_dict_eval1,
                  normalize='speaker',
@@ -168,7 +209,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
                  train_std_female=train_std_female)
 
         print('---------- eval2 ----------')
-        load_htk(htk_paths=htk_eval2_paths,
+        read_htk(htk_paths=htk_eval2_paths,
                  save_path=input_eval2_save_path,
                  speaker_dict=speaker_dict_eval2,
                  normalize='speaker',
@@ -179,7 +220,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
                  train_std_female=train_std_female)
 
         print('---------- eval3 ----------')
-        load_htk(htk_paths=htk_eval3_paths,
+        read_htk(htk_paths=htk_eval3_paths,
                  save_path=input_eval3_save_path,
                  speaker_dict=speaker_dict_eval3,
                  normalize='speaker',
@@ -190,7 +231,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
                  train_std_female=train_std_female)
 
         # Make a confirmation file to prove that dataset was saved correctly
-        with open(join(input_save_path, 'check.txt'), 'w') as f:
+        with open(join(input_save_path, 'complete.txt'), 'w') as f:
             f.write('')
 
 
@@ -205,11 +246,9 @@ if __name__ == '__main__':
     input_feature_path = args[3]
     run_root_path = args[4]
 
-    for label_type in ['kanji', 'character', 'phone']:
-        for train_data_type in ['large', 'default']:
-            main(csj_path,
-                 dataset_save_path,
-                 input_feature_path,
-                 run_root_path,
-                 label_type,
-                 train_data_type)
+    for train_data_type in ['large', 'default']:
+        main(csj_path,
+             dataset_save_path,
+             input_feature_path,
+             run_root_path,
+             train_data_type)

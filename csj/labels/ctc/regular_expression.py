@@ -122,7 +122,7 @@ def remove_cough(kana_seq):
     return kana_seq
 
 
-def remove_which(kana_seq, speaker_name):
+def remove_which(kana_seq):
     # 転訛,発音の怠けなど ,一時的な発音エラー
     which = re.match(r'(.*)\(W ([^)]+);([^)]+)\)(.*)', kana_seq)
     while which is not None:

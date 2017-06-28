@@ -6,10 +6,25 @@ from __future__ import division
 from __future__ import print_function
 
 import re
-from .regular_expression import *
+from csj.labels.ctc.regular_expression import remove_pause
+from csj.labels.ctc.regular_expression import remove_question_which
+from csj.labels.ctc.regular_expression import remove_question
+from csj.labels.ctc.regular_expression import remove_Btag
+from csj.labels.ctc.regular_expression import remove_disfluency
+from csj.labels.ctc.regular_expression import remove_filler
+from csj.labels.ctc.regular_expression import remove_Xtag
+from csj.labels.ctc.regular_expression import remove_Atag
+from csj.labels.ctc.regular_expression import remove_Ktag
+from csj.labels.ctc.regular_expression import remove_cry
+from csj.labels.ctc.regular_expression import remove_cough
+from csj.labels.ctc.regular_expression import remove_which
+from csj.labels.ctc.regular_expression import remove_Ltag
+from csj.labels.ctc.regular_expression import remove_laughing
+from csj.labels.ctc.regular_expression import remove_Otag
+from csj.labels.ctc.regular_expression import remove_Mtag
 
 
-def fix_transcript(kana_seq, speaker_name):
+def fix_transcript(kana_seq):
     if 'R' in kana_seq or '×' in kana_seq:
         return ''
 
@@ -45,11 +60,11 @@ def fix_transcript(kana_seq, speaker_name):
     kana_seq = remove_cry(kana_seq)
     kana_seq = remove_question_which(kana_seq)
     kana_seq = remove_cough(kana_seq)
-    kana_seq = remove_which(kana_seq, speaker_name)
+    kana_seq = remove_which(kana_seq)
     kana_seq = remove_question_which(kana_seq)
     kana_seq = remove_Ltag(kana_seq)
     kana_seq = remove_laughing(kana_seq)
-    kana_seq = remove_which(kana_seq, speaker_name)
+    kana_seq = remove_which(kana_seq)
     kana_seq = remove_Otag(kana_seq)
     kana_seq = remove_Mtag(kana_seq)
 

@@ -10,11 +10,10 @@ import sys
 import unittest
 from glob import glob
 
-sys.path.append('../')
 sys.path.append('../../')
-from prepare_path import Prepare
-from inputs.input_data import read_htk
-from labels.ctc.character import read_sdb
+from csj.prepare_path import Prepare
+from csj.inputs.input_data import read_htk
+from csj.labels.ctc.character import read_sdb
 
 train_mean_male = None
 train_mean_female = None

@@ -9,8 +9,7 @@ from os.path import join, abspath
 import sys
 
 sys.path.append('../')
-sys.path.append('../../')
-from prepare_path import Prepare
+from csj.prepare_path import Prepare
 from utils.util import mkdir, mkdir_join
 from utils.htk.make_config import setup
 

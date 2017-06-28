@@ -9,22 +9,19 @@ import os
 import sys
 import unittest
 
-sys.path.append('../')
 sys.path.append('../../')
-from prepare_path import Prepare
-from labels.attention.character import read_sdb
+from csj.prepare_path import Prepare
+from csj.labels.attention.character import read_sdb
 
 
 class TestCTCLabel(unittest.TestCase):
 
     def test(self):
-        self.check_reading(label_type='kanji')
-        self.check_reading(label_type='character')
-        self.check_reading(label_type='phone')
+        self.check_reading()
 
-    def check_reading(self, label_type):
+    def check_reading(self):
 
-        print('===== Attention label test (' + label_type + ') =====')
+        print('===== Attention label test =====')
 
         prep = Prepare(csj_path='/n/sd8/inaguma/corpus/csj/data/',
                        run_root_path=os.path.abspath('../'))
@@ -34,16 +31,20 @@ class TestCTCLabel(unittest.TestCase):
         label_eval2_paths = prep.trans(data_type='eval2')
         label_eval3_paths = prep.trans(data_type='eval3')
 
-        print('===== ' + label_type + ' =====')
-        read_sdb(label_paths=label_train_large_paths, label_type=label_type,
+        print('---------- train_large ----------')
+        read_sdb(label_paths=label_train_large_paths,
                  run_root_path=prep.run_root_path, save_map_file=True)
-        read_sdb(label_paths=label_train_paths, label_type=label_type,
+        print('---------- train ----------')
+        read_sdb(label_paths=label_train_paths,
                  run_root_path=prep.run_root_path)
-        read_sdb(label_paths=label_eval1_paths, label_type=label_type,
+        print('---------- eval1 ----------')
+        read_sdb(label_paths=label_eval1_paths,
                  run_root_path=prep.run_root_path)
-        read_sdb(label_paths=label_eval2_paths, label_type=label_type,
+        print('---------- eval2 ----------')
+        read_sdb(label_paths=label_eval2_paths,
                  run_root_path=prep.run_root_path)
-        read_sdb(label_paths=label_eval3_paths, label_type=label_type,
+        print('---------- eval3 ----------')
+        read_sdb(label_paths=label_eval3_paths,
                  run_root_path=prep.run_root_path)
 
 

@@ -16,18 +16,19 @@ from utils.util import mkdir_join
 from utils.inputs.segmentation import segment_htk, global_mean, global_std
 
 
-def load_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
+def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
              train_mean_male=None, train_mean_female=None,
              train_std_male=None, train_std_female=None):
-    """Load HTK files.
+    """Read HTK files.
     Args:
         htk_paths: list of paths to HTK files
         speaker_dict: dictionary of speakers
             key => speaker name
             value => dictionary of utterance information of each speaker
                 key => utterance index
-                value => [start_frame, end_frame, transcript]
-        normalize: global => normalize input data by global mean & std of train data
+                value => [start_frame, end_frame, trans_kana, trans_kanji]
+        normalize: global => normalize input data by global mean & std of
+                             train data
                    speaker => normalize data by mean & std per speaker
                    None => no normalization
         is_training: training or not
@@ -40,8 +41,8 @@ def load_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
         train_std_male: global standard deviation of male over train data
         train_std_female: global standard deviation of female over train data
     """
-    # Load each HTK file
-    print('===> Loading HTK files...')
+    # Read each HTK file
+    print('===> Reading HTK files...')
     input_data_dict_list_male, total_frame_num_list_male = [], []
     train_mean_list_male, train_std_list_male = [], []
     input_data_dict_list_female, total_frame_num_list_female = [], []
