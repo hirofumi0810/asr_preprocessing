@@ -27,7 +27,7 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
     input_save_path = mkdir_join(dataset_save_path, 'inputs')
     input_save_path = mkdir_join(input_save_path, train_data_type)
     label_save_path = mkdir_join(dataset_save_path, 'labels')
-    label_save_path = mkdir_join(label_save_path, 'ctc')
+    label_save_path = mkdir_join(label_save_path, 'ctc_nodivide')
     label_save_path = mkdir_join(label_save_path, train_data_type)
     kanji_label_save_path = mkdir_join(label_save_path, 'kanji')
     kana_label_save_path = mkdir_join(label_save_path, 'kana')
@@ -43,17 +43,9 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
     ####################
     # labels
     ####################
-    if not isfile(join(label_save_path, 'complete.txt')):
-        print('=> Deleting old dataset...')
-        shutil.rmtree(label_save_path)
-
-        label_save_path = mkdir_join(dataset_save_path, 'labels')
-        label_save_path = mkdir_join(label_save_path, 'ctc')
-        label_save_path = mkdir_join(label_save_path, train_data_type)
-        kanji_label_save_path = mkdir_join(label_save_path, 'kanji')
-        kana_label_save_path = mkdir_join(label_save_path, 'kana')
-        phone_label_save_path = mkdir_join(label_save_path, 'phone')
-
+    if isfile(join(label_save_path, 'complete.txt')):
+        print('Already exists.')
+    else:
         kanji_label_train_save_path = mkdir_join(
             kanji_label_save_path, 'train')
         kanji_label_dev_save_path = mkdir_join(
@@ -97,7 +89,8 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
             kanji_save_path=kanji_label_train_save_path,
             kana_save_path=kana_label_train_save_path,
             phone_save_path=phone_label_train_save_path,
-            save_map_file=save_map_file)
+            save_map_file=save_map_file,
+            divide_by_space=False)
 
         print('---------- dev ----------')
         label_dev_paths = prep.trans(data_type='dev')
@@ -106,7 +99,8 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
             run_root_path=run_root_path,
             kanji_save_path=kanji_label_dev_save_path,
             kana_save_path=kana_label_dev_save_path,
-            phone_save_path=phone_label_dev_save_path,)
+            phone_save_path=phone_label_dev_save_path,
+            divide_by_space=False)
 
         print('---------- eval1 ----------')
         label_eval1_paths = prep.trans(data_type='eval1')
@@ -116,7 +110,8 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
             is_test=True,
             kanji_save_path=kanji_label_eval1_save_path,
             kana_save_path=kana_label_eval1_save_path,
-            phone_save_path=phone_label_eval1_save_path,)
+            phone_save_path=phone_label_eval1_save_path,
+            divide_by_space=False)
 
         print('---------- eval2 ----------')
         label_eval2_paths = prep.trans(data_type='eval2')
@@ -126,7 +121,8 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
             is_test=True,
             kanji_save_path=kanji_label_eval2_save_path,
             kana_save_path=kana_label_eval2_save_path,
-            phone_save_path=phone_label_eval2_save_path,)
+            phone_save_path=phone_label_eval2_save_path,
+            divide_by_space=False)
 
         print('---------- eval3 ----------')
         label_eval3_paths = prep.trans(data_type='eval3')
@@ -136,7 +132,8 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
             is_test=True,
             kanji_save_path=kanji_label_eval3_save_path,
             kana_save_path=kana_label_eval3_save_path,
-            phone_save_path=phone_label_eval3_save_path,)
+            phone_save_path=phone_label_eval3_save_path,
+            divide_by_space=False)
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:
@@ -146,11 +143,6 @@ def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
     # inputs
     ####################
     if not isfile(join(input_save_path, 'complete.txt')):
-        print('=> Deleting old dataset...')
-        shutil.rmtree(input_save_path)
-
-        input_save_path = mkdir_join(dataset_save_path, 'inputs')
-        input_save_path = mkdir_join(input_save_path, train_data_type)
         input_train_save_path = mkdir_join(input_save_path, 'train')
         input_dev_save_path = mkdir_join(input_save_path, 'dev')
         input_eval1_save_path = mkdir_join(input_save_path, 'eval1')

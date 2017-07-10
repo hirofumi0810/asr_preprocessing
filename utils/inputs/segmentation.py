@@ -14,7 +14,7 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize,
         speaker_name: speaker name
         utterance_dict: dictionary of utterance information of each speaker
             key => utterance index
-            value => [start_frame, end_frame, transcript]
+            value => [start_frame, end_frame, transcript (, transcript2)]
         normalize : if speaker, normalize inputs by mean & std per speaker
         sil_duration: duration of silence at both ends
     Returns:

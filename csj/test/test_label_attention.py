@@ -14,7 +14,7 @@ from csj.prepare_path import Prepare
 from csj.labels.attention.character import read_sdb
 
 
-class TestCTCLabel(unittest.TestCase):
+class TestAttentionLabel(unittest.TestCase):
 
     def test(self):
         self.check_reading()

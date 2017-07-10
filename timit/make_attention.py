@@ -34,9 +34,11 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
     ####################
     # inputs
     ####################
-    if not isfile(join(input_save_path, 'complete.txt')):
-        print('=> Deleting old dataset...')
-        shutil.rmtree(input_save_path)
+    if isfile(join(input_save_path, 'complete.txt')):
+        print('Already exists.')
+    else:
+        # print('=> Deleting old dataset...')
+        # shutil.rmtree(input_save_path)
 
         input_save_path = mkdir_join(dataset_save_path, 'inputs')
         input_train_save_path = mkdir_join(input_save_path, 'train')
@@ -84,9 +86,11 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
     ####################
     # labels
     ####################
-    if not isfile(join(label_save_path, 'complete.txt')):
-        print('=> Deleting old dataset...')
-        shutil.rmtree(label_save_path)
+    if isfile(join(label_save_path, 'complete.txt')):
+        print('Already exists.')
+    else:
+        # print('=> Deleting old dataset...')
+        # shutil.rmtree(label_save_path)
 
         label_save_path = mkdir_join(dataset_save_path, 'labels')
         label_save_path = mkdir_join(label_save_path, 'attention')

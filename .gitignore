@@ -4,8 +4,14 @@ __pychache__
 *.log
 *.pyc
 
-svc
-erato
+# timit
+input_data_direct.py
 
 # csj
 dialog
+*_ss.py
+*_ss.sh
+*_ss.txt
+
+svc
+# erato

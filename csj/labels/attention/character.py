@@ -37,7 +37,7 @@ from csj.labels.ctc.fix_trans import is_hiragana, is_katakana, is_kanji, is_alph
 
 def read_sdb(label_paths, run_root_path, is_test=None,
              save_map_file=False, kanji_save_path=None,
-             kana_save_path=None, phone_save_path=None):
+             kana_save_path=None, phone_save_path=None, divide_by_space=True):
     """Read transcripts (.sdb) & save files (.npy).
     Args:
         label_paths: list of paths to label files
@@ -47,6 +47,7 @@ def read_sdb(label_paths, run_root_path, is_test=None,
         kanji_save_path: path to save kanji labels. If None, don't save labels
         kana_save_path: path to save kana labels. If None, don't save labels
         phone_save_path: path to save phone labels. If None, don't save labels
+        divide_by_space: if True, each word will be diveded by space
     Returns:
         speaker_dict: the dictionary of utterances of each speaker
             key => speaker name
@@ -91,11 +92,13 @@ def read_sdb(label_paths, run_root_path, is_test=None,
 
             # Stack word in the same utterance
             if utt_index == utt_index_pre:
-                # trans_kana += yomi
-                # trans_kanji += kanji
-                trans_kana += yomi + '_'
-                trans_kanji += kanji + '_'
-                # TODO: どっちが良いか要検討
+                if divide_by_space:
+                    trans_kana += yomi + '_'
+                    trans_kanji += kanji + '_'
+                else:
+                    trans_kana += yomi
+                    trans_kanji += kanji
+
                 utt_index_pre = utt_index
                 end_frame_pre = end_frame
                 continue
@@ -104,10 +107,13 @@ def read_sdb(label_paths, run_root_path, is_test=None,
                 left_kanji = trans_kanji.count('(')
                 right_kanji = trans_kanji.count(')')
                 if left_kanji != right_kanji:
-                    # trans_kana += yomi
-                    # trans_kanji += kanji
-                    trans_kana += yomi + '_'
-                    trans_kanji += kanji + '_'
+                    if divide_by_space:
+                        trans_kana += yomi + '_'
+                        trans_kanji += kanji + '_'
+                    else:
+                        trans_kana += yomi
+                        trans_kanji += kanji
+
                     utt_index_pre = utt_index
                     end_frame_pre = end_frame
                     continue
@@ -115,10 +121,13 @@ def read_sdb(label_paths, run_root_path, is_test=None,
                 left_kana = trans_kana.count('(')
                 right_kana = trans_kana.count(')')
                 if left_kana != right_kana:
-                    # trans_kana += yomi
-                    # trans_kanji += kanji
-                    trans_kana += yomi + '_'
-                    trans_kanji += kanji + '_'
+                    if divide_by_space:
+                        trans_kana += yomi + '_'
+                        trans_kanji += kanji + '_'
+                    else:
+                        trans_kana += yomi
+                        trans_kanji += kanji
+
                     utt_index_pre = utt_index
                     end_frame_pre = end_frame
                     continue
@@ -153,10 +162,13 @@ def read_sdb(label_paths, run_root_path, is_test=None,
                             trans_kanji]
 
                     # Initialization
-                    # trans_kana = yomi
-                    # trans_kanji = kanji
-                    trans_kana = yomi + '_'
-                    trans_kanji = kanji + '_'
+                    if divide_by_space:
+                        trans_kana = yomi + '_'
+                        trans_kanji = kanji + '_'
+                    else:
+                        trans_kana = yomi
+                        trans_kanji = kanji
+
                     utt_index_pre = utt_index
                     start_frame_pre = start_frame
                     end_frame_pre = end_frame
@@ -199,9 +211,9 @@ def read_sdb(label_paths, run_root_path, is_test=None,
             for char in all_char_set:
                 if (not is_hiragana(char)) and (not is_katakana(char)):
                     kanji_set.add(char)
-            for char in kana_list:
-                kanji_set.add(char)
-                kanji_set.add(jaconv.kata2hira(char))
+            for kana in kana_list:
+                kanji_set.add(kana)
+                kanji_set.add(jaconv.kata2hira(kana))
             # NOTE: 頻出するラベルにはなるべく小さいインデックスを与える
             kanji_list = ['_', '<', '>', 'NZ'] + sorted(list(kanji_set))
             for index, kanji in enumerate(kanji_list):
@@ -210,8 +222,8 @@ def read_sdb(label_paths, run_root_path, is_test=None,
         # kana
         with open(kana_map_file_path, 'w') as f:
             kana_list = ['_', '<', '>', 'NZ'] + kana_list
-            for index, char in enumerate(kana_list):
-                f.write('%s  %s\n' % (char, str(index)))
+            for index, kana in enumerate(kana_list):
+                f.write('%s  %s\n' % (kana, str(index)))
 
         # phone
         with open(phone_map_file_path, 'w') as f:
