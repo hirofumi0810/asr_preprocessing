@@ -8,10 +8,13 @@ __pychache__
 input_data_direct.py
 
 # csj
-dialog
 *_ss.py
+*_dialog.py
 *_ss.sh
+*_dialog.sh
 *_ss.txt
+make_wav.py
+split.py
 
 svc
 # erato

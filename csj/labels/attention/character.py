@@ -18,7 +18,7 @@ from utils.util import mkdir_join
 from utils.labels.character import kana2num
 from utils.labels.phone import phone2num
 from csj.labels.ctc.fix_trans import fix_transcript
-from csj.labels.ctc.fix_trans import is_hiragana, is_katakana, is_kanji, is_alphabet
+from csj.labels.ctc.fix_trans import is_hiragana, is_katakana
 
 # NOTE:
 # [character]

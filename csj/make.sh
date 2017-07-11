@@ -27,12 +27,13 @@ python make_scp.py $CSJ_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
 CONFIG_PATH="./config/config_fbank"
 
 # Convert from wav to htk files
-# $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train.scp
-# $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_large.scp
-# $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
-# $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
-# $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
-# $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_large.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
+$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dialog.scp
 
 
 # Make dataset for CTC

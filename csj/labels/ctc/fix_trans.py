@@ -48,25 +48,25 @@ def fix_transcript(kana_seq):
     kana_seq = re.sub(r'<FV>', '<>', kana_seq)  # vocal fly
 
     # Decompose hierarchical structure
-    kana_seq = remove_pause(kana_seq)
-    kana_seq = remove_question_which(kana_seq)
-    kana_seq = remove_question(kana_seq)
-    kana_seq = remove_Btag(kana_seq)
-    kana_seq = remove_disfluency(kana_seq)
-    kana_seq = remove_filler(kana_seq)
-    kana_seq = remove_Xtag(kana_seq)
-    kana_seq = remove_Atag(kana_seq)
-    kana_seq = remove_Ktag(kana_seq)
-    kana_seq = remove_cry(kana_seq)
-    kana_seq = remove_question_which(kana_seq)
-    kana_seq = remove_cough(kana_seq)
-    kana_seq = remove_which(kana_seq)
-    kana_seq = remove_question_which(kana_seq)
-    kana_seq = remove_Ltag(kana_seq)
-    kana_seq = remove_laughing(kana_seq)
-    kana_seq = remove_which(kana_seq)
-    kana_seq = remove_Otag(kana_seq)
-    kana_seq = remove_Mtag(kana_seq)
+    for _ in range(kana_seq.count('(') + kana_seq.count('<')):
+        kana_seq = remove_pause(kana_seq)
+        kana_seq = remove_question(kana_seq)
+        kana_seq = remove_which(kana_seq)
+        kana_seq = remove_question_which(kana_seq)
+
+        kana_seq = remove_cry(kana_seq)
+        kana_seq = remove_cough(kana_seq)
+        kana_seq = remove_laughing(kana_seq)
+        kana_seq = remove_filler(kana_seq)
+        kana_seq = remove_disfluency(kana_seq)
+
+        kana_seq = remove_Atag(kana_seq)
+        kana_seq = remove_Btag(kana_seq)
+        kana_seq = remove_Ktag(kana_seq)
+        kana_seq = remove_Ltag(kana_seq)
+        kana_seq = remove_Mtag(kana_seq)
+        kana_seq = remove_Otag(kana_seq)
+        kana_seq = remove_Xtag(kana_seq)
 
     # Remove
     kana_seq = re.sub(r'<H>', '', kana_seq)  # extended voise

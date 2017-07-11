@@ -10,7 +10,7 @@ import sys
 
 sys.path.append('../')
 from csj.prepare_path import Prepare
-from utils.util import mkdir, mkdir_join
+from utils.util import mkdir_join
 from utils.htk.make_config import setup
 
 
@@ -22,12 +22,14 @@ def main(csj_path, input_feature_save_path, run_root_path):
     wav_eval1_paths = prep.wav(data_type='eval1')
     wav_eval2_paths = prep.wav(data_type='eval2')
     wav_eval3_paths = prep.wav(data_type='eval3')
+    wav_dialog_paths = prep.wav(data_type='dialog')
 
     save_train_path = mkdir_join(input_feature_save_path, 'train')
     save_train_all_path = mkdir_join(input_feature_save_path, 'train_large')
     save_eval1_path = mkdir_join(input_feature_save_path, 'eval1')
     save_eval2_path = mkdir_join(input_feature_save_path, 'eval2')
     save_eval3_path = mkdir_join(input_feature_save_path, 'eval3')
+    save_dialog_path = mkdir_join(input_feature_save_path, 'dialog')
 
     # HTK settings
     setup(corpus='csj',
@@ -106,11 +108,24 @@ def main(csj_path, input_feature_save_path, run_root_path):
     elif len(wav_eval3_paths) != 10:
         raise ValueError('File number is not correct (True: 10, Now: %d).' %
                          len(wav_eval3_paths))
-
     with open(join(run_root_path, 'config/wav2fbank_eval3.scp'), 'w') as f:
         for wav_path in wav_eval3_paths:
             speaker_name = wav_path.split('/')[-1].split('.')[0]
             save_path = join(save_eval3_path, speaker_name + '.htk')
+            f.write(wav_path + '  ' + save_path + '\n')
+
+    ################
+    # dialog
+    ################
+    if len(wav_dialog_paths) == 0:
+        raise ValueError('There are not any wav files.')
+    elif len(wav_dialog_paths) != 15:
+        raise ValueError('File number is not correct (True: 10, Now: %d).' %
+                         len(wav_dialog_paths))
+    with open(join(run_root_path, 'config/wav2fbank_dialog.scp'), 'w') as f:
+        for wav_path in wav_dialog_paths:
+            speaker_name = wav_path.split('/')[-1].split('.')[0]
+            save_path = join(save_dialog_path, speaker_name + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
 

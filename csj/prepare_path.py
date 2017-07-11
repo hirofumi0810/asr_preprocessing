@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import re
 from os.path import join, basename, isfile, abspath
 import sys
 from glob import glob
@@ -75,6 +76,7 @@ class Prepare(object):
         self.wav_eval1_paths = []  # 10 files
         self.wav_eval2_paths = []  # 10 files
         self.wav_eval3_paths = []  # 10 files
+        self.wav_dialog_paths = []
 
         # Core
         for wav_path in glob(join(self.wav_path, 'CORE/*/*/*.wav')):
@@ -88,6 +90,8 @@ class Prepare(object):
             elif speaker_name.split('-')[0] in excluded_speakers:
                 continue
             elif speaker_name[0] == 'D':
+                if speaker_name not in excluded_speakers and '-R' in speaker_name and 'D03' in speaker_name:
+                    self.wav_dialog_paths.append(wav_path)
                 continue
             elif speaker_name[0] == 'A':
                 self.wav_train_paths.append(wav_path)
@@ -121,6 +125,8 @@ class Prepare(object):
             if speaker_name.split('-')[0] in excluded_speakers:
                 continue
             elif speaker_name[0] == 'D':
+                if speaker_name not in excluded_speakers and '-R' in speaker_name and 'D03' in speaker_name:
+                    self.wav_dialog_paths.append(wav_path)
                 continue
             else:
                 self.wav_train_large_paths.append(wav_path)
@@ -134,6 +140,7 @@ class Prepare(object):
         self.trans_eval1_paths = []
         self.trans_eval2_paths = []
         self.trans_eval3_paths = []
+        self.trans_dialog_paths = []
 
         # Train (about 240h)
         for index, wav_path in enumerate(self.wav_train_paths):
@@ -197,11 +204,24 @@ class Prepare(object):
             else:
                 self.trans_eval3_paths.append(wav_path.replace('.wav', '.sdb'))
 
+        # Dialog
+        for index, wav_path in enumerate(self.wav_dialog_paths):
+            wav_path = re.sub('-R', '', wav_path)
+            speaker_name = basename(wav_path).split('.')[0]
+            wav_path = join(self.wav_path, wav_path)
+            self.wav_dialog_paths[index] = wav_path
+            ver4_path = join(self.ver4_path, speaker_name + '.sdb')
+            if isfile(ver4_path):
+                self.trans_dialog_paths.append(ver4_path)
+            else:
+                self.trans_dialog_paths.append(
+                    wav_path.replace('.wav', '.sdb'))
+
     def wav(self, data_type):
         """Get paths to wav files.
         Args:
             data_type: string, train or train_large or dev or eval1 or eval2,
-                eval3
+                eval3 or dialog
         Returns:
             paths to wav files
         """
@@ -217,12 +237,16 @@ class Prepare(object):
             return sorted(self.wav_eval2_paths)
         elif data_type == 'eval3':
             return sorted(self.wav_eval3_paths)
+        elif data_type == 'dialog':
+            return sorted(self.wav_dialog_paths)
+        else:
+            return None
 
     def trans(self, data_type):
         """Get paths to transcription (.sdb) files.
         Args:
             data_type: string, train or train_large or dev or eval1 or eval2,
-                eval3
+                eval3 or dialog
         Returns:
             paths to transcription files
         """
@@ -238,6 +262,10 @@ class Prepare(object):
             return sorted(self.trans_eval2_paths)
         elif data_type == 'eval3':
             return sorted(self.trans_eval3_paths)
+        elif data_type == 'dialog':
+            return sorted(self.trans_dialog_paths)
+        else:
+            return None
 
 
 if __name__ == '__main__':
@@ -269,3 +297,7 @@ if __name__ == '__main__':
     print('===== eval3 =====')
     print(len(prep.wav('eval3')))
     print(len(prep.trans('eval3')))
+
+    print('===== dialog =====')
+    print(len(prep.wav('dialog')))
+    print(len(prep.trans('dialog')))
