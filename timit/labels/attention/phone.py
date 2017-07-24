@@ -31,9 +31,6 @@ def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
 
     print('===> Reading & Saving target labels...')
     phone2phone_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
-    phone2num_map_file_path = join(
-        run_root_path,
-        'labels/attention/phone2num_' + label_type[5:7] + '.txt')
     for label_path in tqdm(label_paths):
         speaker_name = label_path.split('/')[-2]
         file_name = label_path.split('/')[-1].split('.')[0]
@@ -43,7 +40,7 @@ def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().split(' ')
-                # Start_frame = line[0]
+                # start_frame = line[0]
                 # end_frame = line[1]
                 phone_list.append(line[2])
 
@@ -52,24 +49,27 @@ def read_phone(label_paths, label_type, run_root_path, save_map_file=False,
                                      phone2phone_map_file_path)
 
         # Make the mapping file
-        if save_map_file:
-            phone_set = set([])
-            with open(phone2phone_map_file_path, 'r') as f:
-                for line in f:
-                    line = line.strip().split()
-                    if line[1] != 'nan':
-                        if label_type == 'phone61':
-                            phone_set.add(line[0])
-                        elif label_type == 'phone48':
-                            phone_set.add(line[1])
-                        elif label_type == 'phone39':
-                            phone_set.add(line[2])
-                    else:
-                        # Ignore "q" if phone39 or phone48
-                        if label_type == 'phone61':
-                            phone_set.add(line[0])
+        phone2num_map_file_path = join(
+            run_root_path,
+            'labels/attention/' + label_type + '_to_num.txt')
+        phone_set = set([])
+        with open(phone2phone_map_file_path, 'r') as f:
+            for line in f:
+                line = line.strip().split()
+                if line[1] != 'nan':
+                    if label_type == 'phone61':
+                        phone_set.add(line[0])
+                    elif label_type == 'phone48':
+                        phone_set.add(line[1])
+                    elif label_type == 'phone39':
+                        phone_set.add(line[2])
+                else:
+                    # Ignore "q" if phone39 or phone48
+                    if label_type == 'phone61':
+                        phone_set.add(line[0])
 
-            # Save mapping file
+        # Save mapping file
+        if save_map_file:
             with open(phone2num_map_file_path, 'w') as f:
                 for index, phone in enumerate(['<', '>'] + sorted(list(phone_set))):
                     f.write('%s  %s\n' % (phone, str(index)))

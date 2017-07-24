@@ -15,7 +15,12 @@ from timit.labels.attention.character import read_text
 
 
 class TestAttentionLabelChar(unittest.TestCase):
+
     def test(self):
+        self.check_reading(divide_by_capital=True)
+        self.check_reading(divide_by_capital=False)
+
+    def check_reading(self, divide_by_capital):
 
         print('===== Attention label test (character) =====')
 
@@ -26,11 +31,15 @@ class TestAttentionLabelChar(unittest.TestCase):
         label_test_paths = prep.text(data_type='test')
 
         read_text(label_paths=label_train_paths,
-                  run_root_path=prep.run_root_path)
+                  run_root_path=prep.run_root_path,
+                  save_map_file=True,
+                  divide_by_capital=divide_by_capital)
         read_text(label_paths=label_dev_paths,
-                  run_root_path=prep.run_root_path)
+                  run_root_path=prep.run_root_path,
+                  divide_by_capital=divide_by_capital)
         read_text(label_paths=label_test_paths,
-                  run_root_path=prep.run_root_path)
+                  run_root_path=prep.run_root_path,
+                  divide_by_capital=divide_by_capital)
 
 
 if __name__ == '__main__':

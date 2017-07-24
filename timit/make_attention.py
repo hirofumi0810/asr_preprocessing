@@ -9,7 +9,6 @@ from __future__ import print_function
 
 from os.path import join, abspath, isfile
 import sys
-import shutil
 from glob import glob
 
 
@@ -37,10 +36,6 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
     if isfile(join(input_save_path, 'complete.txt')):
         print('Already exists.')
     else:
-        # print('=> Deleting old dataset...')
-        # shutil.rmtree(input_save_path)
-
-        input_save_path = mkdir_join(dataset_save_path, 'inputs')
         input_train_save_path = mkdir_join(input_save_path, 'train')
         input_dev_save_path = mkdir_join(input_save_path, 'dev')
         input_test_save_path = mkdir_join(input_save_path, 'test')
@@ -89,13 +84,6 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')
     else:
-        # print('=> Deleting old dataset...')
-        # shutil.rmtree(label_save_path)
-
-        label_save_path = mkdir_join(dataset_save_path, 'labels')
-        label_save_path = mkdir_join(label_save_path, 'attention')
-        label_save_path = mkdir_join(label_save_path, label_type)
-
         label_train_save_path = mkdir_join(label_save_path, 'train')
         label_dev_save_path = mkdir_join(label_save_path, 'dev')
         label_test_save_path = mkdir_join(label_save_path, 'test')
@@ -109,6 +97,13 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
                       run_root_path=abspath('./'),
                       save_map_file=True,
                       save_path=label_train_save_path)
+        elif label_type == 'character_capital_divide':
+            label_train_paths = prep.text(data_type='train')
+            read_text(label_paths=label_train_paths,
+                      run_root_path=abspath('./'),
+                      save_map_file=True,
+                      save_path=label_train_save_path,
+                      divide_by_capital=True)
         else:
             label_train_paths = prep.phone(data_type='train')
             read_phone(label_paths=label_train_paths,
@@ -123,6 +118,12 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
             read_text(label_paths=label_dev_paths,
                       run_root_path=abspath('./'),
                       save_path=label_dev_save_path)
+        elif label_type == 'character_capital_divide':
+            label_dev_paths = prep.text(data_type='dev')
+            read_text(label_paths=label_dev_paths,
+                      run_root_path=abspath('./'),
+                      save_path=label_dev_save_path,
+                      divide_by_capital=True)
         else:
             label_dev_paths = prep.phone(data_type='dev')
             read_phone(label_paths=label_dev_paths,
@@ -136,6 +137,12 @@ def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
             read_text(label_paths=label_test_paths,
                       run_root_path=abspath('./'),
                       save_path=label_test_save_path)
+        elif label_type == 'character_capital_divide':
+            label_test_paths = prep.text(data_type='test')
+            read_text(label_paths=label_test_paths,
+                      run_root_path=abspath('./'),
+                      save_path=label_test_save_path,
+                      divide_by_capital=True)
         else:
             label_test_paths = prep.phone(data_type='test')
             read_phone(label_paths=label_test_paths,
@@ -159,7 +166,7 @@ if __name__ == '__main__':
     input_feature_path = args[3]
     run_root_path = args[4]
 
-    for label_type in ['character', 'phone61', 'phone48', 'phone39']:
+    for label_type in ['character', 'character_capital_divide', 'phone61', 'phone48', 'phone39']:
         main(timit_path,
              dataset_save_path,
              input_feature_path,

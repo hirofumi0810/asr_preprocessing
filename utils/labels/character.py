@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 
-def char2num(str_char, map_file_path):
+def char2num(str_char, map_file_path, double_letter=False):
     """Convert from character to number.
     Args:
         str_char: string of characters
         map_file_path: path to the mapping file
+        double_letter: if True, group repeated letters
     Returns:
         char_list: list of character indices
     """
@@ -20,9 +21,32 @@ def char2num(str_char, map_file_path):
             map_dict[line[0]] = int(line[1])
 
     # Convert from character to number
-    for i in range(len(char_list)):
-        char_list[i] = map_dict[char_list[i]]
+    if double_letter:
+        skip_flag = False
+        for i in range(len(char_list) - 1):
+            if skip_flag:
+                char_list[i] = ''
+                skip_flag = False
+                continue
 
+            if char_list[i] + char_list[i + 1] in map_dict.keys():
+                char_list[i] = map_dict[char_list[i] + char_list[i + 1]]
+                skip_flag = True
+            else:
+                char_list[i] = map_dict[char_list[i]]
+
+        # Final character
+        if skip_flag:
+            char_list[-1] = ''
+        else:
+            char_list[-1] = map_dict[char_list[-1]]
+
+        # Remove skipped characters
+        while '' in char_list:
+            char_list.remove('')
+    else:
+        for i in range(len(char_list)):
+            char_list[i] = map_dict[char_list[i]]
     return char_list
 
 
