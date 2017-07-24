@@ -14,9 +14,9 @@ from utils.util import mkdir_join
 from utils.htk.make_config import setup
 
 
-def main(timit_path, input_feature_save_path, run_root_path):
+def main(data_path, input_feature_save_path, run_root_path):
 
-    prep = Prepare(timit_path, run_root_path)
+    prep = Prepare(data_path, run_root_path)
     wav_train_paths = prep.wav(data_type='train')
     wav_dev_paths = prep.wav(data_type='dev')
     wav_test_paths = prep.wav(data_type='test')
@@ -93,8 +93,8 @@ if __name__ == '__main__':
     if len(args) != 4:
         raise ValueError
 
-    timit_path = args[1]
+    data_path = args[1]
     input_feature_save_path = args[2]
     run_root_path = args[3]
 
-    main(timit_path, input_feature_save_path, run_root_path)
+    main(data_path, input_feature_save_path, run_root_path)

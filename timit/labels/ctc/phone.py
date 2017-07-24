@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make target labels for the CTC model (TIMIT corpus)."""
+"""Make phone-level target labels for the CTC model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division

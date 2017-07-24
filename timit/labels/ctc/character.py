@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make target labels for the CTC model (TIMIT corpus)."""
+"""Make character-level target labels for the CTC model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -15,10 +15,15 @@ from tqdm import tqdm
 from utils.labels.character import char2num
 
 # NOTE:
+# -character
 # 26 alphabets(a-z),
-# space(_), comma(,), period(.), apostorophe('), hyphen(-),
-# question(?), exclamation(!)
-# = 26 + 7 = 33 labels
+# space(_), apostorophe('),
+# = 26 + 2 = 28 labels
+
+# - character_capital_divide
+# 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
+# 18 special double-letters, apostorophe(')
+# = 26 * 2 + 18 + 1 = 71 labels
 
 
 def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,

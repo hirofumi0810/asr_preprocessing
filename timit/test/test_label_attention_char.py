@@ -17,14 +17,14 @@ from timit.labels.attention.character import read_text
 class TestAttentionLabelChar(unittest.TestCase):
 
     def test(self):
-        self.check_reading(divide_by_capital=True)
         self.check_reading(divide_by_capital=False)
+        self.check_reading(divide_by_capital=True)
 
     def check_reading(self, divide_by_capital):
 
         print('===== Attention label test (character) =====')
 
-        prep = Prepare(timit_path='/n/sd8/inaguma/corpus/timit/original/',
+        prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original/',
                        run_root_path=os.path.abspath('../'))
         label_train_paths = prep.text(data_type='train')
         label_dev_paths = prep.text(data_type='dev')

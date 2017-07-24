@@ -19,7 +19,7 @@ class TestAttentionLabelPhone(unittest.TestCase):
     def test(self):
         print('===== Attention label test (phone) =====')
 
-        self.prep = Prepare(timit_path='/n/sd8/inaguma/corpus/timit/original/',
+        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original/',
                             run_root_path=os.path.abspath('../'))
         self.label_train_paths = self.prep.phone(data_type='train')
         self.label_dev_paths = self.prep.phone(data_type='dev')

@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Prepare for making dataset."""
+"""Prepare for making dataset (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -18,17 +18,16 @@ from utils.util import mkdir
 class Prepare(object):
     """Prepare for making dataset.
     Args:
-        timit_path: path to timit corpus
+        data_path: path to timit corpus
         run_root_path: path to ./make.sh
         dataset_save_path: path to save dataset
     """
 
-    def __init__(self, timit_path, run_root_path):
+    def __init__(self, data_path, run_root_path):
 
         # Path to timit data
-        self.data_path = timit_path
-        self.train_data_path = join(self.data_path, 'train')
-        self.test_data_path = join(self.data_path, 'test')
+        self.train_data_path = join(data_path, 'train')
+        self.test_data_path = join(data_path, 'test')
 
         # Absolute path to this directory
         self.run_root_path = run_root_path
@@ -190,9 +189,9 @@ class Prepare(object):
 
 if __name__ == '__main__':
 
-    timit_path = '/n/sd8/inaguma/corpus/timit/original/'
+    data_path = '/n/sd8/inaguma/corpus/timit/original/'
 
-    prep = Prepare(timit_path, abspath('./'))
+    prep = Prepare(data_path, abspath('./'))
 
     print('===== train =====')
     print(len(prep.wav(data_type='train')))

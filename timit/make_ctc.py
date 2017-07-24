@@ -19,11 +19,11 @@ from labels.ctc.phone import read_phone
 from utils.util import mkdir_join
 
 
-def main(timit_path, dataset_save_path, input_feature_path, run_root_path,
+def main(data_path, dataset_save_path, input_feature_path, run_root_path,
          label_type):
 
     print('===== ' + label_type + ' =====')
-    prep = Prepare(timit_path, run_root_path)
+    prep = Prepare(data_path, run_root_path)
     input_save_path = mkdir_join(dataset_save_path, 'inputs')
     label_save_path = mkdir_join(dataset_save_path, 'labels')
     label_save_path = mkdir_join(label_save_path, 'ctc')
@@ -160,13 +160,13 @@ if __name__ == '__main__':
     if len(args) != 5:
         raise ValueError
 
-    timit_path = args[1]
+    data_path = args[1]
     dataset_save_path = args[2]
     input_feature_path = args[3]
     run_root_path = args[4]
 
     for label_type in ['character', 'character_capital_divide', 'phone61', 'phone48', 'phone39']:
-        main(timit_path,
+        main(data_path,
              dataset_save_path,
              input_feature_path,
              run_root_path,
