@@ -37,85 +37,85 @@ class Prepare(object):
 
     def __make(self):
 
-        self.flac_train_clean100_paths, self.text_train_clean100_paths = [], []
-        self.flac_train_clean360_paths, self.text_train_clean360_paths = [], []
-        self.flac_train_other500_paths, self.text_train_other500_paths = [], []
-        self.flac_dev_clean_paths, self.text_dev_clean_paths = [], []
-        self.flac_dev_other_paths, self.text_dev_other_paths = [], []
-        self.flac_test_clean_paths, self.text_test_clean_paths = [], []
-        self.flac_test_other_paths, self.text_test_other_paths = [], []
+        self.wav_train_clean100_paths, self.text_train_clean100_paths = [], []
+        self.wav_train_clean360_paths, self.text_train_clean360_paths = [], []
+        self.wav_train_other500_paths, self.text_train_other500_paths = [], []
+        self.wav_dev_clean_paths, self.text_dev_clean_paths = [], []
+        self.wav_dev_other_paths, self.text_dev_other_paths = [], []
+        self.wav_test_clean_paths, self.text_test_clean_paths = [], []
+        self.wav_test_other_paths, self.text_test_other_paths = [], []
 
-        # train_clean_100
+        # train (clean, 100h)
         for file_path in glob(join(self.train_clean100_path, '*/*/*')):
-            if splitext(basename(file_path))[1] == '.flac':
-                self.flac_train_clean100_paths.append(file_path)
+            if splitext(basename(file_path))[1] == '.wav':
+                self.wav_train_clean100_paths.append(file_path)
             elif splitext(basename(file_path))[1] == '.txt':
                 self.text_train_clean100_paths.append(file_path)
 
-        # train_clean_360
+        # train (clean, 360h)
         for file_path in glob(join(self.train_clean360_path, '*/*/*')):
-            if splitext(basename(file_path))[1] == '.flac':
-                self.flac_train_clean360_paths.append(file_path)
+            if splitext(basename(file_path))[1] == '.wav':
+                self.wav_train_clean360_paths.append(file_path)
             elif splitext(basename(file_path))[1] == '.txt':
                 self.text_train_clean360_paths.append(file_path)
 
-        # train_other_500
+        # train (other, 500h)
         for file_path in glob(join(self.train_other500_path, '*/*/*')):
-            if splitext(basename(file_path))[1] == '.flac':
-                self.flac_train_other500_paths.append(file_path)
+            if splitext(basename(file_path))[1] == '.wav':
+                self.wav_train_other500_paths.append(file_path)
             elif splitext(basename(file_path))[1] == '.txt':
                 self.text_train_other500_paths.append(file_path)
 
-        # dev_clean
+        # dev (clean)
         for file_path in glob(join(self.dev_clean_path, '*/*/*')):
-            if splitext(basename(file_path))[1] == '.flac':
-                self.flac_dev_clean_paths.append(file_path)
+            if splitext(basename(file_path))[1] == '.wav':
+                self.wav_dev_clean_paths.append(file_path)
             elif splitext(basename(file_path))[1] == '.txt':
                 self.text_dev_clean_paths.append(file_path)
 
-        # dev_other
+        # dev (other)
         for file_path in glob(join(self.dev_other_path, '*/*/*')):
-            if splitext(basename(file_path))[1] == '.flac':
-                self.flac_dev_other_paths.append(file_path)
+            if splitext(basename(file_path))[1] == '.wav':
+                self.wav_dev_other_paths.append(file_path)
             elif splitext(basename(file_path))[1] == '.txt':
                 self.text_dev_other_paths.append(file_path)
 
-        # test_clean
+        # test (clean)
         for file_path in glob(join(self.test_clean_path, '*/*/*')):
-            if splitext(basename(file_path))[1] == '.flac':
-                self.flac_test_clean_paths.append(file_path)
+            if splitext(basename(file_path))[1] == '.wav':
+                self.wav_test_clean_paths.append(file_path)
             elif splitext(basename(file_path))[1] == '.txt':
                 self.text_test_clean_paths.append(file_path)
 
-        # test_other
+        # test (other)
         for file_path in glob(join(self.test_other_path, '*/*/*')):
-            if splitext(basename(file_path))[1] == '.flac':
-                self.flac_test_other_paths.append(file_path)
+            if splitext(basename(file_path))[1] == '.wav':
+                self.wav_test_other_paths.append(file_path)
             elif splitext(basename(file_path))[1] == '.txt':
                 self.text_test_other_paths.append(file_path)
 
-    def flac(self, data_type):
-        """Get paths to flac files.
+    def wav(self, data_type):
+        """Get paths to wav files.
         Args:
             data_type: train_clean100 or train_clean360 or train_other500
                 or dev_clean or dev_other or test_clean or test_clean
         Returns:
-            paths to flac files
+            paths to wav files
         """
         if data_type == 'train_clean100':
-            return sorted(self.flac_train_clean100_paths)
+            return sorted(self.wav_train_clean100_paths)
         elif data_type == 'train_clean360':
-            return sorted(self.flac_train_clean360_paths)
+            return sorted(self.wav_train_clean360_paths)
         elif data_type == 'train_other500':
-            return sorted(self.flac_train_other500_paths)
+            return sorted(self.wav_train_other500_paths)
         elif data_type == 'dev_clean':
-            return sorted(self.flac_dev_clean_paths)
+            return sorted(self.wav_dev_clean_paths)
         elif data_type == 'dev_other':
-            return sorted(self.flac_dev_other_paths)
+            return sorted(self.wav_dev_other_paths)
         elif data_type == 'test_clean':
-            return sorted(self.flac_test_clean_paths)
+            return sorted(self.wav_test_clean_paths)
         elif data_type == 'test_other':
-            return sorted(self.flac_test_other_paths)
+            return sorted(self.wav_test_other_paths)
 
     def text(self, data_type):
         """Get paths to transcription files.
@@ -148,21 +148,21 @@ if __name__ == '__main__':
     prep = Prepare(data_path, abspath('./'))
 
     print('===== train =====')
-    print(len(prep.flac(data_type='train_clean100')))
+    print(len(prep.wav(data_type='train_clean100')))
     print(len(prep.text(data_type='train_clean100')))
-    print(len(prep.flac(data_type='train_clean360')))
+    print(len(prep.wav(data_type='train_clean360')))
     print(len(prep.text(data_type='train_clean360')))
-    print(len(prep.flac(data_type='train_other500')))
+    print(len(prep.wav(data_type='train_other500')))
     print(len(prep.text(data_type='train_other500')))
 
     print('===== dev ======')
-    print(len(prep.flac(data_type='dev_clean')))
+    print(len(prep.wav(data_type='dev_clean')))
     print(len(prep.text(data_type='dev_clean')))
-    print(len(prep.flac(data_type='dev_other')))
+    print(len(prep.wav(data_type='dev_other')))
     print(len(prep.text(data_type='dev_other')))
 
     print('===== test =====')
-    print(len(prep.flac(data_type='test_clean')))
+    print(len(prep.wav(data_type='test_clean')))
     print(len(prep.text(data_type='test_clean')))
-    print(len(prep.flac(data_type='test_other')))
+    print(len(prep.wav(data_type='test_other')))
     print(len(prep.text(data_type='test_other')))

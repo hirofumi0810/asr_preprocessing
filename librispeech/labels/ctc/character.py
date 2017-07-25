@@ -13,6 +13,7 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.labels.character import char2num
+from utils.util import mkdir_join
 
 # NOTE:
 # - character
@@ -45,13 +46,16 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
                     in Proceedings of ICASSP, 2017.
     """
     print('===> Reading target labels...')
-    utterance_dict = {}
+    speaker_dict = {}
     char_set = set([])
     for label_path in tqdm(label_paths):
+        speaker_index = label_path.split('/')[-3]
+        if speaker_index in speaker_dict.keys():
+            speaker_dict[speaker_index] = {}
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
-                speaker_name = line[0]
+                utterance_name = line[0]
                 transcript = ' '.join(line[1:])
 
                 if divide_by_capital:
@@ -74,7 +78,7 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
                 for c in list(transcript):
                     char_set.add(c)
 
-                utterance_dict[speaker_name] = transcript
+                speaker_dict[speaker_index][utterance_name] = transcript
 
     # Make mapping file (from character to number)
     if divide_by_capital:
@@ -101,12 +105,15 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
     if save_path is not None:
         # Save target labels
         print('===> Saving target labels...')
-        for speaker_name, transcript in tqdm(utterance_dict.items()):
-            save_file_name = speaker_name + '.npy'
+        for speaker_index, utterance_dict in tqdm(speaker_dict.items()):
+            for utterance_name, transcript in utterance_dict.items():
+                save_file_name = utterance_name + '.npy'
 
-            # Convert from character to number
-            char_index_list = char2num(transcript, mapping_file_path,
-                                       double_letter=divide_by_capital)
+                # Convert from character to number
+                char_index_list = char2num(transcript, mapping_file_path,
+                                           double_letter=divide_by_capital)
 
-            # Save as npy file
-            np.save(join(save_path, save_file_name), char_index_list)
+                # Save as npy file
+                mkdir_join(save_path, speaker_index)
+                np.save(join(save_path, speaker_index, save_file_name),
+                        char_index_list)

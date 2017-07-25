@@ -51,12 +51,10 @@
 
 ## Librispeech
 #### CTC
-- [ ] **phone**
 - [ ] **character**
 - [ ] **word**
 
 #### Attention
-- [ ] **phone**
 - [ ] **character**
 - [ ] **word**
 

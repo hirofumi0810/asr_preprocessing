@@ -12,8 +12,14 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.labels.word import word2num
+from utils.util import mkdir_join
 
 # NOTE:
+# - train_clean100
+# ?? labels
+# - train_clean360
+# ?? labels
+# - train_other500
 # ?? labels
 
 
@@ -29,14 +35,17 @@ def read_text(label_paths, data_type, run_root_path, save_map_file=False,
         save_path: path to save labels. If None, don't save labels
     """
     print('===> Reading target labels...')
-    utterance_dict = {}
+    speaker_dict = {}
     word_set = set([])
     char_set = set([])
     for label_path in tqdm(label_paths):
+        speaker_index = label_path.split('/')[-3]
+        if speaker_index in speaker_dict.keys():
+            speaker_dict[speaker_index] = {}
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
-                speaker_name = line[0]
+                uttrance_name = line[0]
                 word_list = line[1:]
 
                 for word in word_list:
@@ -44,7 +53,7 @@ def read_text(label_paths, data_type, run_root_path, save_map_file=False,
                     for c in word:
                         char_set.add(c)
 
-                utterance_dict[speaker_name] = word_list
+                speaker_dict[speaker_index][uttrance_name] = word_list
 
     # Make mapping file (from word to number)
     mapping_file_path = join(
@@ -62,11 +71,14 @@ def read_text(label_paths, data_type, run_root_path, save_map_file=False,
     if save_path is not None:
         # Save target labels
         print('===> Saving target labels...')
-        for speaker_name, transcript in tqdm(utterance_dict.items()):
-            save_file_name = speaker_name + '.npy'
+        for speaker_index, utterance_dict in tqdm(speaker_dict.items()):
+            for uttrance_name, transcript in utterance_dict.items():
+                save_file_name = uttrance_name + '.npy'
 
-            # Convert from word to number
-            word_index_list = word2num(transcript, mapping_file_path)
+                # Convert from word to number
+                word_index_list = word2num(transcript, mapping_file_path)
 
-            # Save as npy file
-            np.save(join(save_path, save_file_name), word_index_list)
+                # Save as npy file
+                mkdir_join(save_path, speaker_index)
+                np.save(join(save_path, speaker_index, save_file_name),
+                        word_index_list)

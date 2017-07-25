@@ -4,27 +4,25 @@
 from os.path import join
 
 
-def setup(corpus, feature, channels, save_path, sampling_rate=16000, window=0.025, slide=0.01,
-          energy=True, delta=True, deltadelta=True, window_func='hamming'):
+def setup(audio_file_type, feature, channels, save_path, sampling_rate=16000,
+          window=0.025, slide=0.01, energy=False, delta=True, deltadelta=True,
+          window_func='hamming'):
     """Setting for HTK.
     Args:
+        audio_file_type:
         feature: fbank or mfcc
         channels:
-        save_path:
+        save_path: path to save a config file
         sampling_rate:
         window:
         slide:
-        energy:
+        energy: if True, add the energy feature
         delta:
         deltadelta:
         window_func:
 """
-
     with open(join(save_path, 'config_fbank'), 'w') as f:
-        if corpus == 'timit':
-            f.write('SOURCEFORMAT = NIST\n')
-        else:
-            f.write('SOURCEFORMAT = WAV\n')
+        f.write('SOURCEFORMAT = %s\n' % audio_file_type.upper())
 
         # Sampling rate
         if sampling_rate == 16000:

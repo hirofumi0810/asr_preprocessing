@@ -3,6 +3,7 @@
 __pychache__
 *.log
 *.pyc
+*.scp
 
 # timit
 input_data_direct.py
