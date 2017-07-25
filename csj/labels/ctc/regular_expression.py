@@ -181,7 +181,7 @@ def remove_Ltag(kana_seq):
 
 def remove_laughing(kana_seq):
 
-    # 笑いながら発話
+    # 発話笑い
     expr = r'(.*)\(笑[\s]+([^()]+)\)(.*)'
     laughing = re.match(expr, kana_seq)
     while laughing is not None:

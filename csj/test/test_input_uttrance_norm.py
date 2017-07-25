@@ -25,7 +25,7 @@ class TestInputSpeakerNorm(unittest.TestCase):
 
     def test(self):
 
-        print('===== speaker norm input test =====')
+        print('===== utterance norm input test =====')
         prep = Prepare(data_path='/n/sd8/inaguma/corpus/csj/data/',
                        run_root_path=abspath('../'))
         input_feature_path = '/n/sd8/inaguma/corpus/csj/fbank/'
@@ -46,14 +46,14 @@ class TestInputSpeakerNorm(unittest.TestCase):
             if data_type in ['train_subset', 'train_fullset']:
                 return_tuple = read_htk(htk_paths=htk_paths,
                                         speaker_dict=speaker_dict,
-                                        normalize='speaker',
+                                        normalize='utterance',
                                         is_training=True)
                 train_mean_male, train_mean_female, train_std_male, train_std_female = return_tuple
 
             else:
                 read_htk(htk_paths=htk_paths,
                          speaker_dict=speaker_dict,
-                         normalize='speaker',
+                         normalize='utterance',
                          is_training=False,
                          train_mean_male=train_mean_male,
                          train_mean_female=train_mean_female,

@@ -26,15 +26,14 @@ class TestInputGlobalNorm(unittest.TestCase):
     def test(self):
 
         print('===== global norm input test =====')
-        prep = Prepare(csj_path='/n/sd8/inaguma/corpus/csj/data/',
+        prep = Prepare(data_path='/n/sd8/inaguma/corpus/csj/data/',
                        run_root_path=abspath('../'))
         input_feature_path = '/n/sd8/inaguma/corpus/csj/fbank/'
 
-        for data_type in ['train', 'train_large', 'eval1', 'eval2', 'eval3']:
+        for data_type in ['train_subset', 'train_fullset', 'eval1', 'eval2', 'eval3']:
             print('=> ' + data_type)
             label_paths = prep.trans(data_type)
             speaker_dict = read_sdb(label_paths=label_paths,
-                                    label_type='character',
                                     run_root_path=prep.run_root_path)
             htk_paths = [join(input_feature_path, htk_path)
                          for htk_path in sorted(glob(join(input_feature_path,
@@ -44,7 +43,7 @@ class TestInputGlobalNorm(unittest.TestCase):
             global train_mean_female
             global train_std_male
             global train_std_female
-            if data_type in ['train', 'train_large']:
+            if data_type in ['train_subset', 'train_fullset']:
                 return_tuple = read_htk(htk_paths=htk_paths,
                                         speaker_dict=speaker_dict,
                                         normalize='global',

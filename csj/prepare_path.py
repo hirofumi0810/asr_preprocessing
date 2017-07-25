@@ -19,15 +19,15 @@ from utils.util import mkdir
 class Prepare(object):
     """Prepare for making dataset.
     Args:
-        csj_path: path to csj corpus
+        data_path: path to csj corpus
         run_root_path: path to ./make.sh
         dataset_save_path: path to save dataset
     """
 
-    def __init__(self, csj_path, run_root_path):
+    def __init__(self, data_path, run_root_path):
 
         # Path to timit data
-        self.data_path = csj_path
+        self.data_path = data_path
         self.wav_path = join(self.data_path, 'WAV')
         # update ver.
         self.ver4_path = join(self.data_path, 'Ver4/SDB')
@@ -220,14 +220,14 @@ class Prepare(object):
     def wav(self, data_type):
         """Get paths to wav files.
         Args:
-            data_type: string, train or train_large or dev or eval1 or eval2,
-                eval3 or dialog
+            data_type: string, train_subset or train_fullset or dev or eval1 or
+                eval2 or eval3 or dialog
         Returns:
             paths to wav files
         """
-        if data_type == 'train':
+        if data_type == 'train_subset':
             return sorted(self.wav_train_paths)
-        elif data_type == 'train_large':
+        elif data_type == 'train_fullset':
             return sorted(self.wav_train_large_paths)
         elif data_type == 'dev':
             return sorted(self.wav_dev_paths)
@@ -245,14 +245,14 @@ class Prepare(object):
     def trans(self, data_type):
         """Get paths to transcription (.sdb) files.
         Args:
-            data_type: string, train or train_large or dev or eval1 or eval2,
-                eval3 or dialog
+            data_type: string, train_subset or train_fullset or dev or eval1 or
+                eval2 or eval3 or dialog
         Returns:
             paths to transcription files
         """
-        if data_type == 'train':
+        if data_type == 'train_subset':
             return sorted(self.trans_train_paths)
-        elif data_type == 'train_large':
+        elif data_type == 'train_fullset':
             return sorted(self.trans_train_large_paths)
         elif data_type == 'dev':
             return sorted(self.trans_dev_paths)
@@ -270,17 +270,17 @@ class Prepare(object):
 
 if __name__ == '__main__':
 
-    csj_path = '/n/sd8/inaguma/corpus/csj/data/'
+    data_path = '/n/sd8/inaguma/corpus/csj/data/'
 
-    prep = Prepare(csj_path, abspath('./'))
+    prep = Prepare(data_path, abspath('./'))
 
-    print('===== train (240h) =====')
-    print(len(prep.wav('train')))
-    print(len(prep.trans('train')))
+    print('===== train_subset (240h) =====')
+    print(len(prep.wav('train_subset')))
+    print(len(prep.trans('train_subset')))
 
-    print('===== train_large (586h) =====')
-    print(len(prep.wav('train_large')))
-    print(len(prep.trans('train_large')))
+    print('===== train_fullset (586h) =====')
+    print(len(prep.wav('train_fullset')))
+    print(len(prep.trans('train_fullset')))
 
     print('===== dev =====')
     print(len(prep.wav('dev')))

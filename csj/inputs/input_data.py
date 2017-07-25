@@ -27,49 +27,54 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
             value => dictionary of utterance information of each speaker
                 key => utterance index
                 value => [start_frame, end_frame, trans_kana, trans_kanji]
-        normalize: global => normalize input data by global mean & std of
-                             train data
-                   speaker => normalize data by mean & std per speaker
-                   None => no normalization
+        normalize: global => normalize input data by global mean & std over
+                             the training set per gender
+                   speaker => normalize input data by mean & std per speaker
+                   utterance => normalize input data by mean & std per
+                                utterance
         is_training: training or not
         save_path: path to save npy files
-        train_mean: global mean over train data
-        train_std: global standard deviation over train data
+        train_mean_male: global mean of male over the training set
+        train_mean_female: global mean of female over the training set
+        train_std_male: global standard deviation of female over the training
+            set
+        train_std_female: global standard deviation of female over the training
+            set
     Returns:
-        train_mean_male: global mean of male over train data
-        train_mean_female: global mean of female over train data
-        train_std_male: global standard deviation of male over train data
-        train_std_female: global standard deviation of female over train data
+        train_mean_male: global mean of male over the training set
+        train_mean_female: global mean of female over the training set
+        train_std_male: global standard deviation of male over the training set
+        train_std_female: global standard deviation of female over the training
+            set
     """
     # Read each HTK file
     print('===> Reading HTK files...')
     input_data_dict_list_male, total_frame_num_list_male = [], []
-    train_mean_list_male, train_std_list_male = [], []
+    train_mean_list_male = []
     input_data_dict_list_female, total_frame_num_list_female = [], []
-    train_mean_list_female, train_std_list_female = [], []
+    train_mean_list_female = []
     for htk_path in tqdm(htk_paths):
         speaker_name = basename(htk_path).split('.')[0]
-        return_tuple = segment_htk(htk_path,
-                                   speaker_name,
-                                   speaker_dict[speaker_name],
-                                   normalize=normalize,
-                                   sil_duration=50)
-        input_data_dict, train_mean, train_std, total_frame_num = return_tuple
+        input_data_dict_speaker, train_mean_speaker, total_frame_num_speaker = segment_htk(
+            htk_path,
+            speaker_name,
+            speaker_dict[speaker_name],
+            normalize=normalize,
+            is_training=is_training,
+            sil_duration=0)
 
         if speaker_name[3] == 'M':
-            input_data_dict_list_male.append(input_data_dict)
-            train_mean_list_male.append(train_mean)
-            train_std_list_male.append(train_std)
-            total_frame_num_list_male.append(total_frame_num)
+            input_data_dict_list_male.append(input_data_dict_speaker)
+            train_mean_list_male.append(train_mean_speaker)
+            total_frame_num_list_male.append(total_frame_num_speaker)
         elif speaker_name[3] == 'F':
-            input_data_dict_list_female.append(input_data_dict)
-            train_mean_list_female.append(train_mean)
-            train_std_list_female.append(train_std)
-            total_frame_num_list_female.append(total_frame_num)
+            input_data_dict_list_female.append(input_data_dict_speaker)
+            train_mean_list_female.append(train_mean_speaker)
+            total_frame_num_list_female.append(total_frame_num_speaker)
 
     if is_training:
-        # Compute global mean (each gender)
-        print('===> Computing global mean over train data...')
+        # Compute global mean per gender
+        print('===> Computing global mean over the training set...')
         print('=====> male...')
         train_mean_male = global_mean(train_mean_list_male,
                                       total_frame_num_list_male)
@@ -77,8 +82,8 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
         train_mean_female = global_mean(train_mean_list_female,
                                         total_frame_num_list_female)
 
-        # Compute global standard deviation (each gender)
-        print('===> Computing global std over train data...')
+        # Compute global standard deviation per gender
+        print('===> Computing global std over the training set...')
         print('=====> male...')
         train_std_male = global_std(input_data_dict_list_male,
                                     total_frame_num_list_male,
@@ -89,7 +94,7 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
                                       train_mean_female)
 
         if save_path is not None:
-            # Save global mean & std (each gender)
+            # Save global mean & std per each gender
             np.save(join(save_path, 'train_mean_male.npy'),
                     train_mean_male)
             np.save(join(save_path, 'train_mean_female.npy'),
@@ -107,7 +112,7 @@ def read_htk(htk_paths, speaker_dict, normalize, is_training, save_path=None,
             for key, input_data_utt in input_data_dict.items():
                 speaker_name, utt_index = key.split('_')
 
-                # Normalize by global mean & std over train data (each gender)
+                # Normalize by global mean & std over training set per gender
                 if normalize == 'global':
                     if speaker_name[3] == 'M':
                         input_data_utt -= train_mean_male

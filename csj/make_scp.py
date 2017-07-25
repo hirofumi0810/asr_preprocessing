@@ -5,70 +5,70 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, abspath
+from os.path import join, abspath, basename
 import sys
 
 sys.path.append('../')
 from csj.prepare_path import Prepare
-from utils.util import mkdir_join
+from utils.util import mkdir_join, mkdir
 from utils.htk.make_config import setup
 
 
-def main(csj_path, input_feature_save_path, run_root_path):
+def main(data_path, input_feature_save_path, run_root_path):
 
-    prep = Prepare(csj_path, run_root_path)
-    wav_train_paths = prep.wav(data_type='train')
-    wav_train_large_paths = prep.wav(data_type='train_large')
+    prep = Prepare(data_path, run_root_path)
+    wav_train_subset_paths = prep.wav(data_type='train_subset')
+    wav_train_fullset_paths = prep.wav(data_type='train_fullset')
     wav_eval1_paths = prep.wav(data_type='eval1')
     wav_eval2_paths = prep.wav(data_type='eval2')
     wav_eval3_paths = prep.wav(data_type='eval3')
     wav_dialog_paths = prep.wav(data_type='dialog')
 
-    save_train_path = mkdir_join(input_feature_save_path, 'train')
-    save_train_all_path = mkdir_join(input_feature_save_path, 'train_large')
+    save_train_path = mkdir_join(input_feature_save_path, 'train_subset')
+    save_train_all_path = mkdir_join(input_feature_save_path, 'train_fullset')
     save_eval1_path = mkdir_join(input_feature_save_path, 'eval1')
     save_eval2_path = mkdir_join(input_feature_save_path, 'eval2')
     save_eval3_path = mkdir_join(input_feature_save_path, 'eval3')
     save_dialog_path = mkdir_join(input_feature_save_path, 'dialog')
 
     # HTK settings
-    setup(corpus='csj',
+    setup(audio_file_type='wav',
           feature='fbank',
           channels=40,
           save_path=abspath('./config'),
           sampling_rate=16000,
           window=0.025,
           slide=0.01,
-          energy=True,
+          energy=False,
           delta=True,
           deltadelta=True,
           window_func='hamming')
 
     ################
-    # train (240h)
+    # train_subset (240h)
     ################
-    if len(wav_train_paths) == 0:
+    if len(wav_train_subset_paths) == 0:
         raise ValueError('There are not any wav files.')
-    elif len(wav_train_paths) != 986:
+    elif len(wav_train_subset_paths) != 986:
         raise ValueError('File number is not correct (True: 986, Now: %d).' %
-                         len(wav_train_paths))
-    with open(join(run_root_path, 'config/wav2fbank_train.scp'), 'w') as f:
-        for wav_path in wav_train_paths:
-            speaker_name = wav_path.split('/')[-1].split('.')[0]
+                         len(wav_train_subset_paths))
+    with open(join(run_root_path, 'config/wav2fbank_train_subset.scp'), 'w') as f:
+        for wav_path in wav_train_subset_paths:
+            speaker_name = basename(wav_path).split('.')[0]
             save_path = join(save_train_path, speaker_name + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
     #####################
-    # train_large (586h)
+    # train_fullset (586h)
     #####################
-    if len(wav_train_large_paths) == 0:
+    if len(wav_train_fullset_paths) == 0:
         raise ValueError('There are not any wav files.')
-    elif len(wav_train_large_paths) != 3212:
+    elif len(wav_train_fullset_paths) != 3212:
         raise ValueError('File number is not correct (True: 3212, Now: %d).' %
-                         len(wav_train_large_paths))
-    with open(join(run_root_path, 'config/wav2fbank_train_all.scp'), 'w') as f:
-        for wav_path in wav_train_large_paths:
-            speaker_name = wav_path.split('/')[-1].split('.')[0]
+                         len(wav_train_fullset_paths))
+    with open(join(run_root_path, 'config/wav2fbank_train_fullset.scp'), 'w') as f:
+        for wav_path in wav_train_fullset_paths:
+            speaker_name = basename(wav_path).split('.')[0]
             save_path = join(save_train_all_path, speaker_name + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
@@ -82,7 +82,7 @@ def main(csj_path, input_feature_save_path, run_root_path):
                          len(wav_eval1_paths))
     with open(join(run_root_path, 'config/wav2fbank_eval1.scp'), 'w') as f:
         for wav_path in wav_eval1_paths:
-            speaker_name = wav_path.split('/')[-1].split('.')[0]
+            speaker_name = basename(wav_path).split('.')[0]
             save_path = join(save_eval1_path, speaker_name + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
@@ -96,7 +96,7 @@ def main(csj_path, input_feature_save_path, run_root_path):
                          len(wav_eval2_paths))
     with open(join(run_root_path, 'config/wav2fbank_eval2.scp'), 'w') as f:
         for wav_path in wav_eval2_paths:
-            speaker_name = wav_path.split('/')[-1].split('.')[0]
+            speaker_name = basename(wav_path).split('.')[0]
             save_path = join(save_eval2_path, speaker_name + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
@@ -110,7 +110,7 @@ def main(csj_path, input_feature_save_path, run_root_path):
                          len(wav_eval3_paths))
     with open(join(run_root_path, 'config/wav2fbank_eval3.scp'), 'w') as f:
         for wav_path in wav_eval3_paths:
-            speaker_name = wav_path.split('/')[-1].split('.')[0]
+            speaker_name = basename(wav_path).split('.')[0]
             save_path = join(save_eval3_path, speaker_name + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
@@ -124,7 +124,7 @@ def main(csj_path, input_feature_save_path, run_root_path):
                          len(wav_dialog_paths))
     with open(join(run_root_path, 'config/wav2fbank_dialog.scp'), 'w') as f:
         for wav_path in wav_dialog_paths:
-            speaker_name = wav_path.split('/')[-1].split('.')[0]
+            speaker_name = basename(wav_path).split('.')[0]
             save_path = join(save_dialog_path, speaker_name + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
 
@@ -135,8 +135,8 @@ if __name__ == '__main__':
     if len(args) != 4:
         raise ValueError
 
-    csj_path = args[1]
-    input_feature_save_path = args[2]
+    data_path = args[1]
+    input_feature_save_path = mkdir(args[2])
     run_root_path = args[3]
 
-    main(csj_path, input_feature_save_path, run_root_path)
+    main(data_path, input_feature_save_path, run_root_path)

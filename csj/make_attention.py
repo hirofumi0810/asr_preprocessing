@@ -18,28 +18,29 @@ from csj.labels.attention.character import read_sdb
 from utils.util import mkdir_join
 
 
-def main(csj_path, dataset_save_path, input_feature_path, run_root_path,
-         train_data_type, divide_by_space):
+def main(data_path, dataset_save_path, input_feature_path, run_root_path,
+         train_data_size, divide_by_space):
 
-    print('===== ' + train_data_type + ' =====')
-    prep = Prepare(csj_path, run_root_path)
+    print('===== ' + train_data_size + ' =====')
+    prep = Prepare(data_path, run_root_path)
     input_save_path = mkdir_join(dataset_save_path, 'inputs')
-    input_save_path = mkdir_join(input_save_path, train_data_type)
+    input_save_path = mkdir_join(input_save_path, train_data_size)
     label_save_path = mkdir_join(dataset_save_path, 'labels')
+    label_save_path = mkdir_join(label_save_path, 'attention')
     if divide_by_space:
-        label_save_path = mkdir_join(label_save_path, 'attention_divide')
+        kanji_label_save_path = mkdir_join(label_save_path, 'kanji_wakachi')
+        kana_label_save_path = mkdir_join(label_save_path, 'kana_wakachi')
+        phone_label_save_path = mkdir_join(label_save_path, 'phone_wakachi')
     else:
-        label_save_path = mkdir_join(label_save_path, 'attention')
-    label_save_path = mkdir_join(label_save_path, train_data_type)
-    kanji_label_save_path = mkdir_join(label_save_path, 'kanji')
-    kana_label_save_path = mkdir_join(label_save_path, 'kana')
-    phone_label_save_path = mkdir_join(label_save_path, 'phone')
+        kanji_label_save_path = mkdir_join(label_save_path, 'kanji')
+        kana_label_save_path = mkdir_join(label_save_path, 'kana')
+        phone_label_save_path = mkdir_join(label_save_path, 'phone')
 
-    if train_data_type == 'default':
-        train = 'train'
+    if train_data_size == 'subset':
+        train = 'train_subset'
         save_map_file = False
-    elif train_data_type == 'large':
-        train = 'train_large'
+    elif train_data_size == 'fullset':
+        train = 'train_fullset'
         save_map_file = True
 
     ####################
@@ -237,16 +238,16 @@ if __name__ == '__main__':
     if len(args) != 5:
         raise ValueError
 
-    csj_path = args[1]
+    data_path = args[1]
     dataset_save_path = args[2]
     input_feature_path = args[3]
     run_root_path = args[4]
 
     for divide_by_space in [False, True]:
-        for train_data_type in ['large', 'default']:
-            main(csj_path,
+        for train_data_size in ['fullset', 'subset']:
+            main(data_path,
                  dataset_save_path,
                  input_feature_path,
                  run_root_path,
-                 train_data_type,
+                 train_data_size,
                  divide_by_space)
