@@ -22,8 +22,8 @@ from utils.labels.character import char2num
 
 # - character_capital_divide
 # 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
-# 18 special double-letters, apostorophe(')
-# = 26 * 2 + 18 + 1 = 71 labels
+# 19 special double-letters, apostorophe(')
+# = 26 * 2 + 19 + 1 = 72 labels
 
 
 def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,

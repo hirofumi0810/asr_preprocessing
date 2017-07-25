@@ -17,28 +17,39 @@ from timit.labels.attention.character import read_text
 class TestAttentionLabelChar(unittest.TestCase):
 
     def test(self):
+
+        print('============================================')
+        print('=     Attention label test (character)     =')
+        print('============================================')
+
+        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original/',
+                            run_root_path=os.path.abspath('../'))
+        self.label_train_paths = self.prep.text(data_type='train')
+        self.label_dev_paths = self.prep.text(data_type='dev')
+        self.label_test_paths = self.prep.text(data_type='test')
+
         self.check_reading(divide_by_capital=False)
         self.check_reading(divide_by_capital=True)
 
     def check_reading(self, divide_by_capital):
 
-        print('===== Attention label test (character) =====')
+        print('<<<<<<<<<< divide_by_capital: ' + str(divide_by_capital) +
+              ' >>>>>>>>>>')
 
-        prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original/',
-                       run_root_path=os.path.abspath('../'))
-        label_train_paths = prep.text(data_type='train')
-        label_dev_paths = prep.text(data_type='dev')
-        label_test_paths = prep.text(data_type='test')
-
-        read_text(label_paths=label_train_paths,
-                  run_root_path=prep.run_root_path,
+        print('---------- train ----------')
+        read_text(label_paths=self.label_train_paths,
+                  run_root_path=self.prep.run_root_path,
                   save_map_file=True,
                   divide_by_capital=divide_by_capital)
-        read_text(label_paths=label_dev_paths,
-                  run_root_path=prep.run_root_path,
+
+        print('---------- dev ----------')
+        read_text(label_paths=self.label_dev_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
-        read_text(label_paths=label_test_paths,
-                  run_root_path=prep.run_root_path,
+
+        print('---------- test ----------')
+        read_text(label_paths=self.label_test_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
 
 

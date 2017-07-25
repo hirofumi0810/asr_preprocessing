@@ -3,6 +3,7 @@
 echo '----------------------------------------------------'
 echo '|                      TIMIT                        |'
 echo '----------------------------------------------------'
+RUN_ROOT_PATH=`pwd`
 
 # Set the root path to TIMIT corpus
 TIMIT_PATH='/n/sd8/inaguma/corpus/timit/original/'
@@ -13,12 +14,10 @@ DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/timit/dataset/'
 # Set the path to save input features (fbank or MFCC)
 INPUT_FEATURE_SAVE_PATH='/n/sd8/inaguma/corpus/timit/fbank/'
 
-RUN_ROOT_PATH=`pwd`
 
-# Feature extraction
-echo '--------------------------'
-echo '|   Feature extraction    |'
-echo '--------------------------'
+echo '--------------------------------'
+echo '|      Feature extraction       |'
+echo '--------------------------------'
 # Set the path to HTK
 HTK_PATH='/misc/local/htk-3.4/bin/HCopy'
 
@@ -32,15 +31,15 @@ $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
 $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
 
 
-# Make dataset for CTC
-echo '--------------------------'
-echo '|          CTC            |'
-echo '--------------------------'
+echo '--------------------------------'
+echo '|             CTC               |'
+echo '--------------------------------'
+# Make dataset for CTC model
 python make_ctc.py $TIMIT_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
 
 
-# Make dataset for Attention Mechanism
-echo '--------------------------'
-echo '|        Attention        |'
-echo '--------------------------'
+# Make dataset for Attention Mechanismecho '--------------------------------'
+echo '|           Attention           |'
+echo '--------------------------------'
+# Make dataset for Attention-based model
 python make_attention.py $TIMIT_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH

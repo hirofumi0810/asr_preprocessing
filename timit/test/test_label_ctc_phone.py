@@ -17,11 +17,12 @@ from timit.labels.ctc.phone import read_phone
 class TestCTCLabelPhone(unittest.TestCase):
 
     def test(self):
-        print('===== CTC label test (phone) =====')
+        print('==================================')
+        print('=     CTC label test (phone)     =')
+        print('==================================')
 
         self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original/',
                             run_root_path=os.path.abspath('../'))
-
         self.label_train_paths = self.prep.phone(data_type='train')
         self.label_dev_paths = self.prep.phone(data_type='dev')
         self.label_test_paths = self.prep.phone(data_type='test')
@@ -32,14 +33,20 @@ class TestCTCLabelPhone(unittest.TestCase):
 
     def check_reading(self, label_type):
 
-        print('===== ' + label_type + ' =====')
+        print('<<<<<<<<<< ' + label_type + ' >>>>>>>>>>')
+
+        print('---------- train ----------')
         read_phone(label_paths=self.label_train_paths,
                    run_root_path=self.prep.run_root_path,
                    label_type=label_type,
                    save_map_file=True)
+
+        print('---------- dev ----------')
         read_phone(label_paths=self.label_dev_paths,
                    run_root_path=self.prep.run_root_path,
                    label_type=label_type)
+
+        print('---------- test ----------')
         read_phone(label_paths=self.label_test_paths,
                    run_root_path=self.prep.run_root_path,
                    label_type=label_type)

@@ -12,7 +12,7 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 
-from utils.inputs.segmentation import load_htk as load
+from utils.inputs.segmentation import read_htk as read_htk_utt
 
 
 def read_htk(htk_paths, normalize, is_training, save_path=None,
@@ -33,7 +33,7 @@ def read_htk(htk_paths, normalize, is_training, save_path=None,
     print('===> Reading HTK files...')
     input_data_list = []
     for htk_path in tqdm(htk_paths):
-        input_data_list.append(load(htk_path))
+        input_data_list.append(read_htk_utt(htk_path))
 
     if normalize and is_training:
         # Count total frame num

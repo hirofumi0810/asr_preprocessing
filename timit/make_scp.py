@@ -10,7 +10,7 @@ from os.path import join, basename, abspath
 
 sys.path.append('../')
 from prepare_path import Prepare
-from utils.util import mkdir_join
+from utils.util import mkdir_join, mkdir
 from utils.htk.make_config import setup
 
 
@@ -26,14 +26,14 @@ def main(data_path, input_feature_save_path, run_root_path):
     save_test_path = mkdir_join(input_feature_save_path, 'test')
 
     # HTK settings
-    setup(corpus='timit',
+    setup(audio_file_type='nist',
           feature='fbank',
           channels=40,
           save_path=abspath('./config'),
           sampling_rate=16000,
           window=0.025,
           slide=0.01,
-          energy=True,
+          energy=False,
           delta=True,
           deltadelta=True,
           window_func='hamming')
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         raise ValueError
 
     data_path = args[1]
-    input_feature_save_path = args[2]
+    input_feature_save_path = mkdir(args[2])
     run_root_path = args[3]
 
     main(data_path, input_feature_save_path, run_root_path)
