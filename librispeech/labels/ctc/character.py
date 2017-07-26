@@ -50,7 +50,7 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
     char_set = set([])
     for label_path in tqdm(label_paths):
         speaker_index = label_path.split('/')[-3]
-        if speaker_index in speaker_dict.keys():
+        if speaker_index not in speaker_dict.keys():
             speaker_dict[speaker_index] = {}
         with open(label_path, 'r') as f:
             for line in f:

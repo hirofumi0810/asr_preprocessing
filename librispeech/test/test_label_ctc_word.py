@@ -17,51 +17,60 @@ from librispeech.labels.ctc.word import read_text
 class TestCTCLabelWord(unittest.TestCase):
 
     def test(self):
-        self.check_reading()
+        print('=================================')
+        print('=     CTC label test (word)     =')
+        print('=================================')
 
-    def check_reading(self):
+        self.prep = Prepare(
+            data_path='/n/sd8/inaguma/corpus/librispeech/data/',
+            run_root_path=os.path.abspath('../'))
+        self.label_dev_clean_paths = self.prep.text(data_type='dev_clean')
+        self.label_dev_other_paths = self.prep.text(data_type='dev_other')
+        self.label_test_clean_paths = self.prep.text(data_type='test_clean')
+        self.label_test_other_paths = self.prep.text(data_type='test_other')
 
-        print('===== CTC label test (word) =====')
+        self.check_reading(train_data_type='train_clean100')
+        self.check_reading(train_data_type='train_clean360')
+        self.check_reading(train_data_type='train_other500')
 
-        prep = Prepare(data_path='/n/sd8/inaguma/corpus/librispeech/data/',
-                       run_root_path=os.path.abspath('../'))
-        label_train_clean100_paths = prep.text(data_type='train_clean100')
-        label_train_clean360_paths = prep.text(data_type='train_clean360')
-        label_train_other500_paths = prep.text(data_type='train_other500')
-        label_dev_clean_paths = prep.text(data_type='dev_clean')
-        label_dev_other_paths = prep.text(data_type='dev_other')
-        label_test_clean_paths = prep.text(data_type='test_clean')
-        label_test_other_paths = prep.text(data_type='test_other')
+    def check_reading(self, train_data_type):
 
-        # train
-        read_text(label_paths=label_train_clean100_paths,
-                  data_type='train_clean100',
-                  run_root_path=prep.run_root_path,
-                  save_map_file=True)
-        read_text(label_paths=label_train_clean360_paths,
-                  data_type='train_clean360',
-                  run_root_path=prep.run_root_path,
-                  save_map_file=True)
-        read_text(label_paths=label_train_other500_paths,
-                  data_type='train_other500',
-                  run_root_path=prep.run_root_path,
-                  save_map_file=True)
+        print('<<<<<<<<<< train_data_type: %s >>>>>>>>>>' % train_data_type)
 
-        # dev
-        read_text(label_paths=label_dev_clean_paths,
+        print('---------- train ----------')
+        label_train_paths = self.prep.text(data_type=train_data_type)
+        read_text(label_paths=label_train_paths,
+                  data_type=train_data_type,
+                  train_data_type=train_data_type,
+                  run_root_path=self.prep.run_root_path,
+                  save_map_file=True,
+                  frequency_threshold=10)
+
+        print('---------- dev_clean ----------')
+        read_text(label_paths=self.label_dev_clean_paths,
                   data_type='dev_clean',
-                  run_root_path=prep.run_root_path)
-        read_text(label_paths=label_dev_other_paths,
-                  data_type='dev_other',
-                  run_root_path=prep.run_root_path)
+                  train_data_type=train_data_type,
+                  run_root_path=self.prep.run_root_path)
 
-        # test
-        read_text(label_paths=label_test_clean_paths,
+        print('---------- dev_other ----------')
+        read_text(label_paths=self.label_dev_other_paths,
+                  data_type='dev_other',
+                  train_data_type=train_data_type,
+                  run_root_path=self.prep.run_root_path)
+
+        print('---------- test_clean ----------')
+        read_text(label_paths=self.label_test_clean_paths,
                   data_type='test_clean',
-                  run_root_path=prep.run_root_path)
-        read_text(label_paths=label_test_other_paths,
+                  train_data_type=train_data_type,
+                  run_root_path=self.prep.run_root_path,
+                  is_test=True)
+
+        print('---------- test_other ----------')
+        read_text(label_paths=self.label_test_other_paths,
                   data_type='test_other',
-                  run_root_path=prep.run_root_path)
+                  train_data_type=train_data_type,
+                  run_root_path=self.prep.run_root_path,
+                  is_test=True)
 
 
 if __name__ == '__main__':

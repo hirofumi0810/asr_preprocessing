@@ -19,7 +19,7 @@ WAV_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/wav/'
 echo '--------------------------------'
 echo '|   Convert from FLAC to WAV    |'
 echo '--------------------------------'
-Convert from flac to wav files (remove flac files)
+# Convert from flac to wav files (remove flac files)
 flac_paths=$(find $LIBRI_PATH -type f)
 for flac_path in $flac_paths ; do
     dir_path=$(dirname $flac_path)
@@ -53,16 +53,21 @@ $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_other.scp
 $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_clean.scp
 $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_other.scp
 
+echo '--------------------------------'
+echo '|         Input data            |'
+echo '--------------------------------'
+# Make input data
+python make_input.py $LIBRI_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
 
 echo '--------------------------------'
 echo '|             CTC               |'
 echo '--------------------------------'
-# Make dataset for CTC model
-# python make_ctc.py $LIBRI_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
+# Make trainscripts for CTC model
+python make_label_ctc.py $LIBRI_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH
 
 
 echo '--------------------------------'
 echo '|           Attention           |'
 echo '--------------------------------'
-# Make dataset for Attention-based model
-# python make_attention.py $LIBRI_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
+# Make trainscripts for Attention-based model
+# python make_label_attention.py $LIBRI_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH

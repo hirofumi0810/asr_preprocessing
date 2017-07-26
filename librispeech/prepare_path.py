@@ -33,6 +33,17 @@ class Prepare(object):
         # Absolute path to this directory
         self.run_root_path = run_root_path
 
+        # Load speaker data
+        self.speaker_gender_dict = {}
+        with open(join(data_path, 'SPEAKERS.TXT'), 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line[0] == ';':
+                    continue
+                speaker_index = line.split(' ')[0]
+                gender = line.split(' ')[2]
+                self.speaker_gender_dict[speaker_index] = gender
+
         self.__make()
 
     def __make(self):

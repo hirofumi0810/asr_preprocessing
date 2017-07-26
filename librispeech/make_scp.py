@@ -44,7 +44,7 @@ def main(data_path, input_feature_save_path, run_root_path):
           sampling_rate=16000,
           window=0.025,
           slide=0.01,
-          energy=True,
+          energy=False,
           delta=True,
           deltadelta=True,
           window_func='hamming')

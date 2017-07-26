@@ -17,49 +17,57 @@ from librispeech.labels.ctc.character import read_text
 class TestCTCLabelChar(unittest.TestCase):
 
     def test(self):
+        print('======================================')
+        print('=     CTC label test (character)     =')
+        print('======================================')
+
+        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/librispeech/data/',
+                            run_root_path=os.path.abspath('../'))
+        self.label_train_clean100_paths = self.prep.text(
+            data_type='train_clean100')
+        self.label_train_clean360_paths = self.prep.text(
+            data_type='train_clean360')
+        self.label_train_other500_paths = self.prep.text(
+            data_type='train_other500')
+        self.label_dev_clean_paths = self.prep.text(data_type='dev_clean')
+        self.label_dev_other_paths = self.prep.text(data_type='dev_other')
+        self.label_test_clean_paths = self.prep.text(data_type='test_clean')
+        self.label_test_other_paths = self.prep.text(data_type='test_other')
+
         self.check_reading(divide_by_capital=False)
         self.check_reading(divide_by_capital=True)
 
     def check_reading(self, divide_by_capital):
 
-        print('===== CTC label test (character) =====')
+        print('<<<<<<<<<< divide_by_capital: %s >>>>>>>>>>' %
+              str(divide_by_capital))
 
-        prep = Prepare(data_path='/n/sd8/inaguma/corpus/librispeech/data/',
-                       run_root_path=os.path.abspath('../'))
-        label_train_clean100_paths = prep.text(data_type='train_clean100')
-        label_train_clean360_paths = prep.text(data_type='train_clean360')
-        label_train_other500_paths = prep.text(data_type='train_other500')
-        label_dev_clean_paths = prep.text(data_type='dev_clean')
-        label_dev_other_paths = prep.text(data_type='dev_other')
-        label_test_clean_paths = prep.text(data_type='test_clean')
-        label_test_other_paths = prep.text(data_type='test_other')
-
-        # train
-        read_text(label_paths=label_train_clean100_paths,
-                  run_root_path=prep.run_root_path,
+        print('---------- train ----------')
+        read_text(label_paths=self.label_train_clean100_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
-        read_text(label_paths=label_train_clean360_paths,
-                  run_root_path=prep.run_root_path,
+        read_text(label_paths=self.label_train_clean360_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
-        read_text(label_paths=label_train_other500_paths,
-                  run_root_path=prep.run_root_path,
+        read_text(label_paths=self.label_train_other500_paths,
+                  run_root_path=self.prep.run_root_path,
                   save_map_file=True,
                   divide_by_capital=divide_by_capital)
 
-        # dev
-        read_text(label_paths=label_dev_clean_paths,
-                  run_root_path=prep.run_root_path,
+        print('---------- dev ----------')
+        read_text(label_paths=self.label_dev_clean_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
-        read_text(label_paths=label_dev_other_paths,
-                  run_root_path=prep.run_root_path,
+        read_text(label_paths=self.label_dev_other_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
 
-        # test
-        read_text(label_paths=label_test_clean_paths,
-                  run_root_path=prep.run_root_path,
+        print('---------- test ----------')
+        read_text(label_paths=self.label_test_clean_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
-        read_text(label_paths=label_test_other_paths,
-                  run_root_path=prep.run_root_path,
+        read_text(label_paths=self.label_test_other_paths,
+                  run_root_path=self.prep.run_root_path,
                   divide_by_capital=divide_by_capital)
 
 
