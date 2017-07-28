@@ -104,8 +104,7 @@ def main(data_path, dataset_save_path, input_feature_path, run_root_path,
                  train_std_male=train_std_female,
                  train_std_female=train_std_female)
 
-        # Make a confirmation file to prove that dataset was saved
-        # correctly
+        # Make a confirmation file to prove that dataset was saved correctly
         with open(join(input_save_path, 'complete.txt'), 'w') as f:
             f.write('')
 

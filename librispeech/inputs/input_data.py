@@ -51,6 +51,10 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
         train_std_female: global standard deviation of female over the training
             set
     """
+    if not is_training:
+        if train_mean_male is None or train_mean_female is None or train_std_male is None or train_std_female is None:
+            raise ValueError('Set mean & std computed in the training set.')
+
     # Read each HTK file
     print('===> Reading HTK files...')
     input_data_dict = {}
@@ -78,11 +82,11 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
             input_data_list_female.append(input_data_utt)
             total_frame_num_female += input_data_utt.shape[0]
 
+    feature_dim = input_data_list_male[0].shape[1]
     if is_training:
         # Compute global mean per gender
         print('===> Computing global mean over the training set...')
         print('=====> male...')
-        feature_dim = input_data_list_male[0].shape[1]
         train_mean_male = np.zeros((feature_dim,), dtype=np.float64)
         for input_data_utt in tqdm(input_data_list_male):
             train_mean_male += np.sum(input_data_utt, axis=0)
@@ -111,61 +115,61 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
         train_std_female = np.sqrt(
             train_std_female / (total_frame_num_female - 1))
 
-        # Normalization
-        print('===> Normalization...')
-        frame_num_dict = {}
-        for speaker_index, utterance_dict in tqdm(input_data_dict.items()):
-            if normalize == 'speaker':
-                # Compute mean & std per speaker
-                input_data_concat_speaker = np.zeros(
-                    (total_frame_num_dict[speaker_index], feature_dim),
-                    dtype=np.float64)
-                frame_offset = 0
-                for input_data_utt in utterance_dict.values():
-                    frame_num_utt = input_data_utt.shape[0]
-                    input_data_concat_speaker[frame_offset:frame_offset +
-                                              frame_num_utt] = input_data_utt
-                    frame_offset += frame_num_utt
-                speaker_mean = np.mean(input_data_concat_speaker, axis=0)
-                speaker_std = np.std(input_data_concat_speaker, axis=0)
+    # Normalization
+    print('===> Normalization...')
+    frame_num_dict = {}
+    for speaker_index, utterance_dict in tqdm(input_data_dict.items()):
+        if normalize == 'speaker':
+            # Compute mean & std per speaker
+            input_data_concat_speaker = np.zeros(
+                (total_frame_num_dict[speaker_index], feature_dim),
+                dtype=np.float64)
+            frame_offset = 0
+            for input_data_utt in utterance_dict.values():
+                frame_num_utt = input_data_utt.shape[0]
+                input_data_concat_speaker[frame_offset:frame_offset +
+                                          frame_num_utt] = input_data_utt
+                frame_offset += frame_num_utt
+            speaker_mean = np.mean(input_data_concat_speaker, axis=0)
+            speaker_std = np.std(input_data_concat_speaker, axis=0)
 
-            for utterance_name, input_data_utt in utterance_dict.items():
-                if normalize == 'utterance':
-                    # Normalize by mean & std per utterance
-                    utt_mean = np.mean(input_data_utt, axis=0,
-                                       dtype=np.float64)
-                    utt_std = np.std(input_data_utt, axis=0, dtype=np.float64)
-                    input_data_utt = (input_data_utt - utt_mean) / utt_std
-                    input_data_dict[speaker_index][utterance_name] = input_data_utt
+        for utterance_name, input_data_utt in utterance_dict.items():
+            if normalize == 'utterance':
+                # Normalize by mean & std per utterance
+                utt_mean = np.mean(input_data_utt, axis=0,
+                                   dtype=np.float64)
+                utt_std = np.std(input_data_utt, axis=0, dtype=np.float64)
+                input_data_utt = (input_data_utt - utt_mean) / utt_std
+                input_data_dict[speaker_index][utterance_name] = input_data_utt
 
-                elif normalize == 'speaker':
-                    # Normalize by mean & std per speaker
-                    input_data_utt -= speaker_mean
-                    input_data_utt /= speaker_std
-                    input_data_dict[speaker_index][utterance_name] = input_data_utt
+            elif normalize == 'speaker':
+                # Normalize by mean & std per speaker
+                input_data_utt -= speaker_mean
+                input_data_utt /= speaker_std
+                input_data_dict[speaker_index][utterance_name] = input_data_utt
 
-                elif normalize == 'global':
-                    # Normalize by mean & std over the training set
-                    if speaker_gender_dict[speaker_index] == 'M':
-                        input_data_utt -= train_mean_male
-                        input_data_utt /= train_std_male
-                    elif speaker_gender_dict[speaker_index] == 'F':
-                        input_data_utt -= train_mean_female
-                        input_data_utt /= train_std_female
-                    input_data_dict[speaker_index][utterance_name] = input_data_utt
+            elif normalize == 'global':
+                # Normalize by mean & std over the training set
+                if speaker_gender_dict[speaker_index] == 'M':
+                    input_data_utt -= train_mean_male
+                    input_data_utt /= train_std_male
+                elif speaker_gender_dict[speaker_index] == 'F':
+                    input_data_utt -= train_mean_female
+                    input_data_utt /= train_std_female
+                input_data_dict[speaker_index][utterance_name] = input_data_utt
 
-                else:
-                    raise ValueError(
-                        'normalize is "utterance" or "speaker" or "global".')
+            else:
+                raise ValueError(
+                    'normalize is "utterance" or "speaker" or "global".')
 
-                if save_path is not None:
-                    # Save input data
-                    mkdir_join(save_path, speaker_index)
-                    input_data_save_path = join(
-                        save_path, speaker_index, utterance_name + '.npy')
+            if save_path is not None:
+                # Save input data
+                mkdir_join(save_path, speaker_index)
+                input_data_save_path = join(
+                    save_path, speaker_index, utterance_name + '.npy')
 
-                    np.save(input_data_save_path, input_data_utt)
-                    frame_num_dict[utterance_name] = input_data_utt.shape[0]
+                np.save(input_data_save_path, input_data_utt)
+                frame_num_dict[utterance_name] = input_data_utt.shape[0]
 
         if save_path is not None:
             # Save global mean & std per gender
@@ -178,9 +182,10 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
             np.save(join(save_path, 'train_std_female.npy'),
                     train_std_female)
 
-            # Save the frame number dictionary
-            print('===> Saving : frame_num.pickle')
-            with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
-                pickle.dump(frame_num_dict, f)
+    if save_path is not None:
+        # Save the frame number dictionary
+        print('===> Saving : frame_num.pickle')
+        with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
+            pickle.dump(frame_num_dict, f)
 
     return train_mean_male, train_mean_female, train_std_male, train_std_female
