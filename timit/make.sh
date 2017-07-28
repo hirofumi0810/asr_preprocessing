@@ -32,14 +32,21 @@ $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
 
 
 echo '--------------------------------'
+echo '|         Input data            |'
+echo '--------------------------------'
+# Make input data
+python make_input.py $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH
+
+
+echo '--------------------------------'
 echo '|             CTC               |'
 echo '--------------------------------'
-# Make dataset for CTC model
-python make_ctc.py $TIMIT_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
+# Make transcripts for CTC model
+python make_label_ctc.py $TIMIT_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH
 
 
-# Make dataset for Attention Mechanismecho '--------------------------------'
+echo '--------------------------------'
 echo '|           Attention           |'
 echo '--------------------------------'
-# Make dataset for Attention-based model
-python make_attention.py $TIMIT_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
+# Make transcripts for Attention-based model
+python make_label_attention.py $TIMIT_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH

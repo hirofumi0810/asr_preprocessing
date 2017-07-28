@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make dataset for the Attention model (TIMIT corpus)."""
+"""Make labels for the Attention model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -9,78 +9,22 @@ from __future__ import print_function
 
 from os.path import join, abspath, isfile
 import sys
-from glob import glob
-
 
 sys.path.append('../')
-import prepare_path
-from inputs.input_data_global_norm import read_htk
+from prepare_path import Prepare
 from labels.attention.character import read_text
 from labels.attention.phone import read_phone
 from utils.util import mkdir_join
 
 
-def main(data_path, dataset_save_path, input_feature_path, run_root_path,
-         label_type):
+def main(data_path, dataset_save_path, run_root_path, label_type):
 
     print('===== ' + label_type + ' =====')
-    prep = prepare_path.Prepare(data_path, run_root_path)
-    input_save_path = mkdir_join(dataset_save_path, 'inputs')
+    prep = Prepare(data_path, run_root_path)
     label_save_path = mkdir_join(dataset_save_path, 'labels')
     label_save_path = mkdir_join(label_save_path, 'attention')
     label_save_path = mkdir_join(label_save_path, label_type)
 
-    ####################
-    # inputs
-    ####################
-    if isfile(join(input_save_path, 'complete.txt')):
-        print('Already exists.')
-    else:
-        input_train_save_path = mkdir_join(input_save_path, 'train')
-        input_dev_save_path = mkdir_join(input_save_path, 'dev')
-        input_test_save_path = mkdir_join(input_save_path, 'test')
-
-        print('=> Processing input data...')
-        # Read htk files, and save input data and frame num dict
-        htk_train_paths = [join(input_feature_path, htk_dir)
-                           for htk_dir in sorted(glob(join(input_feature_path,
-                                                           'train/*.htk')))]
-        htk_dev_paths = [join(input_feature_path, htk_dir)
-                         for htk_dir in sorted(glob(join(input_feature_path,
-                                                         'dev/*.htk')))]
-        htk_test_paths = [join(input_feature_path, htk_dir)
-                          for htk_dir in sorted(glob(join(input_feature_path,
-                                                          'test/*.htk')))]
-
-        print('---------- train ----------')
-        train_mean, train_std = read_htk(htk_paths=htk_train_paths,
-                                         save_path=input_train_save_path,
-                                         normalize=True,
-                                         is_training=True)
-
-        print('---------- dev ----------')
-        read_htk(htk_paths=htk_dev_paths,
-                 save_path=input_dev_save_path,
-                 normalize=True,
-                 is_training=False,
-                 train_mean=train_mean,
-                 train_std=train_std)
-
-        print('---------- test ----------')
-        read_htk(htk_paths=htk_test_paths,
-                 save_path=input_test_save_path,
-                 normalize=True,
-                 is_training=False,
-                 train_mean=train_mean,
-                 train_std=train_std)
-
-        # Make a confirmation file to prove that dataset was saved correctly
-        with open(join(input_save_path, 'complete.txt'), 'w') as f:
-            f.write('')
-
-    ####################
-    # labels
-    ####################
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')
     else:
@@ -158,17 +102,15 @@ def main(data_path, dataset_save_path, input_feature_path, run_root_path,
 if __name__ == '__main__':
 
     args = sys.argv
-    if len(args) != 5:
+    if len(args) != 4:
         raise ValueError
 
     data_path = args[1]
     dataset_save_path = args[2]
-    input_feature_path = args[3]
-    run_root_path = args[4]
+    run_root_path = args[3]
 
     for label_type in ['character', 'character_capital_divide', 'phone61', 'phone48', 'phone39']:
         main(data_path,
              dataset_save_path,
-             input_feature_path,
              run_root_path,
              label_type)

@@ -17,7 +17,6 @@ from timit.labels.attention.character import read_text
 class TestAttentionLabelChar(unittest.TestCase):
 
     def test(self):
-
         print('============================================')
         print('=     Attention label test (character)     =')
         print('============================================')
