@@ -22,34 +22,53 @@ class TestInputSpeakerNorm(unittest.TestCase):
         print('=     global norm input test     =')
         print('==================================')
 
-        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/librispeech/data/',
-                            run_root_path=abspath('../'))
+        self.prep = Prepare(
+            data_path='/n/sd8/inaguma/corpus/librispeech/data/',
+            run_root_path=abspath('../'))
         self.input_feature_path = '/n/sd8/inaguma/corpus/librispeech/fbank/'
 
-        self.check_reading(train_data_type='train_clean100')
-        self.check_reading(train_data_type='train_clean360')
-        self.check_reading(train_data_type='train_other500')
+        self.check_reading(train_data_size='train_clean100')
+        self.check_reading(train_data_size='train_clean360')
+        self.check_reading(train_data_size='train_other500')
+        self.check_reading(train_data_size='train_all')
 
-    def check_reading(self, train_data_type):
+    def check_reading(self, train_data_size):
 
-        print('<<<<<<<<<< train_data_type: ' + train_data_type + ' >>>>>>>>>>')
+        print('<<<<<<<<<< train_data_size: ' + train_data_size + ' >>>>>>>>>>')
 
-        if train_data_type != 'train_other500':
-            dev_data_type = 'dev_other'
-            test_data_type = 'test_other'
-        else:
+        if train_data_size in ['train_other500', 'train_clean360']:
             dev_data_type = 'dev_clean'
             test_data_type = 'test_clean'
+        else:
+            dev_data_type = 'dev_other'
+            test_data_type = 'test_other'
 
-        htk_train_paths = [join(self.input_feature_path, htk_path)
-                           for htk_path in sorted(glob(join(self.input_feature_path,
-                                                            train_data_type + '/*/*.htk')))]
-        htk_dev_paths = [join(self.input_feature_path, htk_path)
-                         for htk_path in sorted(glob(join(self.input_feature_path,
-                                                          dev_data_type + '/*/*.htk')))]
-        htk_test_paths = [join(self.input_feature_path, htk_path)
-                          for htk_path in sorted(glob(join(self.input_feature_path,
-                                                           test_data_type + '/*/*.htk')))]
+        if train_data_size == 'train_all':
+            htk_train_paths = [
+                join(self.input_feature_path, htk_path)
+                for htk_path in sorted(glob(join(self.input_feature_path,
+                                                 'train_clean100/*/*.htk')))]
+            htk_train_paths += [
+                join(self.input_feature_path, htk_path)
+                for htk_path in sorted(glob(join(self.input_feature_path,
+                                                 'train_clean360/*/*.htk')))]
+            htk_train_paths += [
+                join(self.input_feature_path, htk_path)
+                for htk_path in sorted(glob(join(self.input_feature_path,
+                                                 'train_other500/*/*.htk')))]
+        else:
+            htk_train_paths = [
+                join(self.input_feature_path, htk_path)
+                for htk_path in sorted(glob(join(self.input_feature_path,
+                                                 train_data_size + '/*/*.htk')))]
+        htk_dev_paths = [
+            join(self.input_feature_path, htk_path)
+            for htk_path in sorted(glob(join(self.input_feature_path,
+                                             dev_data_type + '/*/*.htk')))]
+        htk_test_paths = [
+            join(self.input_feature_path, htk_path)
+            for htk_path in sorted(glob(join(self.input_feature_path,
+                                             test_data_type + '/*/*.htk')))]
 
         print('---------- train ----------')
         train_mean_male, train_mean_female, train_std_male, train_std_female = read_htk(

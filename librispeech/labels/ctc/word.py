@@ -15,23 +15,32 @@ from utils.labels.word import word2num
 from utils.util import mkdir_join
 
 # NOTE:
-# - train_clean100
-# ?? labels
-# - train_clean360
-# ?? labels
-# - train_other500
-# ?? labels
+# -- train_clean100
+# Original: 33798 labels
+# Restricted: 7213 labels
+# OOV rate: 6.85%
+# -- train_clean360
+# Original: 59661 labels
+# Restricted: 16287 labels
+# OOV rate: 3.16%
+# -- train_other500
+# Original: 66343 labels
+# Restricted: 18669 labels
+# OOV rate: 2.56%
+# -- train_all
+# Original: 89114 labels
+# Restricted: 26642 labels
+# OOV rate: 1.67%
 
 
-def read_text(label_paths, data_type, train_data_type, run_root_path,
+def read_text(label_paths, data_type, train_data_size, run_root_path,
               is_test=False, save_map_file=False, save_path=None,
               frequency_threshold=5):
     """Read text transcript.
     Args:
         label_paths: list of paths to label files
-        data_type: train_clean100 or train_clean360 or train_other500
-            or dev_clean or dev_other or test_clean or test_clean
-        data_type: train_clean100 or train_clean360 or train_other500
+        data_type: train_clean100 or train_clean360 or train_other500 or
+            train_all or dev_clean or dev_other or test_clean or test_clean
         run_root_path: absolute path of make.sh
         is_test: bool, if False, restrict the vocaburary
         save_map_file: if True, save the mapping file
@@ -62,21 +71,23 @@ def read_text(label_paths, data_type, train_data_type, run_root_path,
                 speaker_dict[speaker_index][uttrance_name] = word_list
 
     # Restrict the vocaburary
-    if data_type in ['train_clean100', 'train_clean360', 'train_other500']:
+    if data_type in ['train_clean100', 'train_clean360',
+                     'train_other500', 'train_all']:
         oov_list = [word for word, frequency in word_count_dict.items()
                     if frequency < frequency_threshold]
     elif data_type in ['dev_clean', 'dev_other']:
         oov_list = []
-        with open(join(run_root_path, 'labels/ctc/word2num_' + train_data_type + '.txt'), 'r') as f:
+        with open(join(run_root_path, 'labels/ctc/word2num_' + train_data_size + '.txt'), 'r') as f:
             for line in f:
                 line = line.strip().split()
                 oov_list.append(line[0])
     else:
+        # test
         oov_list = []
 
     # Make mapping file (from word to number)
     mapping_file_path = join(
-        run_root_path, 'labels/ctc/word2num_' + train_data_type + '.txt')
+        run_root_path, 'labels/ctc/word2num_' + train_data_size + '.txt')
 
     if save_map_file:
         with open(mapping_file_path, 'w') as f:
@@ -90,8 +101,6 @@ def read_text(label_paths, data_type, train_data_type, run_root_path,
         total_word_count = np.sum(list(word_count_dict.values()))
         total_oov_word_count = np.sum(
             [count for word, count in word_count_dict.items() if word in oov_list])
-        # print(total_word_count)
-        # print(total_oov_word_count)
         print('OOV rate %f %%' %
               ((total_oov_word_count / total_word_count) * 100))
 

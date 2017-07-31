@@ -108,8 +108,8 @@ class Prepare(object):
     def wav(self, data_type):
         """Get paths to wav files.
         Args:
-            data_type: train_clean100 or train_clean360 or train_other500
-                or dev_clean or dev_other or test_clean or test_clean
+            data_type: train_clean100 or train_clean360 or train_other500 or
+                dev_clean or dev_other or test_clean or test_clean
         Returns:
             paths to wav files
         """
@@ -131,8 +131,8 @@ class Prepare(object):
     def text(self, data_type):
         """Get paths to transcription files.
         Args:
-            data_type: train_clean100 or train_clean360 or train_other500
-                or dev_clean or dev_other or test_clean or test_clean
+            data_type: train_clean100 or train_clean360 or train_other500 or
+                train_all or dev_clean or dev_other or test_clean or test_clean
         Returns:
             paths to transcription files
         """
@@ -142,6 +142,8 @@ class Prepare(object):
             return sorted(self.text_train_clean360_paths)
         elif data_type == 'train_other500':
             return sorted(self.text_train_other500_paths)
+        elif data_type == 'train_all':
+            return sorted(self.text_train_clean100_paths + self.text_train_clean360_paths + self.text_train_other500_paths)
         elif data_type == 'dev_clean':
             return sorted(self.text_dev_clean_paths)
         elif data_type == 'dev_other':

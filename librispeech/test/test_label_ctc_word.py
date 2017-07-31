@@ -29,19 +29,20 @@ class TestCTCLabelWord(unittest.TestCase):
         self.label_test_clean_paths = self.prep.text(data_type='test_clean')
         self.label_test_other_paths = self.prep.text(data_type='test_other')
 
-        self.check_reading(train_data_type='train_clean100')
-        self.check_reading(train_data_type='train_clean360')
-        self.check_reading(train_data_type='train_other500')
+        self.check_reading(train_data_size='train_clean100')
+        self.check_reading(train_data_size='train_clean360')
+        self.check_reading(train_data_size='train_other500')
+        self.check_reading(train_data_size='train_all')
 
-    def check_reading(self, train_data_type):
+    def check_reading(self, train_data_size):
 
-        print('<<<<<<<<<< train_data_type: %s >>>>>>>>>>' % train_data_type)
+        print('<<<<<<<<<< train_data_size: %s >>>>>>>>>>' % train_data_size)
 
         print('---------- train ----------')
-        label_train_paths = self.prep.text(data_type=train_data_type)
+        label_train_paths = self.prep.text(data_type=train_data_size)
         read_text(label_paths=label_train_paths,
-                  data_type=train_data_type,
-                  train_data_type=train_data_type,
+                  data_type=train_data_size,
+                  train_data_size=train_data_size,
                   run_root_path=self.prep.run_root_path,
                   save_map_file=True,
                   frequency_threshold=10)
@@ -49,26 +50,26 @@ class TestCTCLabelWord(unittest.TestCase):
         print('---------- dev_clean ----------')
         read_text(label_paths=self.label_dev_clean_paths,
                   data_type='dev_clean',
-                  train_data_type=train_data_type,
+                  train_data_size=train_data_size,
                   run_root_path=self.prep.run_root_path)
 
         print('---------- dev_other ----------')
         read_text(label_paths=self.label_dev_other_paths,
                   data_type='dev_other',
-                  train_data_type=train_data_type,
+                  train_data_size=train_data_size,
                   run_root_path=self.prep.run_root_path)
 
         print('---------- test_clean ----------')
         read_text(label_paths=self.label_test_clean_paths,
                   data_type='test_clean',
-                  train_data_type=train_data_type,
+                  train_data_size=train_data_size,
                   run_root_path=self.prep.run_root_path,
                   is_test=True)
 
         print('---------- test_other ----------')
         read_text(label_paths=self.label_test_other_paths,
                   data_type='test_other',
-                  train_data_type=train_data_type,
+                  train_data_size=train_data_size,
                   run_root_path=self.prep.run_root_path,
                   is_test=True)
 

@@ -1,13 +1,16 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+"""Segment a htk file into each utterance."""
+
 import numpy as np
 from struct import unpack
 from tqdm import tqdm
 
 
-def segment_htk(htk_path, speaker_name, utterance_dict, normalize,
-                sil_duration=50):
+def segment_htk(htk_path, speaker_name, utterance_dict, normalize, is_training,
+                sil_duration=0):
     """Segment each HTK file.
     Args:
         htk_path: path to a HTK file
@@ -15,18 +18,22 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize,
         utterance_dict: dictionary of utterance information of each speaker
             key => utterance index
             value => [start_frame, end_frame, transcript (, transcript2)]
-        normalize : if speaker, normalize inputs by mean & std per speaker
+        normalize: global => normalize input data by global mean & std over
+                             the training set per gender
+                   speaker => normalize input data by mean & std per speaker
+                   utterance => normalize input data by mean & std per
+                                utterance
+        is_training: training or not
         sil_duration: duration of silence at both ends
     Returns:
         input_data_dict:
             key => speaker_name + utterance_index
             value => np.ndarray, (frame_num, feature_dim)
-        train_mean: mean per speaker
-        train_std: standard deviation per speaker
+        train_speaker_mean: A mean vector of a speaker in the training set
         total_frame_num: total frame num per speaker
     """
-    # Load the htk file
-    input_data = load_htk(htk_path)
+    # Read the htk file
+    input_data = read_htk(htk_path)
 
     # Divide into each utterance
     input_data_dict = {}
@@ -106,29 +113,49 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize,
         # Update
         end_frame_pre = end_frame
 
-    # Compute mean & std per speaker (including silence)
+    if not is_training:
+        return input_data_dict, None, 0
+
+    # Compute mean & std per speaker
     frame_offset = 0
     feature_dim = input_data.shape[1]
-    train_data = np.empty((total_frame_num, feature_dim), dtype=np.float64)
+    speaker_data = np.empty((total_frame_num, feature_dim),
+                            dtype=np.float64)
     for i, input_data_utt in enumerate(input_data_dict.values()):
         frame_num_utt = input_data_utt.shape[0]
-        train_data[frame_offset:frame_offset +
-                   frame_num_utt] = input_data_utt
+        speaker_data[frame_offset:frame_offset +
+                     frame_num_utt] = input_data_utt
         frame_offset += frame_num_utt
-    train_mean = np.mean(train_data, axis=0, dtype=np.float64)
-    train_std = np.std(train_data, axis=0, dtype=np.float64)
+    train_speaker_mean = np.mean(speaker_data, axis=0, dtype=np.float64)
+    train_speaker_std = np.std(speaker_data, axis=0, dtype=np.float64)
 
-    if normalize == 'speaker':
-        # Normalize by mean & std per speaker
+    if normalize == 'utterance':
+        # Normalize by mean & std per utterance
         for key, input_data_utt in input_data_dict.items():
-            input_data_utt = (input_data_utt - train_mean) / train_std
+            utt_mean = np.mean(input_data_utt, axis=0, dtype=np.float64)
+            utt_std = np.std(input_data_utt, axis=0, dtype=np.float64)
+            input_data_utt = (input_data_utt - utt_mean) / utt_std
             input_data_dict[key] = input_data_utt
 
-    return input_data_dict, train_mean, train_std, total_frame_num
+    elif normalize == 'speaker':
+        # Normalize by mean & std per speaker
+        for key, input_data_utt in input_data_dict.items():
+            input_data_utt -= train_speaker_mean
+            input_data_utt /= train_speaker_std
+            input_data_dict[key] = input_data_utt
+
+    elif normalize == 'global':
+        # Don't normalize yet
+        pass
+
+    else:
+        raise ValueError('normalize is "utterance" or "speaker" or "global".')
+
+    return input_data_dict, train_speaker_mean, total_frame_num
 
 
-def load_htk(htk_path):
-    """Load each HTK file.
+def read_htk(htk_path):
+    """Read each HTK file.
     Args:
         htk_path: path to a HTK file
     Returns:
@@ -156,10 +183,12 @@ def global_mean(mean_list, total_frame_num_list):
     """Calculate global mean of a number of means.
     Args:
         mean_list: list of mean of each speaker
-        total_frame_num_list: list of frame num of each mean
+        total_frame_num_list: list of frame num of mean per speaker
     Returns:
         global_mean_value: global mean value over overall data
     """
+    # NOTE: each input data has been already normalized.
+
     feature_dim = mean_list[0].shape[0]
     global_mean_value = np.empty((feature_dim,), dtype=np.float64)
     total_frame_num = np.sum(total_frame_num_list)
@@ -174,11 +203,13 @@ def global_std(input_data_dict_list, total_frame_num_list, global_mean_value):
     """Calculate global standard deviation of a number of stds.
     Args:
         input_data_dict_list: list of dictionaries of input data
-        total_frame_num_list: list of frame num of each std
+        total_frame_num_list: list of frame num of std per speaker
         global_mean_value: global mean value over overall data
     Returns:
         global_std_value: global std value over overall data
     """
+    # NOTE: each input data has been already normalized.
+
     feature_dim = global_mean_value.shape[0]
     global_std_value = np.empty((feature_dim,), dtype=np.float64)
     total_frame_num = np.sum(total_frame_num_list)

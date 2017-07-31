@@ -18,21 +18,21 @@ from utils.util import mkdir_join
 
 
 def main(data_path, dataset_save_path, run_root_path, label_type,
-         train_data_type):
+         train_data_size):
 
-    print('===== train_data_type: %s, label_type: %s =====' %
-          (train_data_type, label_type))
+    print('===== train_data_size: %s, label_type: %s =====' %
+          (train_data_size, label_type))
 
     prep = Prepare(data_path, run_root_path)
     label_save_path = mkdir_join(dataset_save_path, 'labels')
     label_save_path = mkdir_join(label_save_path, 'ctc')
-    label_save_path = mkdir_join(label_save_path, train_data_type)
+    label_save_path = mkdir_join(label_save_path, train_data_size)
     label_save_path = mkdir_join(label_save_path, label_type)
 
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')
     else:
-        label_train_save_path = mkdir_join(label_save_path, train_data_type)
+        label_train_save_path = mkdir_join(label_save_path, train_data_size)
         label_dev_clean_save_path = mkdir_join(label_save_path, 'dev_clean')
         label_dev_other_save_path = mkdir_join(label_save_path, 'dev_other')
         label_test_clean_save_path = mkdir_join(label_save_path, 'test_clean')
@@ -46,11 +46,11 @@ def main(data_path, dataset_save_path, run_root_path, label_type,
         print('=> Processing transcripts...')
         # Read target labels and save labels as npy files
         print('---------- train_ ----------')
-        label_train_paths = prep.text(data_type=train_data_type)
+        label_train_paths = prep.text(data_type=train_data_size)
         if label_type == 'word':
             read_word(label_paths=label_train_paths,
-                      data_type=train_data_type,
-                      train_data_type=train_data_type,
+                      data_type=train_data_size,
+                      train_data_size=train_data_size,
                       run_root_path=prep.run_root_path,
                       save_map_file=True,
                       save_path=label_train_save_path,
@@ -66,7 +66,7 @@ def main(data_path, dataset_save_path, run_root_path, label_type,
         if label_type == 'word':
             read_word(label_paths=label_dev_clean_paths,
                       data_type='dev_clean',
-                      train_data_type=train_data_type,
+                      train_data_size=train_data_size,
                       run_root_path=prep.run_root_path,
                       save_path=label_dev_clean_save_path)
         else:
@@ -80,11 +80,11 @@ def main(data_path, dataset_save_path, run_root_path, label_type,
         if label_type == 'word':
             read_word(label_paths=label_dev_other_paths,
                       data_type='dev_other',
-                      train_data_type=train_data_type,
+                      train_data_size=train_data_size,
                       run_root_path=prep.run_root_path,
                       save_path=label_dev_other_save_path)
         else:
-            read_char(label_paths=label_dev_clean_paths,
+            read_char(label_paths=label_dev_other_paths,
                       run_root_path=prep.run_root_path,
                       save_path=label_dev_other_save_path,
                       divide_by_capital=divide_by_capital)
@@ -94,7 +94,7 @@ def main(data_path, dataset_save_path, run_root_path, label_type,
         if label_type == 'word':
             read_word(label_paths=label_test_clean_paths,
                       data_type='test_clean',
-                      train_data_type=train_data_type,
+                      train_data_size=train_data_size,
                       run_root_path=prep.run_root_path,
                       save_path=label_test_clean_save_path)
         else:
@@ -108,11 +108,11 @@ def main(data_path, dataset_save_path, run_root_path, label_type,
         if label_type == 'word':
             read_word(label_paths=label_test_other_paths,
                       data_type='test_other',
-                      train_data_type=train_data_type,
+                      train_data_size=train_data_size,
                       run_root_path=prep.run_root_path,
                       save_path=label_test_other_save_path)
         else:
-            read_char(label_paths=label_test_clean_paths,
+            read_char(label_paths=label_test_other_paths,
                       run_root_path=prep.run_root_path,
                       save_path=label_test_other_save_path,
                       divide_by_capital=divide_by_capital)
@@ -132,10 +132,11 @@ if __name__ == '__main__':
     dataset_save_path = args[2]
     run_root_path = args[3]
 
-    for train_data_type in ['train_clean100', 'train_clean360', 'train_other500']:
+    for train_data_size in ['train_clean100', 'train_clean360',
+                            'train_other500', 'train_all']:
         for label_type in ['character', 'character_capital_divide', 'word']:
             main(data_path,
                  dataset_save_path,
                  run_root_path,
                  label_type,
-                 train_data_type)
+                 train_data_size)
