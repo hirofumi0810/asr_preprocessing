@@ -17,5 +17,8 @@ input_data_direct.py
 make_wav.py
 split.py
 
+# librispeech
+word2num*.txt
+
 svc
 # erato

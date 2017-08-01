@@ -22,9 +22,9 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
     """Read HTK files.
     Args:
         htk_paths: list of paths to HTK files
-            key => speaker index
+            key => speaker_index
             value => dictionary of utterance information of each speaker
-                key => utterance index
+                key => utt_index
                 value => [start_frame, end_frame, transcript]
         normalize: global => normalize input data by global mean & std over
                              the training set per gender
@@ -57,16 +57,17 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
         raise ValueError(
             'normalize is "utterance" or "speaker" or "global".')
 
-    # Divide all htk paths into speakers
     print('===> Reading HTK files...')
     htk_path_dict = {}
     htk_path_list_male, htk_path_list_female = [], []
     total_frame_num_dict = {}
     total_frame_num_male, total_frame_num_female = 0, 0
     speaker_mean_dict, speaker_std_dict = {}, {}
+
+    # Divide all htk paths into speakers
     for i, htk_path in enumerate(tqdm(htk_paths)):
-        utterance_name = basename(htk_path).split('.')[0]
-        speaker_index = utterance_name.split('-')[0]
+        utt_index = basename(htk_path).split('.')[0]
+        speaker_index = utt_index.split('-')[0]
         if speaker_index not in htk_path_dict.keys():
             htk_path_dict[speaker_index] = []
         htk_path_dict[speaker_index].append(htk_path)
@@ -91,7 +92,7 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
                 total_frame_num_male += input_data_utt.shape[0]
             elif speaker_gender_dict[speaker_index] == 'F':
                 htk_path_list_female.append(input_data_utt)
-                train_mean_female += np.sum(input_data_utt, axis=0)
+                train_mean_female += input_data_utt_sum
                 total_frame_num_female += input_data_utt.shape[0]
 
             # For computing speaker mean
@@ -118,13 +119,13 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
                 speaker_mean_dict[speaker_index] /= total_frame_num_dict[speaker_index]
 
             for htk_path in htk_paths_speaker:
-                utterance_name = basename(htk_path).split('.')[0]
-                speaker_index = utterance_name.split('-')[0]
+                utt_index = basename(htk_path).split('.')[0]
+                speaker_index = utt_index.split('-')[0]
 
                 # Read each HTK file
                 input_data_utt = read_htk_utt(htk_path)
 
-                # For computeing global stddev
+                # For computing global stddev
                 if speaker_gender_dict[speaker_index] == 'M':
                     train_std_male += np.sum(
                         np.abs(input_data_utt - train_mean_male) ** 2, axis=0)
@@ -133,7 +134,7 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
                         np.abs(input_data_utt - train_mean_female) ** 2, axis=0)
 
                 if normalize == 'speaker':
-                    # For computeing speaker stddev
+                    # For computing speaker stddev
                     speaker_std_dict[speaker_index] += np.sum(
                         np.abs(input_data_utt - speaker_mean_dict[speaker_index]) ** 2, axis=0)
 
@@ -158,13 +159,12 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
             np.save(join(save_path, 'train_std_female.npy'),
                     train_std_female)
 
-    # Normalization
     print('===> Normalization...')
     frame_num_dict = {}
     for speaker_index, htk_paths_speaker in tqdm(htk_path_dict.items()):
         for htk_path in htk_paths_speaker:
-            utterance_name = basename(htk_path).split('.')[0]
-            speaker_index = utterance_name.split('-')[0]
+            utt_index = basename(htk_path).split('.')[0]
+            speaker_index = utt_index.split('-')[0]
 
             # Read each HTK file
             input_data_utt = read_htk_utt(htk_path)
@@ -193,9 +193,9 @@ def read_htk(htk_paths, normalize, is_training, speaker_gender_dict,
                 # Save input data
                 mkdir_join(save_path, speaker_index)
                 input_data_save_path = join(
-                    save_path, speaker_index, utterance_name + '.npy')
+                    save_path, speaker_index, utt_index + '.npy')
                 np.save(input_data_save_path, input_data_utt)
-                frame_num_dict[utterance_name] = input_data_utt.shape[0]
+                frame_num_dict[utt_index] = input_data_utt.shape[0]
 
     if save_path is not None:
         # Save the frame number dictionary

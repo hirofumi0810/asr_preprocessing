@@ -6,15 +6,14 @@
 
 import numpy as np
 from struct import unpack
-from tqdm import tqdm
 
 
-def segment_htk(htk_path, speaker_name, utterance_dict, normalize, is_training,
-                sil_duration=0):
-    """Segment each HTK file.
+def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
+                is_training, sil_duration=0, speaker_mean=None):
+    """Segment each HTK file into utterances.
     Args:
         htk_path: path to a HTK file
-        speaker_name: speaker name
+        speaker_index: speaker index
         utterance_dict: dictionary of utterance information of each speaker
             key => utterance index
             value => [start_frame, end_frame, transcript (, transcript2)]
@@ -24,47 +23,52 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize, is_training,
                    utterance => normalize input data by mean & std per
                                 utterance
         is_training: training or not
-        sil_duration: duration of silence at both ends
+        sil_duration: duration of silence at both ends. Default is 0.
+        speaker_mean: mean of the target speaker
     Returns:
         input_data_dict:
-            key => speaker_name + utterance_index
+            key => speaker_index + utterance_index
             value => np.ndarray, (frame_num, feature_dim)
-        train_speaker_mean: A mean vector of a speaker in the training set
-        total_frame_num: total frame num per speaker
+        speaker_mean: A mean vector of a speaker in the training set
+        total_frame_num_speaker: total frame num of the target speaker's
+            utterances
     """
     # Read the htk file
     input_data = read_htk(htk_path)
+    feature_dim = input_data.shape[1]
 
     # Divide into each utterance
     input_data_dict = {}
-    total_frame_num = 0
+    total_frame_num_speaker = 0
     end_frame_pre = 0
     utt_num = len(utterance_dict.keys())
     utt_dict_sorted = sorted(utterance_dict.items(), key=lambda x: x[0])
-    for index, (utt_index, utt_info) in enumerate(utt_dict_sorted):
+    input_data_sum = np.zeros((feature_dim,), dtype=np.float64)
+    speaker_std = np.zeros((feature_dim,), dtype=np.float64)
+    for i, (utt_index, utt_info) in enumerate(utt_dict_sorted):
         start_frame, end_frame = utt_info[0], utt_info[1]
 
-        # Error check
+        # Check timestamp
         if start_frame > end_frame:
             print(utterance_dict)
             print('Warning: time stamp is reversed.')
-            print('speaker name: %s' % speaker_name)
+            print('speaker index: %s' % speaker_index)
             print('utterance index: %s & %s' %
-                  (str(utt_index), utt_dict_sorted[index + 1][0]))
+                  (str(utt_index), utt_dict_sorted[i + 1][0]))
 
-        # First utterance
-        if index == 0:
+        # Check the first utterance
+        if i == 0:
             if start_frame >= sil_duration:
                 start_frame_extend = start_frame - sil_duration
             else:
                 start_frame_extend = 0
 
-            start_frame_next = utt_dict_sorted[index + 1][1][0]
+            start_frame_next = utt_dict_sorted[i + 1][1][0]
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
-                print('speaker name: %s' % speaker_name)
+                print('speaker index: %s' % speaker_index)
                 print('utterance index: %s & %s' %
-                      (str(utt_index), utt_dict_sorted[index + 1][0]))
+                      (str(utt_index), utt_dict_sorted[i + 1][0]))
 
             if start_frame_next - end_frame >= sil_duration * 2:
                 end_frame_extend = end_frame + sil_duration
@@ -72,8 +76,8 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize, is_training,
                 end_frame_extend = end_frame + \
                     int((start_frame_next - end_frame) / 2)
 
-        # Last utterance
-        elif index == utt_num - 1:
+        # Check the last utterance
+        elif i == utt_num - 1:
             if start_frame - end_frame_pre >= sil_duration * 2:
                 start_frame_extend = start_frame - sil_duration
             else:
@@ -85,7 +89,7 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize, is_training,
             else:
                 end_frame_extend = input_data.shape[0]  # last frame
 
-        # Middle utterances
+        # Check other utterances
         else:
             if start_frame - end_frame_pre >= sil_duration * 2:
                 start_frame_extend = start_frame - sil_duration
@@ -93,12 +97,12 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize, is_training,
                 start_frame_extend = start_frame - \
                     int((start_frame - end_frame_pre) / 2)
 
-            start_frame_next = utt_dict_sorted[index + 1][1][0]
+            start_frame_next = utt_dict_sorted[i + 1][1][0]
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
-                print('speaker: %s' % speaker_name)
+                print('speaker: %s' % speaker_index)
                 print('utt index: %s & %s' %
-                      (str(utt_index), utt_dict_sorted[index + 1][0]))
+                      (str(utt_index), utt_dict_sorted[i + 1][0]))
 
             if start_frame_next - end_frame >= sil_duration * 2:
                 end_frame_extend = end_frame + sil_duration
@@ -107,51 +111,26 @@ def segment_htk(htk_path, speaker_name, utterance_dict, normalize, is_training,
                     int((start_frame_next - end_frame) / 2)
 
         input_data_utt = input_data[start_frame_extend:end_frame_extend]
-        total_frame_num += (end_frame_extend - start_frame_extend)
-        input_data_dict[speaker_name + '_' + str(utt_index)] = input_data_utt
+        input_data_sum += np.sum(input_data_utt, axis=0)
+        total_frame_num_speaker += (end_frame_extend - start_frame_extend)
+        input_data_dict[speaker_index + '_' + str(utt_index)] = input_data_utt
+
+        # For computing speaker stddev
+        if speaker_mean is not None:
+            speaker_std += np.sum(
+                np.abs(input_data_utt - speaker_mean) ** 2, axis=0)
 
         # Update
         end_frame_pre = end_frame
 
-    if not is_training:
-        return input_data_dict, None, 0
-
-    # Compute mean & std per speaker
-    frame_offset = 0
-    feature_dim = input_data.shape[1]
-    speaker_data = np.empty((total_frame_num, feature_dim),
-                            dtype=np.float64)
-    for i, input_data_utt in enumerate(input_data_dict.values()):
-        frame_num_utt = input_data_utt.shape[0]
-        speaker_data[frame_offset:frame_offset +
-                     frame_num_utt] = input_data_utt
-        frame_offset += frame_num_utt
-    train_speaker_mean = np.mean(speaker_data, axis=0, dtype=np.float64)
-    train_speaker_std = np.std(speaker_data, axis=0, dtype=np.float64)
-
-    if normalize == 'utterance':
-        # Normalize by mean & std per utterance
-        for key, input_data_utt in input_data_dict.items():
-            utt_mean = np.mean(input_data_utt, axis=0, dtype=np.float64)
-            utt_std = np.std(input_data_utt, axis=0, dtype=np.float64)
-            input_data_utt = (input_data_utt - utt_mean) / utt_std
-            input_data_dict[key] = input_data_utt
-
-    elif normalize == 'speaker':
-        # Normalize by mean & std per speaker
-        for key, input_data_utt in input_data_dict.items():
-            input_data_utt -= train_speaker_mean
-            input_data_utt /= train_speaker_std
-            input_data_dict[key] = input_data_utt
-
-    elif normalize == 'global':
-        # Don't normalize yet
-        pass
-
+    if speaker_mean is not None:
+        # Compute speaker stddev
+        speaker_std /= total_frame_num_speaker
     else:
-        raise ValueError('normalize is "utterance" or "speaker" or "global".')
+        # Compute speaker mean
+        speaker_mean = input_data_sum / total_frame_num_speaker
 
-    return input_data_dict, train_speaker_mean, total_frame_num
+    return input_data_dict, input_data_sum, speaker_mean, speaker_std, total_frame_num_speaker
 
 
 def read_htk(htk_path):
@@ -177,68 +156,3 @@ def read_htk(htk_path):
         input_data.byteswap(True)
 
     return input_data
-
-
-def global_mean(mean_list, total_frame_num_list):
-    """Calculate global mean of a number of means.
-    Args:
-        mean_list: list of mean of each speaker
-        total_frame_num_list: list of frame num of mean per speaker
-    Returns:
-        global_mean_value: global mean value over overall data
-    """
-    # NOTE: each input data has been already normalized.
-
-    feature_dim = mean_list[0].shape[0]
-    global_mean_value = np.empty((feature_dim,), dtype=np.float64)
-    total_frame_num = np.sum(total_frame_num_list)
-    for i in tqdm(range(len(mean_list))):
-        total_frame_num_speaker = total_frame_num_list[i]
-        global_mean_value += mean_list[i] * float(total_frame_num_speaker)
-    global_mean_value = global_mean_value / float(total_frame_num)
-    return global_mean_value
-
-
-def global_std(input_data_dict_list, total_frame_num_list, global_mean_value):
-    """Calculate global standard deviation of a number of stds.
-    Args:
-        input_data_dict_list: list of dictionaries of input data
-        total_frame_num_list: list of frame num of std per speaker
-        global_mean_value: global mean value over overall data
-    Returns:
-        global_std_value: global std value over overall data
-    """
-    # NOTE: each input data has been already normalized.
-
-    feature_dim = global_mean_value.shape[0]
-    global_std_value = np.empty((feature_dim,), dtype=np.float64)
-    total_frame_num = np.sum(total_frame_num_list)
-    for i, input_data_dict in enumerate(tqdm(input_data_dict_list)):
-        # Compute square values between features & global mean per speaker
-        frame_offset = 0
-        total_frame_num_speaker = total_frame_num_list[i]
-        input_data_speaker = np.empty((total_frame_num_speaker, feature_dim))
-        for input_data_utt in input_data_dict.values():
-            frame_num_utt = input_data_utt.shape[0]
-            input_data_speaker[frame_offset:frame_offset +
-                               frame_num_utt] = input_data_utt
-            frame_offset += frame_num_utt
-        global_std_value += sqrt_sum(input_data_speaker, global_mean_value)
-    global_std_value = np.power(global_std_value / float(total_frame_num), 0.5)
-    return global_std_value
-
-
-def sqrt_sum(input_data, global_mean_value):
-    """Calculate square sum, sigma(each_input - global_mean_value)^2.
-    Args:
-        input_data: input data of each speaker
-        global_mean_value: global mean value over overall data
-    Returns:
-        value_sqrt_sum: square sum
-    """
-    feature_dim = input_data[0].shape[0]
-    value_sqrt_sum = np.zeros((feature_dim,))
-    for input_vec in input_data:
-        value_sqrt_sum += np.power((input_vec -
-                                    global_mean_value), 2, dtype=np.float64)
-    return value_sqrt_sum

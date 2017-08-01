@@ -18,6 +18,7 @@ from librispeech.inputs.input_data import read_htk
 class TestInputSpeakerNorm(unittest.TestCase):
 
     def test(self):
+
         print('=====================================')
         print('=     utterance norm input test     =')
         print('=====================================')

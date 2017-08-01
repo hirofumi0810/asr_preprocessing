@@ -17,6 +17,7 @@ from librispeech.labels.ctc.character import read_text
 class TestCTCLabelChar(unittest.TestCase):
 
     def test(self):
+
         print('======================================')
         print('=     CTC label test (character)     =')
         print('======================================')
