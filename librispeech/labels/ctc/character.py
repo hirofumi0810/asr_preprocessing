@@ -91,7 +91,7 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
     char_set.discard('\'')
 
     # for debug
-    print(sorted(list(char_set)))
+    # print(sorted(list(char_set)))
 
     if save_map_file:
         with open(mapping_file_path, 'w') as f:

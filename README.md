@@ -5,7 +5,6 @@
 - [x] **phone**
 - [x] **character**
 - [x] **word**
-
 #### Attention
 - [ ] **phone**
 - [ ] **character**
@@ -16,7 +15,6 @@
 - [ ] **phone**
 - [ ] **character**
 - [ ] **word**
-
 #### Attention
 - [ ] **phone**
 - [ ] **character**
@@ -32,7 +30,6 @@
 ## CSJ
 #### CTC
 - [ ] **word**
-
 #### Attention
 - [ ] **word**
 
@@ -42,7 +39,6 @@
 - [ ] **phone**
 - [ ] **character**
 - [ ] **word**
-
 #### Attention
 - [ ] **phone**
 - [ ] **character**
@@ -51,9 +47,8 @@
 
 ## Librispeech
 #### CTC
-- [ ] **character**
-- [ ] **word**
-
+- [x] **character**
+- [x] **word**
 #### Attention
 - [ ] **character**
 - [ ] **word**
@@ -64,7 +59,6 @@
 - [ ] **phone**
 - [ ] **character**
 - [ ] **word**
-
 #### Attention
 - [ ] **phone**
 - [ ] **character**

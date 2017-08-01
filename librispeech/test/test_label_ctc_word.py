@@ -63,15 +63,13 @@ class TestCTCLabelWord(unittest.TestCase):
         read_text(label_paths=self.label_test_clean_paths,
                   data_type='test_clean',
                   train_data_size=train_data_size,
-                  run_root_path=self.prep.run_root_path,
-                  is_test=True)
+                  run_root_path=self.prep.run_root_path)
 
         print('---------- test_other ----------')
         read_text(label_paths=self.label_test_other_paths,
                   data_type='test_other',
                   train_data_size=train_data_size,
-                  run_root_path=self.prep.run_root_path,
-                  is_test=True)
+                  run_root_path=self.prep.run_root_path)
 
 
 if __name__ == '__main__':

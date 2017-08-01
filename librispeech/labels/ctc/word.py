@@ -34,7 +34,7 @@ from utils.util import mkdir_join
 
 
 def read_text(label_paths, data_type, train_data_size, run_root_path,
-              is_test=False, save_map_file=False, save_path=None,
+              save_map_file=False, save_path=None,
               frequency_threshold=5):
     """Read text transcript.
     Args:
@@ -42,16 +42,22 @@ def read_text(label_paths, data_type, train_data_size, run_root_path,
         data_type: train_clean100 or train_clean360 or train_other500 or
             train_all or dev_clean or dev_other or test_clean or test_clean
         run_root_path: absolute path of make.sh
-        is_test: bool, if False, restrict the vocaburary
         save_map_file: if True, save the mapping file
         save_path: path to save labels. If None, don't save labels
         frequency_threshold: int, the vocaburary is restricted to words which
             appear more than 'frequency_threshold' in the training set
     """
+    is_training, is_test = False, False
+    if data_type in ['train_clean100', 'train_clean360',
+                     'train_other500', 'train_all']:
+        is_training = True
+    elif data_type in ['test_clean', 'test_other']:
+        is_test = True
+
     print('===> Reading target labels...')
     speaker_dict = {}
     word_count_dict = {}
-    word_set = set([])
+    vocab_set = set([])
     for label_path in tqdm(label_paths):
         speaker_index = label_path.split('/')[-3]
         if speaker_index not in speaker_dict.keys():
@@ -62,42 +68,39 @@ def read_text(label_paths, data_type, train_data_size, run_root_path,
                 uttrance_name = line[0]
                 word_list = line[1:]
 
-                for word in word_list:
-                    word_set.add(word)
-                    if word not in word_count_dict.keys():
-                        word_count_dict[word] = 0
-                    word_count_dict[word] += 1
+                if is_training:
+                    for word in word_list:
+                        vocab_set.add(word)
+                        if word not in word_count_dict.keys():
+                            word_count_dict[word] = 0
+                        word_count_dict[word] += 1
 
                 speaker_dict[speaker_index][uttrance_name] = word_list
 
     # Restrict the vocaburary
-    if data_type in ['train_clean100', 'train_clean360',
-                     'train_other500', 'train_all']:
+    if is_training:
         oov_list = [word for word, frequency in word_count_dict.items()
                     if frequency < frequency_threshold]
-    elif data_type in ['dev_clean', 'dev_other']:
-        oov_list = []
+        original_vocab_set = vocab_set
+        vocab_set -= set(oov_list)
+    else:
         with open(join(run_root_path, 'labels/ctc/word2num_' + train_data_size + '.txt'), 'r') as f:
             for line in f:
                 line = line.strip().split()
-                oov_list.append(line[0])
-    else:
-        # test
-        oov_list = []
+                vocab_set.add(line[0])
 
     # Make mapping file (from word to number)
     mapping_file_path = join(
         run_root_path, 'labels/ctc/word2num_' + train_data_size + '.txt')
 
-    if save_map_file:
+    if save_map_file and is_training:
         with open(mapping_file_path, 'w') as f:
-            restricted_word_set = word_set - set(oov_list)
-            for index, word in enumerate(sorted(list(restricted_word_set)) + ['OOV']):
+            for index, word in enumerate(sorted(list(vocab_set)) + ['OOV']):
                 f.write('%s  %s\n' % (word, str(index)))
 
         # for debug
-        print('Original vocab: %d' % len(word_set))
-        print('Restriced vocab: %d' % (len(restricted_word_set) + 1))
+        print('Original vocab: %d' % len(original_vocab_set))
+        print('Restriced vocab: %d' % (len(vocab_set) + 1))
         total_word_count = np.sum(list(word_count_dict.values()))
         total_oov_word_count = np.sum(
             [count for word, count in word_count_dict.items() if word in oov_list])
@@ -119,16 +122,11 @@ def read_text(label_paths, data_type, train_data_size, run_root_path,
                     # NOTE: save a transcript as the list of words
                 else:
                     # Convert to OOV
-                    for i, word in enumerate(word_list):
-                        if word in oov_list:
-                            word_list[i] = 'OOV'
+                    word_list = [
+                        word if word in vocab_set else 'OOV' for word in word_list]
 
                     # Convert from word to number
                     word_index_list = word2num(word_list, mapping_file_path)
 
                     np.save(join(save_path, speaker_index, save_file_name),
                             word_index_list)
-
-
-def convert_to_oov(word):
-    global oov_list
