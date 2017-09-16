@@ -9,6 +9,7 @@ from __future__ import print_function
 
 from os.path import join, abspath, isfile
 import sys
+import argparse
 
 sys.path.append('../')
 from prepare_path import Prepare
@@ -16,14 +17,23 @@ from labels.ctc.character import read_text
 from labels.ctc.phone import read_phone
 from utils.util import mkdir_join
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
+parser.add_argument('--dataset_save_path', type=str, help='path to save dataset')
+parser.add_argument('--run_root_path', type=str, help='path to run this script')
+parser.add_argument('--tool', type=str,
+                    help='the tool to extract features, htk or python_speech_features or htk')
+parser.add_argument('--normalize', type=str, default='speaker',
+                    help='global or speaker or utterance')
 
-def main(data_path, dataset_save_path, run_root_path, label_type):
+
+def main(label_type):
 
     print('===== ' + label_type + ' =====')
-    prep = Prepare(data_path, run_root_path)
-    label_save_path = mkdir_join(dataset_save_path, 'labels')
-    label_save_path = mkdir_join(label_save_path, 'ctc')
-    label_save_path = mkdir_join(label_save_path, label_type)
+    args = parser.parse_args()
+    prep = Prepare(args.data_path, args.run_root_path)
+    label_save_path = mkdir_join(args.dataset_save_path,
+                                 'labels', 'ctc', label_type)
 
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')
@@ -100,17 +110,5 @@ def main(data_path, dataset_save_path, run_root_path, label_type):
 
 
 if __name__ == '__main__':
-
-    args = sys.argv
-    if len(args) != 4:
-        raise ValueError
-
-    data_path = args[1]
-    dataset_save_path = args[2]
-    run_root_path = args[3]
-
     for label_type in ['character', 'character_capital_divide', 'phone61', 'phone48', 'phone39']:
-        main(data_path,
-             dataset_save_path,
-             run_root_path,
-             label_type)
+        main(label_type)

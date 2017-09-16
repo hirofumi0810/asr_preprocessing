@@ -13,8 +13,8 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.inputs.segmentation import read_htk as read_htk_utt
-# from utils.inputs.python_speech_features.wav2feature import wav2feature as w2f_psf
-# from utils.inputs.librosa.wav2feature import wav2feature as w2f_librosa
+from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
+from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
 
 
 def read_wav(wav_paths, tool, config, normalize, is_training, save_path=None,
@@ -57,13 +57,29 @@ def read_wav(wav_paths, tool, config, normalize, is_training, save_path=None,
     for wav_path in tqdm(wav_paths):
         if tool == 'htk':
             input_data_utt = read_htk_utt(wav_path)
-            input_data_list.append(input_data_utt)
             # NOTE: wav_path is a htk file path in this case
+
         elif tool == 'librosa':
-            raise NotImplementedError
+            input_data_utt = w2f_librosa(wav_path,
+                                         feature_type=config['feature_type'],
+                                         feature_dim=config['channels'],
+                                         use_energy=config['energy'],
+                                         use_delta1=config['delta'],
+                                         use_delta2=config['deltadelta'],
+                                         window=config['window'],
+                                         slide=config['slide'])
+
         elif tool == 'python_speech_features':
-            raise NotImplementedError
-            # input_data_list.append(w2f_psf(wav_path, config))
+            input_data_utt = w2f_psf(wav_path,
+                                     feature_type=config['feature_type'],
+                                     feature_dim=config['channels'],
+                                     use_energy=config['energy'],
+                                     use_delta1=config['delta'],
+                                     use_delta2=config['deltadelta'],
+                                     window=config['window'],
+                                     slide=config['slide'])
+
+        input_data_list.append(input_data_utt)
 
         if is_training:
             speaker = basename(wav_path).split('_')[0]
@@ -79,6 +95,7 @@ def read_wav(wav_paths, tool, config, normalize, is_training, save_path=None,
                 total_frame_num_dict[speaker] += frame_num_utt
                 speaker_mean_dict[speaker] += np.sum(input_data_utt, axis=0)
     # NOTE: load all data in advance because TIMIT is a small dataset.
+    # TODO: make this pararell
 
     if is_training:
         # Compute speaker mean

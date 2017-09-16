@@ -4,11 +4,11 @@
 
 def save(audio_file_type, feature_type, channels, config_path,
          sampling_rate=16000, window=0.025, slide=0.01,
-         energy=False, delta=True, deltadelta=True):
+         energy=True, delta=True, deltadelta=True):
     """Save a configuration file for HTK.
     Args:
         audio_file_type (string): nist or
-        feature_type (string): the type of features, logmelfbank or mfcc or linearmelfbank
+        feature_type (string): the type of features, logmelfbank or mfcc
         channels (int): the number of frequency channels
         config_path (string): path to save the config file
         sampling_rate (float, optional):
@@ -32,10 +32,10 @@ def save(audio_file_type, feature_type, channels, config_path,
             feature_type = 'FBANK'
         elif feature_type == 'mfcc':
             feature_type = 'MFCC'
-        elif feature_type == 'linearmelfbank':
-            feature_type = 'MELSPEC'
+        # elif feature_type == 'linearmelfbank':
+        #     feature_type = 'MELSPEC'
         else:
-            raise ValueError('feature_type must be logmelfbank or mfcc or linearmelfbank.')
+            raise ValueError('feature_type must be logmelfbank or mfcc.')
 
         if energy:
             feature_type += '_E'

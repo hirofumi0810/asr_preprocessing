@@ -12,7 +12,7 @@ import argparse
 sys.path.append('../')
 from prepare_path import Prepare
 from utils.util import mkdir_join, mkdir
-from utils.inputs.htk.make_config import save
+from utils.inputs.htk import save
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
@@ -20,7 +20,7 @@ parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
 parser.add_argument('--run_root_path', type=str, help='path to run this script')
 
 parser.add_argument('--feature_type', type=str, default='logmelfbank',
-                    help='the type of features, logmelfbank or mfcc or linearmelfbank')
+                    help='the type of features, logmelfbank or mfcc')
 parser.add_argument('--channels', type=int, default=40, help='the number of frequency channels')
 parser.add_argument('--sampling_rate', type=float, default=16000, help='sampling rate')
 parser.add_argument('--window', type=float, default=0.025, help='window width to extract features')

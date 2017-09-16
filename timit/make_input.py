@@ -15,7 +15,7 @@ from glob import glob
 sys.path.append('../')
 from prepare_path import Prepare
 from inputs.input_data import read_wav
-from utils.util import mkdir_join, mkdir
+from utils.util import mkdir_join
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
@@ -25,6 +25,8 @@ parser.add_argument('--tool', type=str,
                     help='the tool to extract features, htk or python_speech_features or htk')
 parser.add_argument('--htk_save_path', type=str, default='',
                     help='path to save features, this is needed only when you use HTK.')
+parser.add_argument('--normalize', type=str, default='speaker',
+                    help='global or speaker or utterance')
 
 parser.add_argument('--feature_type', type=str, default='logmelfbank',
                     help='the type of features, logmelfbank or mfcc or linearmelfbank')
@@ -36,8 +38,6 @@ parser.add_argument('--energy', type=bool, default=True, help='if True, add the 
 parser.add_argument('--delta', type=bool, default=True, help='if True, add the energy feature')
 parser.add_argument('--deltadelta', type=bool, default=True,
                     help='if True, double delta features are also extracted')
-parser.add_argument('--normalize', type=str, default='speaker',
-                    help='global or speaker or utterance')
 
 
 def main():
@@ -53,7 +53,7 @@ def main():
         wav_train_paths = prep.wav(data_type='train')
         wav_dev_paths = prep.wav(data_type='dev')
         wav_test_paths = prep.wav(data_type='test')
-    input_save_path = mkdir_join(args.dataset_save_path, 'inputs', args.tool, args.normalize)
+    input_save_path = mkdir_join(args.dataset_save_path, args.tool, args.normalize, 'inputs')
 
     if isfile(join(input_save_path, 'complete.txt')):
         print('Already exists.')
