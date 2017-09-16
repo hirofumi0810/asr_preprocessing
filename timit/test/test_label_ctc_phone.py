@@ -17,6 +17,7 @@ from timit.labels.ctc.phone import read_phone
 class TestCTCLabelPhone(unittest.TestCase):
 
     def test(self):
+
         print('==================================')
         print('=     CTC label test (phone)     =')
         print('==================================')
@@ -33,7 +34,7 @@ class TestCTCLabelPhone(unittest.TestCase):
 
     def check_reading(self, label_type):
 
-        print('<<<<<<<<<< ' + label_type + ' >>>>>>>>>>')
+        print('<<<<<<<<<< %s >>>>>>>>>>' % label_type)
 
         print('---------- train ----------')
         read_phone(label_paths=self.label_train_paths,

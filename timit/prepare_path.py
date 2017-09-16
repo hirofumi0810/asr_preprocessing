@@ -133,7 +133,7 @@ class Prepare(object):
     def wav(self, data_type):
         """Get paths to wav files.
         Args:
-            data_type: train or dev or test
+            data_type (string): train or dev or test
         Returns:
             paths to wav files
         """
@@ -147,7 +147,7 @@ class Prepare(object):
     def text(self, data_type):
         """Get paths to sentence-level transcription files.
         Args:
-            data_type: string, train or dev or test
+            data_type (string): train or dev or test
         Returns:
             paths to transcription files
         """
@@ -161,7 +161,7 @@ class Prepare(object):
     def word(self, data_type):
         """Get paths to word-level transcription files.
         Args:
-            data_type: string, train or dev or test
+            data_type (string): train or dev or test
         Returns:
             paths to transcription files
         """
@@ -175,7 +175,7 @@ class Prepare(object):
     def phone(self, data_type):
         """Get paths to phone-level transcription files.
         Args:
-            data_type: string, train or dev or test
+            data_type (string): train or dev or test
         Returns:
             paths to transcription files
         """

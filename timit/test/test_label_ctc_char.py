@@ -17,6 +17,7 @@ from timit.labels.ctc.character import read_text
 class TestCTCLabelChar(unittest.TestCase):
 
     def test(self):
+
         print('======================================')
         print('=     CTC label test (character)     =')
         print('======================================')
@@ -32,8 +33,8 @@ class TestCTCLabelChar(unittest.TestCase):
 
     def check_reading(self, divide_by_capital):
 
-        print('<<<<<<<<<< divide_by_capital: ' + str(divide_by_capital) +
-              ' >>>>>>>>>>')
+        print('<<<<<<<<<< divide_by_capital: %s >>>>>>>>>>' %
+              str(divide_by_capital))
 
         print('---------- train ----------')
         read_text(label_paths=self.label_train_paths,

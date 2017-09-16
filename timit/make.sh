@@ -1,52 +1,99 @@
 #!/bin/bash
 
-echo '----------------------------------------------------'
-echo '|                      TIMIT                        |'
-echo '----------------------------------------------------'
+### Set paths
+TIMIT_PATH='/n/sd8/inaguma/corpus/timit/original'
+DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/timit/dataset'
+
+### Select one tool to extract features
+TOOL='htk'
+# TOOL='python_speech_features'
+# TOOL='librosa'
+
+### Configuration (Set by yourself)
+FEATURE_TYPE='logmelfbank'  # or mfcc or linearmelfbank
+CHANNELS=40
+SAMPLING_RATE=16000
+WINDOW=0.025
+SLIDE=0.01
+ENERGY=False
+DELTA=True
+DELTADELTA=True
+NORMALIZE='global'
+# NORMALIZE='speaker'
+# NORMALIZE='utterance'
+
+##############################
+# Don't change from here ↓↓↓
+##############################
+set -eu
+
+if [ ! -e $TIMIT_PATH ]; then
+    echo "TIMIT directory was not found."
+    exit 1
+fi
+if [ ! -e $DATASET_SAVE_PATH ]; then
+    mkdir $DATASET_SAVE_PATH
+fi
+
 RUN_ROOT_PATH=`pwd`
 
-# Set the root path to TIMIT corpus
-TIMIT_PATH='/n/sd8/inaguma/corpus/timit/original/'
 
-# Set the path to save dataset
-DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/timit/dataset/'
+echo ============================================================================
+echo "                           Feature extraction                             "
+echo ============================================================================
 
-# Set the path to save input features (fbank or MFCC)
-INPUT_FEATURE_SAVE_PATH='/n/sd8/inaguma/corpus/timit/fbank/'
+HTK_SAVE_PATH='/n/sd8/inaguma/corpus/timit/htk'
+
+if [ $TOOL = 'htk' ]; then
+  # Set the path to HTK (optional, set only when using HTK toolkit)
+  HTK_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
+  CONFIG_PATH="./config/config_file"
+
+  # Make a config file to covert from wav to htk file
+  python make_config.py --data_path $TIMIT_PATH  \
+                     --htk_save_path $HTK_SAVE_PATH \
+                     --run_root_path $RUN_ROOT_PATH \
+                     --feature_type $FEATURE_TYPE \
+                     --channels $CHANNELS \
+                     --sampling_rate $SAMPLING_RATE \
+                     --window $WINDOW \
+                     --slide $SLIDE \
+                     --energy $ENERGY \
+                     --delta $DELTA \
+                     --deltadelta $DELTADELTA \
+                     --config_path $CONFIG_PATH
+
+  # Convert from wav to htk files
+#   $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train.scp
+#   $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
+#   $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
+fi
+
+# Make input features
+python make_input.py --data_path $TIMIT_PATH  \
+                     --dataset_save_path $DATASET_SAVE_PATH \
+                     --run_root_path $RUN_ROOT_PATH \
+                     --tool $TOOL \
+                     --htk_save_path $HTK_SAVE_PATH \
+                     --feature_type $FEATURE_TYPE \
+                     --channels $CHANNELS \
+                     --sampling_rate $SAMPLING_RATE \
+                     --window $WINDOW \
+                     --slide $SLIDE \
+                     --energy $ENERGY \
+                     --delta $DELTA \
+                     --deltadelta $DELTADELTA \
+                     --normalize $NORMALIZE
 
 
-echo '--------------------------------'
-echo '|      Feature extraction       |'
-echo '--------------------------------'
-# Set the path to HTK
-HTK_PATH='/misc/local/htk-3.4/bin/HCopy'
+echo ============================================================================
+echo "                         Process transcriptions                           "
+echo ============================================================================
 
-# Make a mapping file from wav to htk
-python make_scp.py $TIMIT_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
-CONFIG_PATH="./config/config_fbank"
+# Make transcripts for the CTC model
+# python make_label_ctc.py $TIMIT_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH
 
-# Convert from wav to htk files
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
+# Make transcripts for the Attention-based model
+# python make_label_attention.py $TIMIT_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH
 
-
-echo '--------------------------------'
-echo '|         Input data            |'
-echo '--------------------------------'
-# Make input data
-python make_input.py $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH
-
-
-echo '--------------------------------'
-echo '|             CTC               |'
-echo '--------------------------------'
-# Make transcripts for CTC model
-python make_label_ctc.py $TIMIT_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH
-
-
-echo '--------------------------------'
-echo '|           Attention           |'
-echo '--------------------------------'
-# Make transcripts for Attention-based model
-python make_label_attention.py $TIMIT_PATH $DATASET_SAVE_PATH $RUN_ROOT_PATH
+echo 'Successfully completed!!!'

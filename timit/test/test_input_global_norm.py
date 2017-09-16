@@ -20,6 +20,7 @@ train_std = None
 class TestInputGlobalNorm(unittest.TestCase):
 
     def test(self):
+
         print('==================================')
         print('=     global norm input test     =')
         print('==================================')
@@ -27,10 +28,11 @@ class TestInputGlobalNorm(unittest.TestCase):
         input_feature_path = '/n/sd8/inaguma/corpus/timit/fbank/'
 
         for data_type in ['train', 'dev', 'test']:
-            print('---------- ' + data_type + ' ----------')
-            htk_paths = [join(input_feature_path, htk_dir)
-                         for htk_dir in sorted(glob(join(input_feature_path,
-                                                         data_type + '/*.htk')))]
+            print('---------- %s ----------' % data_type)
+            htk_paths = [
+                join(input_feature_path, htk_dir)
+                for htk_dir in sorted(glob(join(input_feature_path,
+                                                data_type + '/*.htk')))]
             global train_mean
             global train_std
             if data_type == 'train':

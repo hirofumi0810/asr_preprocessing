@@ -9,29 +9,28 @@ from struct import unpack
 
 
 def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
-                is_training, sil_duration=0, speaker_mean=None):
+                is_training, sil_duration=0., speaker_mean=None):
     """Segment each HTK file into utterances.
     Args:
-        htk_path: path to a HTK file
-        speaker_index: speaker index
-        utterance_dict: dictionary of utterance information of each speaker
-            key => utterance index
-            value => [start_frame, end_frame, transcript (, transcript2)]
-        normalize: global => normalize input data by global mean & std over
-                             the training set per gender
-                   speaker => normalize input data by mean & std per speaker
-                   utterance => normalize input data by mean & std per
-                                utterance
-        is_training: training or not
-        sil_duration: duration of silence at both ends. Default is 0.
-        speaker_mean: mean of the target speaker
+        htk_path (string): path to a HTK file
+        speaker_index (int): speaker index
+        utterance_dict (dict): dictionary of utterance information of each speaker
+            key (string) => utterance index
+            value (list) => [start_frame, end_frame, transcript (, transcript2)]
+        normalize (string):
+            global    => normalize input data by global mean & std over
+                         the training set per gender
+            speaker   => normalize input data by mean & std per speaker
+            utterance => normalize input data by mean & std per utterance
+        is_training (bool): training or not
+        sil_duration (float): duration of silence at both ends. Default is 0.
+        speaker_mean (np.ndarray): mean of the target speaker
     Returns:
-        input_data_dict:
-            key => speaker_index + utterance_index
-            value => np.ndarray, (frame_num, feature_dim)
-        speaker_mean: A mean vector of a speaker in the training set
-        total_frame_num_speaker: total frame num of the target speaker's
-            utterances
+        input_data_dict (dict):
+            key (string) => speaker_index + utterance_index
+            value (np.ndarray )=> A tensor of size (frame_num, feature_dim)
+        speaker_mean (np.ndarray): A mean vector of a speaker in the training set
+        total_frame_num_speaker (int): total frame num of the target speaker's utterances
     """
     # Read the htk file
     input_data = read_htk(htk_path)
@@ -136,9 +135,9 @@ def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
 def read_htk(htk_path):
     """Read each HTK file.
     Args:
-        htk_path: path to a HTK file
+        htk_path (string): path to a HTK file
     Returns:
-        input_data: np.ndarray, (frame_num, feature_dim)
+        input_data (np.ndarray): A tensor of size (frame_num, feature_dim)
     """
     with open(htk_path, "rb") as fh:
         spam = fh.read(12)
