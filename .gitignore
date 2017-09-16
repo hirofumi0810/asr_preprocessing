@@ -5,8 +5,8 @@ __pychache__
 *.pyc
 *.scp
 
-# timit
-input_data_direct.py
+# tools
+sph2pipe_v2.5
 
 # csj
 *_ss.py

@@ -21,10 +21,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
 parser.add_argument('--dataset_save_path', type=str, help='path to save dataset')
 parser.add_argument('--run_root_path', type=str, help='path to run this script')
-parser.add_argument('--tool', type=str,
-                    help='the tool to extract features, htk or python_speech_features or htk')
-parser.add_argument('--normalize', type=str, default='speaker',
-                    help='global or speaker or utterance')
 
 
 def main(label_type):
@@ -32,8 +28,7 @@ def main(label_type):
     print('===== ' + label_type + ' =====')
     args = parser.parse_args()
     prep = Prepare(args.data_path, args.run_root_path)
-    label_save_path = mkdir_join(args.dataset_save_path,
-                                 'labels', 'ctc', label_type)
+    label_save_path = mkdir_join(args.dataset_save_path, 'labels', 'ctc', label_type)
 
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')

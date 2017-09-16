@@ -53,7 +53,7 @@ def main():
         wav_train_paths = prep.wav(data_type='train')
         wav_dev_paths = prep.wav(data_type='dev')
         wav_test_paths = prep.wav(data_type='test')
-    input_save_path = mkdir_join(args.dataset_save_path, args.tool, args.normalize, 'inputs')
+    input_save_path = mkdir_join(args.dataset_save_path, 'inputs', args.tool, args.normalize)
 
     if isfile(join(input_save_path, 'complete.txt')):
         print('Already exists.')
@@ -75,7 +75,7 @@ def main():
 
         print('=> Processing input data...')
         print('---------- train ----------')
-        train_global_mean, train_global_std = read_wav(
+        train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_wav(
             wav_paths=wav_train_paths,
             tool=args.tool,
             config=config,
@@ -90,8 +90,10 @@ def main():
                  save_path=input_dev_save_path,
                  normalize=args.normalize,
                  is_training=False,
-                 train_global_mean=train_global_mean,
-                 train_global_std=train_global_std)
+                 train_global_mean_male=train_global_mean_male,
+                 train_global_std_male=train_global_std_male,
+                 train_global_mean_female=train_global_mean_female,
+                 train_global_std_female=train_global_std_female)
 
         print('---------- test ----------')
         read_wav(wav_paths=wav_test_paths,
@@ -100,8 +102,10 @@ def main():
                  save_path=input_test_save_path,
                  normalize=args.normalize,
                  is_training=False,
-                 train_global_mean=train_global_mean,
-                 train_global_std=train_global_std)
+                 train_global_mean_male=train_global_mean_male,
+                 train_global_std_male=train_global_std_male,
+                 train_global_mean_female=train_global_mean_female,
+                 train_global_std_female=train_global_std_female)
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(input_save_path, 'complete.txt'), 'w') as f:

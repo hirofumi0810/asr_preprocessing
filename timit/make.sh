@@ -19,8 +19,8 @@ ENERGY=False
 DELTA=True
 DELTADELTA=True
 # NORMALIZE='global'
-# NORMALIZE='speaker'
-NORMALIZE='utterance'
+NORMALIZE='speaker'
+# NORMALIZE='utterance'
 
 ##############################
 # Don't change from here ↓↓↓
@@ -64,9 +64,9 @@ if [ $TOOL = 'htk' ]; then
                         --config_path $CONFIG_PATH
 
   # Convert from wav to htk files
-#   $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train.scp
-#   $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
-#   $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
 fi
 
 # Make input features
@@ -93,13 +93,11 @@ echo ===========================================================================
 # Make transcripts for the CTC model
 python make_label_ctc.py --data_path $TIMIT_PATH  \
                          --dataset_save_path $DATASET_SAVE_PATH \
-                         --run_root_path $RUN_ROOT_PATH \
-                         --tool $TOOL
+                         --run_root_path $RUN_ROOT_PATH
 
 # Make transcripts for the Attention-based model
 python make_label_attention.py --data_path $TIMIT_PATH  \
                                --dataset_save_path $DATASET_SAVE_PATH \
-                               --run_root_path $RUN_ROOT_PATH \
-                               --tool $TOOL
+                               --run_root_path $RUN_ROOT_PATH
 
 echo 'Successfully completed!!!'

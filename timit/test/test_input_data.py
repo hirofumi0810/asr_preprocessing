@@ -63,7 +63,7 @@ class TestInputNorm(unittest.TestCase):
         }
 
         print('---------- train ----------')
-        train_global_mean, train_global_std = read_wav(
+        train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_wav(
             wav_paths=wav_train_paths,
             tool=tool,
             config=config,
@@ -76,8 +76,10 @@ class TestInputNorm(unittest.TestCase):
                  config=config,
                  normalize=normalize,
                  is_training=False,
-                 train_global_mean=train_global_mean,
-                 train_global_std=train_global_std)
+                 train_global_mean_male=train_global_mean_male,
+                 train_global_std_male=train_global_std_male,
+                 train_global_mean_female=train_global_mean_female,
+                 train_global_std_female=train_global_std_female)
 
         print('---------- test ----------')
         read_wav(wav_paths=wav_test_paths,
@@ -85,8 +87,10 @@ class TestInputNorm(unittest.TestCase):
                  config=config,
                  normalize=normalize,
                  is_training=False,
-                 train_global_mean=train_global_mean,
-                 train_global_std=train_global_std)
+                 train_global_mean_male=train_global_mean_male,
+                 train_global_std_male=train_global_std_male,
+                 train_global_mean_female=train_global_mean_female,
+                 train_global_std_female=train_global_std_female)
 
 
 if __name__ == '__main__':
