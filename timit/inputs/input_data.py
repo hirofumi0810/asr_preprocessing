@@ -216,7 +216,7 @@ def read_wav(wav_paths, tool, config, normalize, is_training, save_path=None,
                     input_data_utt /= train_global_std_female
 
             np.save(input_data_save_path, input_data_utt)
-            frame_num_dict[input_data_save_name] = input_data_utt.shape[0]
+            frame_num_dict[input_data_save_name.split('.')[0]] = input_data_utt.shape[0]
 
         # Save a frame number dictionary
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
