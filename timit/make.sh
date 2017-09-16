@@ -90,14 +90,10 @@ echo ===========================================================================
 echo "                         Process transcriptions                           "
 echo ============================================================================
 
-# Make transcripts for the CTC model
-python make_label_ctc.py --data_path $TIMIT_PATH  \
-                         --dataset_save_path $DATASET_SAVE_PATH \
-                         --run_root_path $RUN_ROOT_PATH
+# Make transcripts for the End-to-End model
+python make_label_end2end.py --data_path $TIMIT_PATH  \
+                             --dataset_save_path $DATASET_SAVE_PATH \
+                             --run_root_path $RUN_ROOT_PATH
 
-# Make transcripts for the Attention-based model
-python make_label_attention.py --data_path $TIMIT_PATH  \
-                               --dataset_save_path $DATASET_SAVE_PATH \
-                               --run_root_path $RUN_ROOT_PATH
 
 echo 'Successfully completed!!!'

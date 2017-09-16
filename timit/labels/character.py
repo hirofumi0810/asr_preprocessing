@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make character-level target labels for the CTC model (TIMIT corpus)."""
+"""Make character-level target labels for the End-to-End model (TIMIT corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -15,7 +15,10 @@ from tqdm import tqdm
 from utils.labels.character import char2num
 
 # NOTE:
-# -character
+############################################################
+# CTC model
+
+# - character
 # 26 alphabets(a-z),
 # space(_), apostorophe('),
 # = 26 + 2 = 28 labels
@@ -24,18 +27,34 @@ from utils.labels.character import char2num
 # 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
 # 19 special double-letters, apostorophe(')
 # = 26 * 2 + 19 + 1 = 72 labels
+############################################################
+
+############################################################
+# Attention-based model
+
+# - character
+# 26 alphabets(a-z), <SOS>, <EOS>
+# space(_), apostorophe(')
+# = 26 + 2 + 2 = 30 labels
+
+# - character_capital_divide
+# 26 lower alphabets(a-z), 26 upper alphabets(A-Z)  <SOS>, <EOS>
+# 19 special double-letters, apostorophe(')
+# = 26 * 2 + 2 + 19 + 1 = 74 labels
+############################################################
 
 
-def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
-              divide_by_capital=False):
+def read_text(label_paths, run_root_path, model, save_map_file=False,
+              save_path=None, divide_by_capital=False, is_test=False):
     """Read text transcript.
     Args:
-        label_paths: list of paths to label files
-        run_root_path: absolute path of make.sh
-        save_map_file: if True, save the mapping file
-        save_path: path to save labels. If None, don't save labels
-        divide_by_capital: if True, each word will be diveded by capital
-            letters rather than spaces. In addition, repeated letters
+        label_paths (list): list of paths to label files
+        run_root_path (string): absolute path of make.sh
+        model (string): ctc or attention
+        save_map_file (string): if True, save the mapping file
+        save_path (string, optional): path to save labels. If None, don't save labels
+        divide_by_capital (bool, optional): if True, each word will be diveded
+            by capital letters rather than spaces. In addition, repeated letters
             will be grouped by a special double-letter unit.
                 ex.) hello => h e ll o
             This implementation is based on
@@ -43,6 +62,7 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
                     Zweig, Geoffrey, et al.
                     "Advances in all-neural speech recognition."
                     in Proceedings of ICASSP, 2017.
+        is_test (bool, optional): if True, print transcripts
     """
     print('===> Reading target labels...')
     text_dict = {}
@@ -70,31 +90,48 @@ def read_text(label_paths, run_root_path, save_map_file=False, save_path=None,
                             char_set.add(word[i] * 2)
 
                     transcript += word
+
             else:
                 # Convert space to "_"
                 transcript = '_'.join(line.split(' ')[2:])
+
+            if model == 'attention':
+                transcript = '<' + transcript + '>'
 
         for c in list(transcript):
             char_set.add(c)
 
         text_dict[label_path] = transcript
 
+        # for debug
+        if is_test:
+            print(transcript)
+
     # Make mapping file (from character to number)
     if divide_by_capital:
         mapping_file_path = join(
-            run_root_path, 'labels/ctc/character_to_num_capital.txt')
+            run_root_path, 'labels', 'mapping_files', model, 'character_to_num_capital.txt')
     else:
         mapping_file_path = join(
-            run_root_path, 'labels/ctc/character_to_num.txt')
+            run_root_path, 'labels', 'mapping_files', model, 'character_to_num.txt')
     char_set.discard('_')
     char_set.discard('\'')
+    if model == 'attention':
+        char_set.discard('<')
+        char_set.discard('>')
 
     if save_map_file:
         with open(mapping_file_path, 'w') as f:
+            if model == 'attention':
+                char_list = ['<', '>']
+            elif model == 'ctc':
+                char_list = []
+
             if divide_by_capital:
-                char_list = sorted(list(char_set)) + ['\'']
+                char_list += sorted(list(char_set)) + ['\'']
             else:
-                char_list = ['_'] + sorted(list(char_set)) + ['\'']
+                char_list += ['_'] + sorted(list(char_set)) + ['\'']
+
             for index, char in enumerate(char_list):
                 f.write('%s  %s\n' % (char, str(index)))
 
