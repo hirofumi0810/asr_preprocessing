@@ -14,14 +14,14 @@ from glob import glob
 class Prepare(object):
     """Prepare for making dataset.
     Args:
-        data_path: path to timit corpus
-        run_root_path: path to ./make.sh
-        dataset_save_path: path to save dataset
+        data_path (string): path to timit corpus
+        run_root_path (string): path to ./make.sh
+        dataset_save_path (string): path to save dataset
     """
 
     def __init__(self, data_path, run_root_path):
 
-        # Path to timit data
+        # Paths to TIMIT data
         self.train_data_path = join(data_path, 'train')
         self.test_data_path = join(data_path, 'test')
 
@@ -32,99 +32,44 @@ class Prepare(object):
 
     def __make(self):
 
-        ####################
-        # train
-        ####################
-        self.wav_train_paths = []
-        self.text_train_paths = []
-        self.word_train_paths = []
-        self.phone_train_paths = []
-        for file_path in glob(join(self.train_data_path, '*/*/*')):
-            region_name, speaker_name, file_name = file_path.split('/')[-3:]
-            ext = splitext(file_name)[1]
-            if basename(file_name)[0: 2] in ['sx', 'si']:
-                if ext == '.wav':
-                    self.wav_train_paths.append(
-                        join(self.train_data_path, file_path))
-                elif ext == '.txt':
-                    self.text_train_paths.append(
-                        join(self.train_data_path, file_path))
-                elif ext == '.wrd':
-                    self.word_train_paths.append(
-                        join(self.train_data_path, file_path))
-                elif ext == '.phn':
-                    self.phone_train_paths.append(
-                        join(self.train_data_path, file_path))
+        self.wav_paths = {}
+        self.text_paths = {}
+        self.word_paths = {}
+        self.phone_paths = {}
 
-        ####################
-        # dev
-        ####################
-        # Load speaker list
-        speakers_dev = []
-        with open(join(self.run_root_path,
-                       'config/dev_speaker_list.txt'), 'r') as f:
-            for line in f:
-                line = line.strip()
-                speakers_dev.append(line)
+        for data_type in ['train', 'dev', 'test']:
 
-        self.wav_dev_paths = []
-        self.text_dev_paths = []
-        self.word_dev_paths = []
-        self.phone_dev_paths = []
-        for file_path in glob(join(self.test_data_path, '*/*/*')):
-            region_name, speaker_name, file_name = file_path.split('/')[-3:]
-            ext = splitext(file_name)[1]
+            self.wav_paths[data_type] = []
+            self.text_paths[data_type] = []
+            self.word_paths[data_type] = []
+            self.phone_paths[data_type] = []
+            data_path = self.train_data_path if data_type == 'train' else self.test_data_path
 
-            if speaker_name not in speakers_dev:
-                continue
-            elif basename(file_name)[0: 2] in ['sx', 'si']:
-                if ext == '.wav':
-                    self.wav_dev_paths.append(
-                        join(self.test_data_path, file_path))
-                elif ext == '.txt':
-                    self.text_dev_paths.append(
-                        join(self.test_data_path, file_path))
-                elif ext == '.wrd':
-                    self.word_dev_paths.append(
-                        join(self.test_data_path, file_path))
-                elif ext == '.phn':
-                    self.phone_dev_paths.append(
-                        join(self.test_data_path, file_path))
+            if data_type != 'train':
+                # Load speaker list
+                test_speakers = []
+                with open(join(self.run_root_path,
+                               'config/' + data_type + '_speaker_list.txt'), 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        test_speakers.append(line)
 
-        ####################
-        # test
-        ####################
-        # Load speaker list
-        speakers_test = []
-        with open(join(self.run_root_path,
-                       'config/test_speaker_list.txt'), 'r') as f:
-            for line in f:
-                line = line.strip()
-                speakers_test.append(line)
+            for file_path in glob(join(data_path, '*/*/*')):
+                region, speaker, file_name = file_path.split('/')[-3:]
+                ext = splitext(file_name)[1]
 
-        self.wav_test_paths = []
-        self.text_test_paths = []
-        self.word_test_paths = []
-        self.phone_test_paths = []
-        for file_path in glob(join(self.test_data_path, '*/*/*')):
-            region_name, speaker_name, file_name = file_path.split('/')[-3:]
-            ext = splitext(file_name)[1]
+                if data_type != 'train' and speaker not in test_speakers:
+                    continue
 
-            if speaker_name not in speakers_test:
-                continue
-            elif basename(file_name)[0: 2] in ['sx', 'si']:
-                if ext == '.wav':
-                    self.wav_test_paths.append(
-                        join(self.test_data_path, file_path))
-                elif ext == '.txt':
-                    self.text_test_paths.append(
-                        join(self.test_data_path, file_path))
-                elif ext == '.wrd':
-                    self.word_test_paths.append(
-                        join(self.test_data_path, file_path))
-                elif ext == '.phn':
-                    self.phone_test_paths.append(
-                        join(self.test_data_path, file_path))
+                if basename(file_name)[0: 2] in ['sx', 'si']:
+                    if ext == '.wav':
+                        self.wav_paths[data_type].append(join(data_path, file_path))
+                    elif ext == '.txt':
+                        self.text_paths[data_type].append(join(data_path, file_path))
+                    elif ext == '.wrd':
+                        self.word_paths[data_type].append(join(data_path, file_path))
+                    elif ext == '.phn':
+                        self.phone_paths[data_type].append(join(data_path, file_path))
 
     def wav(self, data_type):
         """Get paths to wav files.
@@ -133,12 +78,7 @@ class Prepare(object):
         Returns:
             paths to wav files
         """
-        if data_type == 'train':
-            return sorted(self.wav_train_paths)
-        elif data_type == 'dev':
-            return sorted(self.wav_dev_paths)
-        elif data_type == 'test':
-            return sorted(self.wav_test_paths)
+        return sorted(self.wav_paths[data_type])
 
     def text(self, data_type):
         """Get paths to sentence-level transcription files.
@@ -147,12 +87,7 @@ class Prepare(object):
         Returns:
             paths to transcription files
         """
-        if data_type == 'train':
-            return sorted(self.text_train_paths)
-        elif data_type == 'dev':
-            return sorted(self.text_dev_paths)
-        elif data_type == 'test':
-            return sorted(self.text_test_paths)
+        return sorted(self.text_paths[data_type])
 
     def word(self, data_type):
         """Get paths to word-level transcription files.
@@ -161,12 +96,7 @@ class Prepare(object):
         Returns:
             paths to transcription files
         """
-        if data_type == 'train':
-            return sorted(self.word_train_paths)
-        elif data_type == 'dev':
-            return sorted(self.word_dev_paths)
-        elif data_type == 'test':
-            return sorted(self.word_test_paths)
+        return sorted(self.word_paths[data_type])
 
     def phone(self, data_type):
         """Get paths to phone-level transcription files.
@@ -175,12 +105,7 @@ class Prepare(object):
         Returns:
             paths to transcription files
         """
-        if data_type == 'train':
-            return sorted(self.phone_train_paths)
-        elif data_type == 'dev':
-            return sorted(self.phone_dev_paths)
-        elif data_type == 'test':
-            return sorted(self.phone_test_paths)
+        return sorted(self.phone_paths[data_type])
 
 
 if __name__ == '__main__':

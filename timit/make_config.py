@@ -38,14 +38,6 @@ def main():
     htk_save_path = mkdir(args.htk_save_path)
     prep = Prepare(args.data_path, args.run_root_path)
 
-    wav_train_paths = prep.wav(data_type='train')
-    wav_dev_paths = prep.wav(data_type='dev')
-    wav_test_paths = prep.wav(data_type='test')
-
-    save_train_path = mkdir_join(htk_save_path, 'train')
-    save_dev_path = mkdir_join(htk_save_path, 'dev')
-    save_test_path = mkdir_join(htk_save_path, 'test')
-
     # HTK settings
     save(audio_file_type='nist',
          feature_type=args.feature_type,
@@ -59,44 +51,26 @@ def main():
          deltadelta=args.deltadelta)
     # NOTE: 120-dim features are extracted by default
 
-    ####################
-    # train
-    ####################
-    assert len(wav_train_paths) == 3696, 'File number is not correct (True: 3696, Now: %d).'.format(
-        len(wav_train_paths))
-    with open(join(args.run_root_path, 'config/wav2fbank_train.scp'), 'w') as f:
-        for wav_path in wav_train_paths:
-            speaker_name = wav_path.split('/')[-2]
-            wav_index = basename(wav_path).split('.')[0]
-            save_path = join(save_train_path, speaker_name +
-                             '_' + wav_index + '.htk')
-            f.write(wav_path + '  ' + save_path + '\n')
+    file_number = {
+        'train': 3696,
+        'dev': 400,
+        'test': 192
+    }
 
-    ####################
-    # dev
-    ####################
-    assert len(wav_dev_paths) == 400, 'File number is not correct (True: 400, Now: %d).'.format(
-        len(wav_dev_paths))
-    with open(join(args.run_root_path, 'config/wav2fbank_dev.scp'), 'w') as f:
-        for wav_path in wav_dev_paths:
-            speaker_name = wav_path.split('/')[-2]
-            wav_index = basename(wav_path).split('.')[0]
-            save_path = join(
-                save_dev_path, speaker_name + '_' + wav_index + '.htk')
-            f.write(wav_path + '  ' + save_path + '\n')
+    for data_type in ['train', 'dev', 'test']:
 
-    ####################
-    # test
-    ####################
-    assert len(wav_test_paths) == 192, 'File number is not correct (True: 192, Now: %d).'.format(
-        len(wav_test_paths))
-    with open(join(args.run_root_path, 'config/wav2fbank_test.scp'), 'w') as f:
-        for wav_path in wav_test_paths:
-            speaker_name = wav_path.split('/')[-2]
-            wav_index = basename(wav_path).split('.')[0]
-            save_path = join(save_test_path, speaker_name +
-                             '_' + wav_index + '.htk')
-            f.write(wav_path + '  ' + save_path + '\n')
+        wav_paths = prep.wav(data_type=data_type)
+        save_path = mkdir_join(htk_save_path, data_type)
+
+        assert len(wav_paths) == file_number[data_type], 'File number is not correct (True: %d, Now: %d).'.format(
+            file_number[data_type], len(wav_paths))
+
+        with open(join(args.run_root_path, 'config/wav2fbank_' + data_type + '.scp'), 'w') as f:
+            for wav_path in wav_paths:
+                speaker_name = wav_path.split('/')[-2]
+                wav_index = basename(wav_path).split('.')[0]
+                save_path_tmp = join(save_path, speaker_name + '_' + wav_index + '.htk')
+                f.write(wav_path + '  ' + save_path_tmp + '\n')
 
 
 if __name__ == '__main__':
