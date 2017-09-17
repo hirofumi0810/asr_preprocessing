@@ -71,6 +71,16 @@ class Prepare(object):
                     elif ext == '.phn':
                         self.phone_paths[data_type].append(join(data_path, file_path))
 
+        file_number = {
+            'train': 3696,
+            'dev': 400,
+            'test': 192
+        }
+
+        for data_type in ['train', 'dev', 'test']:
+            assert len(self.wav_paths[data_type]) == file_number[data_type], 'File number is not correct (True: %d, Now: %d).'.format(
+                file_number[data_type], len(self.wav_paths[data_type]))
+
     def wav(self, data_type):
         """Get paths to wav files.
         Args:

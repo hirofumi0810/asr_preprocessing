@@ -57,7 +57,7 @@ if [ $TOOL = 'htk' ]; then
 
     # Make a config file to covert from wav to htk file
     python make_config.py \
-        --data_path $TIMIT_PATH  \
+        --data_path $TIMIT_PATH \
         --htk_save_path $HTK_SAVE_PATH \
         --run_root_path $RUN_ROOT_PATH \
         --feature_type $FEATURE_TYPE \
@@ -78,7 +78,7 @@ fi
 
 # Make input features
 python make_input.py \
-    --data_path $TIMIT_PATH  \
+    --data_path $TIMIT_PATH \
     --dataset_save_path $DATASET_SAVE_PATH \
     --run_root_path $RUN_ROOT_PATH \
     --tool $TOOL \
@@ -100,7 +100,7 @@ echo ===========================================================================
 
 # Make transcripts for the End-to-End models (CTC and Attention)
 python make_label_end2end.py \
-    --data_path $TIMIT_PATH  \
+    --data_path $TIMIT_PATH \
     --dataset_save_path $DATASET_SAVE_PATH \
     --run_root_path $RUN_ROOT_PATH
 

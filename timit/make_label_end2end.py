@@ -67,5 +67,6 @@ def main(model, label_type):
 
 if __name__ == '__main__':
     for model in ['ctc', 'attention']:
-        for label_type in ['character', 'character_capital_divide', 'phone61', 'phone48', 'phone39']:
+        for label_type in ['character', 'character_capital_divide',
+                           'phone61', 'phone48', 'phone39']:
             main(model, label_type)

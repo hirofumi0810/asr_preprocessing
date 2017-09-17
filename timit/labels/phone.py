@@ -16,7 +16,7 @@ from timit.util import map_phone2phone
 
 
 def read_phone(label_paths, label_type, run_root_path, model,
-               save_map_file=False, save_path=None, print_stdout=False):
+               save_map_file=False, save_path=None, stdout_transcript=False):
     """Read phone transcript.
     Args:
         label_paths (list): list of paths to label files
@@ -24,8 +24,8 @@ def read_phone(label_paths, label_type, run_root_path, model,
         run_root_path (string): path to make.sh
         model (string): ctc or attention
         save_map_file (bool, optional): if True, save the mapping file
-        save_path (string, bool): path to save labels. If None, don't save labels
-        print_stdout (bool, optional): if True, print transcripts to standard output
+        save_path (string, optional): path to save labels. If None, don't save labels
+        stdout_transcript (bool, optional): if True, print transcripts to standard output
     """
     if label_type not in ['phone39', 'phone48', 'phone61']:
         raise ValueError('data_type is "phone39" or "phone48" or "phone61".')
@@ -84,7 +84,7 @@ def read_phone(label_paths, label_type, run_root_path, model,
         if model == 'attention':
             phone_list = ['<'] + phone_list + ['>']  # add <SOS> & <EOS>
 
-        if print_stdout:
+        if stdout_transcript:
             print(' '.join(phone_list))
 
         index_list = phone2num(phone_list, phone2num_map_file_path)

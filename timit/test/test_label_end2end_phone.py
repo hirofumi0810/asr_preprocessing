@@ -53,7 +53,7 @@ class TestEnd2EndLabelPhone(unittest.TestCase):
                        run_root_path=self.prep.run_root_path,
                        model=model,
                        save_map_file=save_map_file,
-                       print_stdout=True)
+                       stdout_transcript=True)
 
 
 if __name__ == '__main__':

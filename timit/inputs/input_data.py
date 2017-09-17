@@ -62,17 +62,16 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
     if normalize not in ['global', 'speaker', 'utterance']:
         raise ValueError('normalize is "utterance" or "speaker" or "global".')
 
-    # Read each wav file
-    print('===> Reading wav files...')
+    # Read each audio file
+    print('===> Reading audio files...')
     wav_paths_male, wav_paths_female = [], []
     input_data_list_male, input_data_list_female = [], []
     total_frame_num_male, total_frame_num_female = 0, 0
     total_frame_num_dict = {}
     speaker_mean_dict, speaker_std_dict = {}, {}
     for audio_path in tqdm(audio_paths):
-
-        speaker = basename(audio_path).split('_')[0]
-        gender = audio_path.split('/')[-2][0]  # f (female) or m (male)
+        speaker = audio_path.split('/')[-2]
+        gender = speaker[0]  # f (female) or m (male)
 
         if tool == 'htk':
             input_data_utt = read_htk_utt(audio_path)
@@ -106,7 +105,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
             wav_paths_female.append(audio_path)
 
         if is_training:
-            speaker = basename(audio_path).split('_')[0]
+            speaker = audio_path.split('/')[-2]
             gender = speaker[0]
             frame_num_utt, feat_dim = input_data_utt.shape
 
@@ -144,7 +143,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         # male
         for input_data_utt, audio_path in zip(tqdm(input_data_list_male),
                                               wav_paths_male):
-            speaker = basename(audio_path).split('_')[0]
+            speaker = audio_path.split('/')[-2]
             frame_num_utt = input_data_utt.shape[0]
             train_data_male[frame_offset:frame_offset + frame_num_utt] = input_data_utt
             frame_offset += frame_num_utt
@@ -157,7 +156,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         frame_offset = 0
         for input_data_utt, audio_path in zip(tqdm(input_data_list_female),
                                               wav_paths_female):
-            speaker = basename(audio_path).split('_')[0]
+            speaker = audio_path.split('/')[-2]
             frame_num_utt = input_data_utt.shape[0]
             train_data_female[frame_offset:frame_offset + frame_num_utt] = input_data_utt
             frame_offset += frame_num_utt
@@ -195,7 +194,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         frame_num_dict = {}
         for input_data_utt, audio_path in zip(tqdm(input_data_list_male + input_data_list_female),
                                               wav_paths_male + wav_paths_female):
-            speaker = basename(audio_path).split('_')[0]
+            speaker = audio_path.split('/')[-2]
             gender = speaker[0]
             input_data_save_name = basename(audio_path).split('.')[0] + '.npy'
             input_data_save_path = join(save_path, input_data_save_name)

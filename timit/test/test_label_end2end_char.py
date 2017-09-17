@@ -51,7 +51,7 @@ class TestEnd2EndLabelChar(unittest.TestCase):
                       model=model,
                       save_map_file=save_map_file,
                       divide_by_capital=divide_by_capital,
-                      print_stdout=True)
+                      stdout_transcript=True)
 
 
 if __name__ == '__main__':

@@ -66,7 +66,7 @@ def main():
 
         if args.tool == 'htk':
             wav_train_paths = [path for path in sorted(
-                glob(join(args.htk_save_path, 'train/*.htk')))]
+                glob(join(args.htk_save_path, 'train/*/*.htk')))]
             # NOTE: these are htk file paths
         else:
             wav_train_paths = prep.wav(data_type='train')
@@ -84,7 +84,7 @@ def main():
 
             if args.tool == 'htk':
                 audio_paths = [path for path in sorted(
-                    glob(join(args.htk_save_path, data_type + '/*.htk')))]
+                    glob(join(args.htk_save_path, data_type, '*/*.htk')))]
                 # NOTE: these are htk file paths
             else:
                 audio_paths = prep.wav(data_type=data_type)
