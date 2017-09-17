@@ -3,47 +3,104 @@
 echo '----------------------------------------------------'
 echo '|                       CSJ                         |'
 echo '----------------------------------------------------'
+
+# Set paths
+CSJ_PATH='/n/sd8/inaguma/corpus/csj/data'
+DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/csj/dataset'
+HTK_SAVE_PATH='/n/sd8/inaguma/corpus/csj/htk'
+HTK_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
+
+### Select one tool to extract features (HTK is the fastest)
+TOOL='htk'
+# TOOL='python_speech_features'
+# TOOL='librosa'
+
+### Configuration (Set by yourself)
+FEATURE_TYPE='logmelfbank'  # or mfcc
+CHANNELS=40
+SAMPLING_RATE=16000
+WINDOW=0.025
+SLIDE=0.01
+ENERGY=False
+DELTA=True
+DELTADELTA=True
+# NORMALIZE='global'
+NORMALIZE='speaker'
+# NORMALIZE='utterance'
+
+##############################
+# Don't change from here ↓↓↓
+##############################
+set -eu
+
+if [ ! -e $CSJ_PATH ]; then
+    echo "CSJ directory was not found."
+    exit 1
+fi
+if [ ! -e $DATASET_SAVE_PATH ]; then
+    mkdir $DATASET_SAVE_PATH
+fi
+if [ ! -e $HTK_SAVE_PATH ] && [ $TOOL = 'htk' ]; then
+    mkdir $HTK_SAVE_PATH
+fi
+
 RUN_ROOT_PATH=`pwd`
 
-# Set the root path to CSJ corpus
-CSJ_PATH='/n/sd8/inaguma/corpus/csj/data/'
 
-# Set the path to save dataset
-DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/csj/dataset/'
+echo ============================================================================
+echo "                           Feature extraction                             "
+echo ============================================================================
 
-# Set the path to save input features (fbank or MFCC)
-INPUT_FEATURE_SAVE_PATH='/n/sd8/inaguma/corpus/csj/fbank/'
+if [ $TOOL = 'htk' ]; then
+    # Set the path to HTK (optional, set only when using HTK toolkit)
+    CONFIG_PATH="./config/config_file"
 
+    # Make a config file to covert from wav to htk file
+    python make_config.py \
+        --data_path $CSJ_PATH  \
+        --htk_save_path $HTK_SAVE_PATH \
+        --run_root_path $RUN_ROOT_PATH \
+        --feature_type $FEATURE_TYPE \
+        --channels $CHANNELS \
+        --sampling_rate $SAMPLING_RATE \
+        --window $WINDOW \
+        --slide $SLIDE \
+        --energy $ENERGY \
+        --delta $DELTA \
+        --deltadelta $DELTADELTA \
+        --config_path $CONFIG_PATH
 
-echo '--------------------------------'
-echo '|      Feature extraction       |'
-echo '--------------------------------'
-# Set the path to HTK
-HTK_PATH='/misc/local/htk-3.4/bin/HCopy'
-
-# Make a mapping file from wav to htk
-python make_scp.py $CSJ_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
-CONFIG_PATH="./config/config_fbank"
-
-# Convert from wav to htk files
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_subset.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_fullset.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
-$HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dialog.scp
-
-
-echo '--------------------------------'
-echo '|             CTC               |'
-echo '--------------------------------'
-# Make dataset for CTC model
-# python make_ctc.py $CSJ_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
+    # Convert from wav to htk files
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_subset.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_fullset.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dialog.scp
+fi
 
 
-echo '--------------------------------'
-echo '|           Attention           |'
-echo '--------------------------------'
-# Make dataset for Attention-based model
-# python make_attention.py $CSJ_PATH $DATASET_SAVE_PATH $INPUT_FEATURE_SAVE_PATH $RUN_ROOT_PATH
+echo ============================================================================
+echo "                         Process transcriptions                           "
+echo ============================================================================
+
+# Make input features & transcripts
+# Note that feature extraction depends on transcription data
+python make_end2end.py \
+    --data_path $CSJ_PATH  \
+    --dataset_save_path $DATASET_SAVE_PATH \
+    --run_root_path $RUN_ROOT_PATH \
+    --tool $TOOL \
+    --htk_save_path $HTK_SAVE_PATH \
+    --feature_type $FEATURE_TYPE \
+    --channels $CHANNELS \
+    --sampling_rate $SAMPLING_RATE \
+    --window $WINDOW \
+    --slide $SLIDE \
+    --energy $ENERGY \
+    --delta $DELTA \
+    --deltadelta $DELTADELTA \
+    --normalize $NORMALIZE
+
+echo 'Successfully completed!!!'

@@ -6,22 +6,22 @@ from __future__ import division
 from __future__ import print_function
 
 import re
-from csj.labels.ctc.regular_expression import remove_pause
-from csj.labels.ctc.regular_expression import remove_question_which
-from csj.labels.ctc.regular_expression import remove_question
-from csj.labels.ctc.regular_expression import remove_Btag
-from csj.labels.ctc.regular_expression import remove_disfluency
-from csj.labels.ctc.regular_expression import remove_filler
-from csj.labels.ctc.regular_expression import remove_Xtag
-from csj.labels.ctc.regular_expression import remove_Atag
-from csj.labels.ctc.regular_expression import remove_Ktag
-from csj.labels.ctc.regular_expression import remove_cry
-from csj.labels.ctc.regular_expression import remove_cough
-from csj.labels.ctc.regular_expression import remove_which
-from csj.labels.ctc.regular_expression import remove_Ltag
-from csj.labels.ctc.regular_expression import remove_laughing
-from csj.labels.ctc.regular_expression import remove_Otag
-from csj.labels.ctc.regular_expression import remove_Mtag
+from csj.labels.regular_expression import remove_pause
+from csj.labels.regular_expression import remove_question_which
+from csj.labels.regular_expression import remove_question
+from csj.labels.regular_expression import remove_Btag
+from csj.labels.regular_expression import remove_disfluency
+from csj.labels.regular_expression import remove_filler
+from csj.labels.regular_expression import remove_Xtag
+from csj.labels.regular_expression import remove_Atag
+from csj.labels.regular_expression import remove_Ktag
+from csj.labels.regular_expression import remove_cry
+from csj.labels.regular_expression import remove_cough
+from csj.labels.regular_expression import remove_which
+from csj.labels.regular_expression import remove_Ltag
+from csj.labels.regular_expression import remove_laughing
+from csj.labels.regular_expression import remove_Otag
+from csj.labels.regular_expression import remove_Mtag
 
 
 def fix_transcript(kana_seq):

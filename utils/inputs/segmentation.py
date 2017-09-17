@@ -7,43 +7,72 @@
 import numpy as np
 from struct import unpack
 
+from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
+from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
 
-def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
-                is_training, sil_duration=0., speaker_mean=None):
-    """Segment each HTK file into utterances.
+
+def segment_htk(audio_path, speaker, utterance_dict, is_training,
+                sil_duration=0., tool='htk', config=None, mean=None,
+                dtype=np.float64):
+    """Segment each HTK or WAV file into utterances. Normalization will not be
+        conducted here.
     Args:
-        htk_path (string): path to a HTK file
-        speaker_index (int): speaker index
-        utterance_dict (dict): dictionary of utterance information of each speaker
+        audio_path (string): path to a HTK or WAV file
+        speaker (string): speaker name
+        utterance_dict (dict): dictionary of utterance information
             key (string) => utterance index
             value (list) => [start_frame, end_frame, transcript (, transcript2)]
-        normalize (string):
-            global    => normalize input data by global mean & std over
-                         the training set per gender
-            speaker   => normalize input data by mean & std per speaker
-            utterance => normalize input data by mean & std per utterance
-        is_training (bool): training or not
         sil_duration (float): duration of silence at both ends. Default is 0.
-        speaker_mean (np.ndarray): mean of the target speaker
+        tool (string): htk or python_speech_features or librosa
+        config (dict): a configuration for feature extraction
+        mean (np.ndarray):  A mean vector over the file
+        dtype (optional): default is np.float64
     Returns:
         input_data_dict (dict):
-            key (string) => speaker_index + utterance_index
-            value (np.ndarray )=> A tensor of size (frame_num, feature_dim)
-        speaker_mean (np.ndarray): A mean vector of a speaker in the training set
-        total_frame_num_speaker (int): total frame num of the target speaker's utterances
+            key (string) => speaker + '_' + utt_index
+            value (np.ndarray )=> a feature vector of size
+                `(frame_num, feature_dim)`
+        input_data_utt_sum (np.ndarray): A sum of feature vectors of a speaker
+        mean (np.ndarray): A mean vector over the file
+        stddev (np.ndarray): A stddev vector over the file
+        total_frame_num_file (int): total frame num of the target speaker's utterances
     """
-    # Read the htk file
-    input_data = read_htk(htk_path)
+    if tool != 'htk' and config is None:
+        raise ValueError('Set config dict.')
+
+    # Read the HTK or WAV file
+    if tool == 'htk':
+        input_data = read_htk(audio_path)
+    elif tool == 'python_speech_features':
+        input_data = w2f_psf(audio_path,
+                             feature_type=config['feature_type'],
+                             feature_dim=config['channels'],
+                             use_energy=config['energy'],
+                             use_delta1=config['delta'],
+                             use_delta2=config['deltadelta'],
+                             window=config['window'],
+                             slide=config['slide'])
+
+    elif tool == 'librosa':
+        input_data = w2f_librosa(audio_path,
+                                 feature_type=config['feature_type'],
+                                 feature_dim=config['channels'],
+                                 use_energy=config['energy'],
+                                 use_delta1=config['delta'],
+                                 use_delta2=config['deltadelta'],
+                                 window=config['window'],
+                                 slide=config['slide'])
+
     feature_dim = input_data.shape[1]
 
     # Divide into each utterance
     input_data_dict = {}
-    total_frame_num_speaker = 0
+    total_frame_num_file = 0
     end_frame_pre = 0
     utt_num = len(utterance_dict.keys())
     utt_dict_sorted = sorted(utterance_dict.items(), key=lambda x: x[0])
-    input_data_sum = np.zeros((feature_dim,), dtype=np.float64)
-    speaker_std = np.zeros((feature_dim,), dtype=np.float64)
+    input_data_utt_sum = np.zeros((feature_dim,), dtype=dtype)
+    stddev = np.zeros((feature_dim,), dtype=dtype)
     for i, (utt_index, utt_info) in enumerate(utt_dict_sorted):
         start_frame, end_frame = utt_info[0], utt_info[1]
 
@@ -51,7 +80,7 @@ def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
         if start_frame > end_frame:
             print(utterance_dict)
             print('Warning: time stamp is reversed.')
-            print('speaker index: %s' % speaker_index)
+            print('speaker index: %s' % speaker)
             print('utterance index: %s & %s' %
                   (str(utt_index), utt_dict_sorted[i + 1][0]))
 
@@ -65,7 +94,7 @@ def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
             start_frame_next = utt_dict_sorted[i + 1][1][0]
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
-                print('speaker index: %s' % speaker_index)
+                print('speaker index: %s' % speaker)
                 print('utterance index: %s & %s' %
                       (str(utt_index), utt_dict_sorted[i + 1][0]))
 
@@ -99,7 +128,7 @@ def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
             start_frame_next = utt_dict_sorted[i + 1][1][0]
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
-                print('speaker: %s' % speaker_index)
+                print('speaker: %s' % speaker)
                 print('utt index: %s & %s' %
                       (str(utt_index), utt_dict_sorted[i + 1][0]))
 
@@ -110,36 +139,40 @@ def segment_htk(htk_path, speaker_index, utterance_dict, normalize,
                     int((start_frame_next - end_frame) / 2)
 
         input_data_utt = input_data[start_frame_extend:end_frame_extend]
-        input_data_sum += np.sum(input_data_utt, axis=0)
-        total_frame_num_speaker += (end_frame_extend - start_frame_extend)
-        input_data_dict[speaker_index + '_' + str(utt_index)] = input_data_utt
+        input_data_utt_sum += np.sum(input_data_utt, axis=0)
+        total_frame_num_file += (end_frame_extend - start_frame_extend)
+        input_data_dict[speaker + '_' + str(utt_index)] = input_data_utt
 
-        # For computing speaker stddev
-        if speaker_mean is not None:
-            speaker_std += np.sum(
-                np.abs(input_data_utt - speaker_mean) ** 2, axis=0)
+        # For computing stddev over the file
+        if mean is not None:
+            stddev += np.sum(
+                np.abs(input_data_utt - mean) ** 2, axis=0)
 
         # Update
         end_frame_pre = end_frame
 
-    if speaker_mean is not None:
-        # Compute speaker stddev
-        speaker_std /= total_frame_num_speaker
+    if is_training:
+        if mean is not None:
+            # Compute stddev over the file
+            stddev = np.sqrt(stddev / (total_frame_num_file - 1))
+        else:
+            # Compute mean over the file
+            mean = input_data_utt_sum / total_frame_num_file
+            stddev = None
     else:
-        # Compute speaker mean
-        speaker_mean = input_data_sum / total_frame_num_speaker
+        mean, stddev = None, None
 
-    return input_data_dict, input_data_sum, speaker_mean, speaker_std, total_frame_num_speaker
+    return input_data_dict, input_data_utt_sum, mean, stddev, total_frame_num_file
 
 
-def read_htk(htk_path):
+def read_htk(audio_path):
     """Read each HTK file.
     Args:
-        htk_path (string): path to a HTK file
+        audio_path (string): path to a HTK file
     Returns:
         input_data (np.ndarray): A tensor of size (frame_num, feature_dim)
     """
-    with open(htk_path, "rb") as fh:
+    with open(audio_path, "rb") as fh:
         spam = fh.read(12)
         frame_num, sampPeriod, sampSize, parmKind = unpack(">IIHH", spam)
         # print(frame_num)  # frame num

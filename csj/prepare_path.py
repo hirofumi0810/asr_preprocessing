@@ -19,17 +19,17 @@ from utils.util import mkdir
 class Prepare(object):
     """Prepare for making dataset.
     Args:
-        data_path: path to csj corpus
-        run_root_path: path to ./make.sh
-        dataset_save_path: path to save dataset
+        data_path (string): path to csj corpus
+        run_root_path (string): path to ./make.sh
+        dataset_save_path (string): path to save dataset
     """
 
     def __init__(self, data_path, run_root_path):
 
-        # Path to timit data
+        # Paths to CSJ data
         self.data_path = data_path
         self.wav_path = join(self.data_path, 'WAV')
-        # update ver.
+        # NOTE: Update ver. (CSJ ver 4.)
         self.ver4_path = join(self.data_path, 'Ver4/SDB')
 
         # Absolute path to this directory
@@ -46,239 +46,184 @@ class Prepare(object):
         with open(join(self.run_root_path,
                        'config/eval1_speaker_list.txt'), 'r') as f:
             for line in f:
-                speaker_name = line.strip()
-                eval1_speakers.append(speaker_name)
+                speaker = line.strip()
+                eval1_speakers.append(speaker)
         with open(join(self.run_root_path,
                        'config/eval2_speaker_list.txt'), 'r') as f:
             for line in f:
-                speaker_name = line.strip()
-                eval2_speakers.append(speaker_name)
+                speaker = line.strip()
+                eval2_speakers.append(speaker)
         with open(join(self.run_root_path,
                        'config/eval3_speaker_list.txt'), 'r') as f:
             for line in f:
-                speaker_name = line.strip()
-                eval3_speakers.append(speaker_name)
+                speaker = line.strip()
+                eval3_speakers.append(speaker)
 
         # Exclude speakers in evaluation data
         with open(join(self.run_root_path,
                        'config/excluded_speaker_list.txt'), 'r') as f:
             for line in f:
-                speaker_name = line.strip()
-                excluded_speakers.append(speaker_name)
+                speaker = line.strip()
+                excluded_speakers.append(speaker)
 
         ####################
         # wav
         ####################
-        # Monolog
-        self.wav_train_paths = []  # 967 A + 19 M files
-        self.wav_train_large_paths = []  # 3212 (A + S + M + R) files
-        self.wav_dev_paths = []  # 19 files
-        self.wav_eval1_paths = []  # 10 files
-        self.wav_eval2_paths = []  # 10 files
-        self.wav_eval3_paths = []  # 10 files
-        self.wav_dialog_paths = []
+        self.wav_paths = {
+            'train_subset': [],  # 967 A + 19 M files
+            'train_fullset': [],  # 3212 (A + S + M + R) files
+            'dev': [],   # 19 files
+            'eval1': [],  # 10 files
+            'eval2': [],  # 10 files
+            'eval3': [],  # 10 files
+            'dialog': []
+        }
 
         # Core
         for wav_path in glob(join(self.wav_path, 'CORE/*/*/*.wav')):
-            speaker_name = basename(wav_path).split('.')[0]
-            if speaker_name in eval1_speakers:
-                self.wav_eval1_paths.append(wav_path)
-            elif speaker_name in eval2_speakers:
-                self.wav_eval2_paths.append(wav_path)
-            elif speaker_name in eval3_speakers:
-                self.wav_eval3_paths.append(wav_path)
-            elif speaker_name.split('-')[0] in excluded_speakers:
+            speaker = basename(wav_path).split('.')[0]
+            if speaker in eval1_speakers:
+                self.wav_paths['eval1'].append(wav_path)
+            elif speaker in eval2_speakers:
+                self.wav_paths['eval2'].append(wav_path)
+            elif speaker in eval3_speakers:
+                self.wav_paths['eval3'].append(wav_path)
+            elif speaker.split('-')[0] in excluded_speakers:
                 continue
-            elif speaker_name[0] == 'D':
-                if speaker_name not in excluded_speakers and '-R' in speaker_name and 'D03' in speaker_name:
-                    self.wav_dialog_paths.append(wav_path)
+            elif speaker[0] == 'D':
+                if speaker not in excluded_speakers and '-R' in speaker and 'D03' in speaker:
+                    self.wav_paths['dialog'].append(wav_path)
                 continue
-            elif speaker_name[0] == 'A':
-                self.wav_train_paths.append(wav_path)
-                self.wav_train_large_paths.append(wav_path)
+            elif speaker[0] == 'A':
+                self.wav_paths['train_subset'].append(wav_path)
+                self.wav_paths['train_fullset'].append(wav_path)
             else:
-                self.wav_train_large_paths.append(wav_path)
+                self.wav_paths['train_fullset'].append(wav_path)
 
         # Noncore
         for wav_path in glob(join(self.wav_path, 'NONCORE/*/*/*/*.wav')):
-            speaker_name = basename(wav_path).split('.')[0]
-            if speaker_name in eval1_speakers:
-                self.wav_eval1_paths.append(wav_path)
-            elif speaker_name in eval2_speakers:
-                self.wav_eval2_paths.append(wav_path)
-            elif speaker_name in eval3_speakers:
-                self.wav_eval3_paths.append(wav_path)
-            elif speaker_name.split('-')[0] in excluded_speakers:
+            speaker = basename(wav_path).split('.')[0]
+            if speaker in eval1_speakers:
+                self.wav_paths['eval1'].append(wav_path)
+            elif speaker in eval2_speakers:
+                self.wav_paths['eval2'].append(wav_path)
+            elif speaker in eval3_speakers:
+                self.wav_paths['eval3'].append(wav_path)
+            elif speaker.split('-')[0] in excluded_speakers:
                 continue
-            elif speaker_name[0] in ['A', 'M']:
-                self.wav_train_paths.append(wav_path)
-                self.wav_train_large_paths.append(wav_path)
-                if speaker_name[0] == 'M':
-                    self.wav_dev_paths.append(wav_path)
+            elif speaker[0] in ['A', 'M']:
+                self.wav_paths['train_subset'].append(wav_path)
+                self.wav_paths['train_fullset'].append(wav_path)
+                if speaker[0] == 'M':
+                    self.wav_paths['dev'].append(wav_path)
             else:
-                self.wav_train_large_paths.append(wav_path)
+                self.wav_paths['train_fullset'].append(wav_path)
 
         # Noncore dialog
-        self.wav_noncore_dialog_paths = []
         for wav_path in glob(join(self.wav_path, 'NONCORE-DIALOG/*/*.wav')):
-            speaker_name = basename(wav_path).split('.')[0]
-            if speaker_name.split('-')[0] in excluded_speakers:
+            speaker = basename(wav_path).split('.')[0]
+            if speaker.split('-')[0] in excluded_speakers:
                 continue
-            elif speaker_name[0] == 'D':
-                if speaker_name not in excluded_speakers and '-R' in speaker_name and 'D03' in speaker_name:
-                    self.wav_dialog_paths.append(wav_path)
+            elif speaker[0] == 'D':
+                if speaker not in excluded_speakers and '-R' in speaker and 'D03' in speaker:
+                    self.wav_paths['dialog'].append(wav_path)
                 continue
             else:
-                self.wav_train_large_paths.append(wav_path)
+                self.wav_paths['train_fullset'].append(wav_path)
 
         ##################################
         # Transcript (use ver4 if exists)
         ##################################
-        self.trans_train_paths = []
-        self.trans_train_large_paths = []
-        self.trans_dev_paths = []
-        self.trans_eval1_paths = []
-        self.trans_eval2_paths = []
-        self.trans_eval3_paths = []
-        self.trans_dialog_paths = []
+        self.trans_paths = {
+            'train_subset': [],
+            'train_fullset': [],
+            'dev': [],
+            'eval1': [],
+            'eval2': [],
+            'eval3': [],
+            'dialog': []
+        }
 
-        # Train (about 240h)
-        for index, wav_path in enumerate(self.wav_train_paths):
-            speaker_name = basename(wav_path).split('.')[0]
-            wav_path = join(self.wav_path, wav_path)
-            self.wav_train_paths[index] = wav_path
-            ver4_path = join(self.ver4_path, speaker_name + '.sdb')
+        # train subset (about 240h)
+        for i, wav_path in enumerate(self.wav_paths['train_subset']):
+            speaker = basename(wav_path).split('.')[0]
+            self.wav_paths['train_subset'][i] = wav_path
+            ver4_path = join(self.ver4_path, speaker + '.sdb')
             if isfile(ver4_path):
-                self.trans_train_paths.append(ver4_path)
+                self.trans_paths['train_subset'].append(ver4_path)
             else:
-                self.trans_train_paths.append(wav_path.replace('.wav', '.sdb'))
+                self.trans_paths['train_subset'].append(wav_path.replace('.wav', '.sdb'))
 
-        # Train_large (about 586h)
-        for index, wav_path in enumerate(self.wav_train_large_paths):
-            speaker_name = basename(wav_path).split('.')[0]
-            wav_path = join(self.wav_path, wav_path)
-            self.wav_train_large_paths[index] = wav_path
-            ver4_path = join(self.ver4_path, speaker_name + '.sdb')
+        # train fullset (about 586h)
+        for i, wav_path in enumerate(self.wav_paths['train_fullset']):
+            speaker = basename(wav_path).split('.')[0]
+            self.wav_paths['train_fullset'][i] = wav_path
+            ver4_path = join(self.ver4_path, speaker + '.sdb')
             if isfile(ver4_path):
-                self.trans_train_large_paths.append(ver4_path)
+                self.trans_paths['train_fullset'].append(ver4_path)
             else:
-                self.trans_train_large_paths.append(
-                    wav_path.replace('.wav', '.sdb'))
+                self.trans_paths['train_fullset'].append(wav_path.replace('.wav', '.sdb'))
 
         # Dev
-        for index, wav_path in enumerate(self.wav_dev_paths):
-            wav_path = join(self.wav_path, wav_path)
-            self.wav_dev_paths[index] = wav_path
-            self.trans_dev_paths.append(wav_path.replace('.wav', '.sdb'))
+        for i, wav_path in enumerate(self.wav_paths['dev']):
+            self.wav_paths['dev'][i] = wav_path
+            self.trans_paths['dev'].append(wav_path.replace('.wav', '.sdb'))
 
-        # Eval1
-        for index, wav_path in enumerate(self.wav_eval1_paths):
-            speaker_name = basename(wav_path).split('.')[0]
-            wav_path = join(self.wav_path, wav_path)
-            self.wav_eval1_paths[index] = wav_path
-            ver4_path = join(self.ver4_path, speaker_name + '.sdb')
-            if isfile(ver4_path):
-                self.trans_eval1_paths.append(ver4_path)
-            else:
-                self.trans_eval1_paths.append(wav_path.replace('.wav', '.sdb'))
-
-        # Eval2
-        for index, wav_path in enumerate(self.wav_eval2_paths):
-            speaker_name = basename(wav_path).split('.')[0]
-            wav_path = join(self.wav_path, wav_path)
-            self.wav_eval2_paths[index] = wav_path
-            ver4_path = join(self.ver4_path, speaker_name + '.sdb')
-            if isfile(ver4_path):
-                self.trans_eval2_paths.append(ver4_path)
-            else:
-                self.trans_eval2_paths.append(wav_path.replace('.wav', '.sdb'))
-
-        # Eval3
-        for index, wav_path in enumerate(self.wav_eval3_paths):
-            speaker_name = basename(wav_path).split('.')[0]
-            wav_path = join(self.wav_path, wav_path)
-            self.wav_eval3_paths[index] = wav_path
-            ver4_path = join(self.ver4_path, speaker_name + '.sdb')
-            if isfile(ver4_path):
-                self.trans_eval3_paths.append(ver4_path)
-            else:
-                self.trans_eval3_paths.append(wav_path.replace('.wav', '.sdb'))
+        # eval1, eval2, evak3
+        for data_type in ['eval1', 'eval2', 'eval3']:
+            for i, wav_path in enumerate(self.wav_paths[data_type]):
+                speaker = basename(wav_path).split('.')[0]
+                wav_path = join(self.wav_path, wav_path)
+                self.wav_paths[data_type][i] = wav_path
+                ver4_path = join(self.ver4_path, speaker + '.sdb')
+                if isfile(ver4_path):
+                    self.trans_paths[data_type].append(ver4_path)
+                else:
+                    self.trans_paths[data_type].append(wav_path.replace('.wav', '.sdb'))
 
         # Dialog
-        for index, wav_path in enumerate(self.wav_dialog_paths):
+        for i, wav_path in enumerate(self.wav_paths['dialog']):
             wav_path = re.sub('-R', '', wav_path)
-            speaker_name = basename(wav_path).split('.')[0]
-            wav_path = join(self.wav_path, wav_path)
-            self.wav_dialog_paths[index] = wav_path
-            ver4_path = join(self.ver4_path, speaker_name + '.sdb')
+            speaker = basename(wav_path).split('.')[0]
+            self.wav_paths['dialog'][i] = wav_path
+            ver4_path = join(self.ver4_path, speaker + '.sdb')
             if isfile(ver4_path):
-                self.trans_dialog_paths.append(ver4_path)
+                self.trans_paths['dialog'].append(ver4_path)
             else:
-                self.trans_dialog_paths.append(
-                    wav_path.replace('.wav', '.sdb'))
+                self.trans_paths['dialog'].append(wav_path.replace('.wav', '.sdb'))
 
     def wav(self, data_type):
         """Get paths to wav files.
         Args:
-            data_type: string, train_subset or train_fullset or dev or eval1 or
+            data_type (string): train_subset or train_fullset or dev or eval1 or
                 eval2 or eval3 or dialog
         Returns:
             paths to wav files
         """
-        if data_type == 'train_subset':
-            return sorted(self.wav_train_paths)
-        elif data_type == 'train_fullset':
-            return sorted(self.wav_train_large_paths)
-        elif data_type == 'dev':
-            return sorted(self.wav_dev_paths)
-        elif data_type == 'eval1':
-            return sorted(self.wav_eval1_paths)
-        elif data_type == 'eval2':
-            return sorted(self.wav_eval2_paths)
-        elif data_type == 'eval3':
-            return sorted(self.wav_eval3_paths)
-        elif data_type == 'dialog':
-            return sorted(self.wav_dialog_paths)
-        else:
-            return None
+        return sorted(self.wav_paths[data_type])
 
     def trans(self, data_type):
         """Get paths to transcription (.sdb) files.
         Args:
-            data_type: string, train_subset or train_fullset or dev or eval1 or
+            data_type (string): train_subset or train_fullset or dev or eval1 or
                 eval2 or eval3 or dialog
         Returns:
             paths to transcription files
         """
-        if data_type == 'train_subset':
-            return sorted(self.trans_train_paths)
-        elif data_type == 'train_fullset':
-            return sorted(self.trans_train_large_paths)
-        elif data_type == 'dev':
-            return sorted(self.trans_dev_paths)
-        elif data_type == 'eval1':
-            return sorted(self.trans_eval1_paths)
-        elif data_type == 'eval2':
-            return sorted(self.trans_eval2_paths)
-        elif data_type == 'eval3':
-            return sorted(self.trans_eval3_paths)
-        elif data_type == 'dialog':
-            return sorted(self.trans_dialog_paths)
-        else:
-            return None
+        return sorted(self.trans_paths[data_type])
 
 
 if __name__ == '__main__':
 
-    data_path = '/n/sd8/inaguma/corpus/csj/data/'
+    data_path = '/n/sd8/inaguma/corpus/csj/data'
 
     prep = Prepare(data_path, abspath('./'))
 
-    print('===== train_subset (240h) =====')
+    print('===== train subset (240h) =====')
     print(len(prep.wav('train_subset')))
     print(len(prep.trans('train_subset')))
 
-    print('===== train_fullset (586h) =====')
+    print('===== train fullset (586h) =====')
     print(len(prep.wav('train_fullset')))
     print(len(prep.trans('train_fullset')))
 
