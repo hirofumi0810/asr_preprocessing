@@ -18,15 +18,14 @@ class TestEnd2EndLabelPhone(unittest.TestCase):
 
     def test(self):
 
-        print('=========================================')
-        print('=     End-to-End label test (phone)     =')
-        print('=========================================')
-
-        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original/',
+        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
                             run_root_path=os.path.abspath('../'))
-        self.label_train_paths = self.prep.phone(data_type='train')
-        self.label_dev_paths = self.prep.phone(data_type='dev')
-        self.label_test_paths = self.prep.phone(data_type='test')
+
+        self.label_paths = {
+            'train': self.prep.phone(data_type='train'),
+            'dev': self.prep.phone(data_type='dev'),
+            'test': self.prep.phone(data_type='test')
+        }
 
         # CTC
         self.check_reading(model='ctc', label_type='phone61')
@@ -45,24 +44,16 @@ class TestEnd2EndLabelPhone(unittest.TestCase):
         print('  label_type: %s' % label_type)
         print('==================================================')
 
-        print('---------- train ----------')
-        read_phone(label_paths=self.label_train_paths,
-                   label_type=label_type,
-                   run_root_path=self.prep.run_root_path,
-                   model=model,
-                   save_map_file=True)
+        for data_type in ['train', 'dev', 'test']:
+            save_map_file = True if data_type == 'train' else False
 
-        print('---------- dev ----------')
-        read_phone(label_paths=self.label_dev_paths,
-                   label_type=label_type,
-                   run_root_path=self.prep.run_root_path,
-                   model=model)
-
-        print('---------- test ----------')
-        read_phone(label_paths=self.label_test_paths,
-                   label_type=label_type,
-                   run_root_path=self.prep.run_root_path,
-                   model=model)
+            print('---------- %s ----------' % data_type)
+            read_phone(label_paths=self.label_paths[data_type],
+                       label_type=label_type,
+                       run_root_path=self.prep.run_root_path,
+                       model=model,
+                       save_map_file=save_map_file,
+                       print_stdout=True)
 
 
 if __name__ == '__main__':

@@ -5,28 +5,29 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join
+from os.path import join, abspath
 import sys
 from glob import glob
 import unittest
 
 sys.path.append('../../')
 from timit.prepare_path import Prepare
-from timit.inputs.input_data import read_wav
+from timit.inputs.input_data import read_audio
 
 
 class TestInputNorm(unittest.TestCase):
 
     def test(self):
 
-        self.check_feature_extraction(tool='htk', normalize='global')
-        self.check_feature_extraction(tool='htk', normalize='speaker')
-        self.check_feature_extraction(tool='htk', normalize='utterance')
+        # self.check_feature_extraction(tool='htk', normalize='global')
+        # self.check_feature_extraction(tool='htk', normalize='speaker')
+        # self.check_feature_extraction(tool='htk', normalize='utterance')
 
         # NOTE: these are very slow
         self.check_feature_extraction(tool='python_speech_features', normalize='global')
         self.check_feature_extraction(tool='python_speech_features', normalize='speaker')
         self.check_feature_extraction(tool='python_speech_features', normalize='utterance')
+
         self.check_feature_extraction(tool='librosa', normalize='global')
         self.check_feature_extraction(tool='librosa', normalize='speaker')
         self.check_feature_extraction(tool='librosa', normalize='utterance')
@@ -38,8 +39,8 @@ class TestInputNorm(unittest.TestCase):
         print('  normalize: %s' % normalize)
         print('==================================================')
 
-        htk_save_path = '/n/sd8/inaguma/corpus/timit/htk/'
-        prep = Prepare('/n/sd8/inaguma/corpus/timit/original', '../')
+        htk_save_path = '/n/sd8/inaguma/corpus/timit/htk'
+        prep = Prepare('/n/sd8/inaguma/corpus/timit/original', abspath('../'))
 
         if tool == 'htk':
             wav_train_paths = [path for path in glob(join(htk_save_path, 'train/*.htk'))]
@@ -63,34 +64,34 @@ class TestInputNorm(unittest.TestCase):
         }
 
         print('---------- train ----------')
-        train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_wav(
-            wav_paths=wav_train_paths,
+        train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_audio(
+            audio_paths=wav_train_paths,
             tool=tool,
             config=config,
             normalize=normalize,
             is_training=True)
 
         print('---------- dev ----------')
-        read_wav(wav_paths=wav_dev_paths,
-                 tool=tool,
-                 config=config,
-                 normalize=normalize,
-                 is_training=False,
-                 train_global_mean_male=train_global_mean_male,
-                 train_global_std_male=train_global_std_male,
-                 train_global_mean_female=train_global_mean_female,
-                 train_global_std_female=train_global_std_female)
+        read_audio(audio_paths=wav_dev_paths,
+                   tool=tool,
+                   config=config,
+                   normalize=normalize,
+                   is_training=False,
+                   train_global_mean_male=train_global_mean_male,
+                   train_global_std_male=train_global_std_male,
+                   train_global_mean_female=train_global_mean_female,
+                   train_global_std_female=train_global_std_female)
 
         print('---------- test ----------')
-        read_wav(wav_paths=wav_test_paths,
-                 tool=tool,
-                 config=config,
-                 normalize=normalize,
-                 is_training=False,
-                 train_global_mean_male=train_global_mean_male,
-                 train_global_std_male=train_global_std_male,
-                 train_global_mean_female=train_global_mean_female,
-                 train_global_std_female=train_global_std_female)
+        read_audio(audio_paths=wav_test_paths,
+                   tool=tool,
+                   config=config,
+                   normalize=normalize,
+                   is_training=False,
+                   train_global_mean_male=train_global_mean_male,
+                   train_global_std_male=train_global_std_male,
+                   train_global_mean_female=train_global_mean_female,
+                   train_global_std_female=train_global_std_female)
 
 
 if __name__ == '__main__':

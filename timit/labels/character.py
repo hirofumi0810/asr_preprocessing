@@ -45,7 +45,7 @@ from utils.labels.character import char2num
 
 
 def read_text(label_paths, run_root_path, model, save_map_file=False,
-              save_path=None, divide_by_capital=False, is_test=False):
+              save_path=None, divide_by_capital=False, print_stdout=False):
     """Read text transcript.
     Args:
         label_paths (list): list of paths to label files
@@ -62,8 +62,11 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
                     Zweig, Geoffrey, et al.
                     "Advances in all-neural speech recognition."
                     in Proceedings of ICASSP, 2017.
-        is_test (bool, optional): if True, print transcripts
+        print_stdout (bool, optional): if True, print transcripts to standard output
     """
+    if model not in ['ctc', 'attention']:
+        raise ValueError('model must be ctc or attention.')
+
     print('===> Reading target labels...')
     text_dict = {}
     char_set = set([])
@@ -104,7 +107,7 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
         text_dict[label_path] = transcript
 
         # for debug
-        if is_test:
+        if print_stdout:
             print(transcript)
 
     # Make mapping file (from character to number)

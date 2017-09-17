@@ -16,7 +16,7 @@ from timit.util import map_phone2phone
 
 
 def read_phone(label_paths, label_type, run_root_path, model,
-               save_map_file=False, save_path=None):
+               save_map_file=False, save_path=None, print_stdout=False):
     """Read phone transcript.
     Args:
         label_paths (list): list of paths to label files
@@ -25,9 +25,12 @@ def read_phone(label_paths, label_type, run_root_path, model,
         model (string): ctc or attention
         save_map_file (bool, optional): if True, save the mapping file
         save_path (string, bool): path to save labels. If None, don't save labels
+        print_stdout (bool, optional): if True, print transcripts to standard output
     """
     if label_type not in ['phone39', 'phone48', 'phone61']:
         raise ValueError('data_type is "phone39" or "phone48" or "phone61".')
+    if model not in ['ctc', 'attention']:
+        raise ValueError('model must be ctc or attention.')
 
     print('===> Reading & Saving target labels...')
     phone2phone_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
@@ -77,11 +80,15 @@ def read_phone(label_paths, label_type, run_root_path, model,
                     for index, phone in enumerate(['<', '>'] + sorted(list(phone_set))):
                         f.write('%s  %s\n' % (phone, str(index)))
 
-        # Convert from phone to number
+        # Convert from phone to index
         if model == 'attention':
             phone_list = ['<'] + phone_list + ['>']  # add <SOS> & <EOS>
-        phone_list = phone2num(phone_list, phone2num_map_file_path)
+
+        if print_stdout:
+            print(' '.join(phone_list))
+
+        index_list = phone2num(phone_list, phone2num_map_file_path)
 
         if save_path is not None:
             # Save phone labels as npy file
-            np.save(join(save_path, save_file_name), phone_list)
+            np.save(join(save_path, save_file_name), index_list)
