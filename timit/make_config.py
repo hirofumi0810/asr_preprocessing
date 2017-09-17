@@ -10,7 +10,7 @@ from os.path import join, basename
 import argparse
 
 sys.path.append('../')
-from prepare_path import Prepare
+from timit.prepare_path import Prepare
 from utils.util import mkdir_join, mkdir
 from utils.inputs.htk import save
 
@@ -37,9 +37,11 @@ def main():
     args = parser.parse_args()
     htk_save_path = mkdir(args.htk_save_path)
     prep = Prepare(args.data_path, args.run_root_path)
+
     wav_train_paths = prep.wav(data_type='train')
     wav_dev_paths = prep.wav(data_type='dev')
     wav_test_paths = prep.wav(data_type='test')
+
     save_train_path = mkdir_join(htk_save_path, 'train')
     save_dev_path = mkdir_join(htk_save_path, 'dev')
     save_test_path = mkdir_join(htk_save_path, 'test')

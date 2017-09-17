@@ -7,7 +7,7 @@ def save(audio_file_type, feature_type, channels, config_path,
          energy=True, delta=True, deltadelta=True):
     """Save a configuration file for HTK.
     Args:
-        audio_file_type (string): nist or
+        audio_file_type (string): nist or wav
         feature_type (string): the type of features, logmelfbank or mfcc
         channels (int): the number of frequency channels
         config_path (string): path to save the config file
@@ -19,6 +19,8 @@ def save(audio_file_type, feature_type, channels, config_path,
         deltadelta (bool, optional): if True, double delta features are also extracted
 """
     with open(config_path, 'w') as f:
+        if audio_file_type not in ['nist', 'wav']:
+            raise ValueError('audio_file_type must be nist or wav.')
         f.write('SOURCEFORMAT = %s\n' % audio_file_type.upper())
 
         # Sampling rate

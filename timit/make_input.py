@@ -13,8 +13,8 @@ import argparse
 from glob import glob
 
 sys.path.append('../')
-from prepare_path import Prepare
-from inputs.input_data import read_wav
+from timit.prepare_path import Prepare
+from timit.inputs.input_data import read_wav
 from utils.util import mkdir_join
 
 parser = argparse.ArgumentParser()
@@ -44,24 +44,12 @@ def main():
 
     args = parser.parse_args()
     prep = Prepare(args.data_path, args.run_root_path)
-    if args.tool == 'htk':
-        wav_train_paths = [path for path in glob(join(args.htk_save_path, 'train/*.htk'))]
-        wav_dev_paths = [path for path in glob(join(args.htk_save_path, 'dev/*.htk'))]
-        wav_test_paths = [path for path in glob(join(args.htk_save_path, 'test/*.htk'))]
-        # NOTE: these are htk file paths
-    else:
-        wav_train_paths = prep.wav(data_type='train')
-        wav_dev_paths = prep.wav(data_type='dev')
-        wav_test_paths = prep.wav(data_type='test')
+
     input_save_path = mkdir_join(args.dataset_save_path, 'inputs', args.tool, args.normalize)
 
     if isfile(join(input_save_path, 'complete.txt')):
-        print('Already exists.')
+        print('Already exists.\n')
     else:
-        input_train_save_path = mkdir_join(input_save_path, 'train')
-        input_dev_save_path = mkdir_join(input_save_path, 'dev')
-        input_test_save_path = mkdir_join(input_save_path, 'test')
-
         config = {
             'feature_type': args.feature_type,
             'channels': args.channels,
@@ -75,37 +63,40 @@ def main():
 
         print('=> Processing input data...')
         print('---------- train ----------')
+
+        if args.tool == 'htk':
+            wav_train_paths = [path for path in glob(join(args.htk_save_path, 'train/*.htk'))]
+            # NOTE: these are htk file paths
+        else:
+            wav_train_paths = prep.wav(data_type='train')
+
         train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_wav(
             wav_paths=wav_train_paths,
             tool=args.tool,
             config=config,
-            save_path=input_train_save_path,
             normalize=args.normalize,
-            is_training=True)
+            is_training=True,
+            save_path=mkdir_join(input_save_path, 'train'))
 
-        print('---------- dev ----------')
-        read_wav(wav_paths=wav_dev_paths,
-                 tool=args.tool,
-                 config=config,
-                 save_path=input_dev_save_path,
-                 normalize=args.normalize,
-                 is_training=False,
-                 train_global_mean_male=train_global_mean_male,
-                 train_global_std_male=train_global_std_male,
-                 train_global_mean_female=train_global_mean_female,
-                 train_global_std_female=train_global_std_female)
+        for data_type in ['dev', 'test']:
+            print('---------- %s ----------' % data_type)
 
-        print('---------- test ----------')
-        read_wav(wav_paths=wav_test_paths,
-                 tool=args.tool,
-                 config=config,
-                 save_path=input_test_save_path,
-                 normalize=args.normalize,
-                 is_training=False,
-                 train_global_mean_male=train_global_mean_male,
-                 train_global_std_male=train_global_std_male,
-                 train_global_mean_female=train_global_mean_female,
-                 train_global_std_female=train_global_std_female)
+            if args.tool == 'htk':
+                wav_paths = [path for path in glob(join(args.htk_save_path, data_type + '/*.htk'))]
+                # NOTE: these are htk file paths
+            else:
+                wav_paths = prep.wav(data_type=data_type)
+
+            read_wav(wav_paths=wav_paths,
+                     tool=args.tool,
+                     config=config,
+                     normalize=args.normalize,
+                     is_training=False,
+                     save_path=mkdir_join(input_save_path, data_type),
+                     train_global_mean_male=train_global_mean_male,
+                     train_global_std_male=train_global_std_male,
+                     train_global_mean_female=train_global_mean_female,
+                     train_global_std_female=train_global_std_female)
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(input_save_path, 'complete.txt'), 'w') as f:

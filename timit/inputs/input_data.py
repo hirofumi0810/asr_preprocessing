@@ -77,6 +77,16 @@ def read_wav(wav_paths, tool, config, normalize, is_training, save_path=None,
             input_data_utt = read_htk_utt(wav_path)
             # NOTE: wav_path is a htk file path in this case
 
+        elif tool == 'python_speech_features':
+            input_data_utt = w2f_psf(wav_path,
+                                     feature_type=config['feature_type'],
+                                     feature_dim=config['channels'],
+                                     use_energy=config['energy'],
+                                     use_delta1=config['delta'],
+                                     use_delta2=config['deltadelta'],
+                                     window=config['window'],
+                                     slide=config['slide'])
+
         elif tool == 'librosa':
             input_data_utt = w2f_librosa(wav_path,
                                          feature_type=config['feature_type'],
@@ -87,15 +97,6 @@ def read_wav(wav_paths, tool, config, normalize, is_training, save_path=None,
                                          window=config['window'],
                                          slide=config['slide'])
 
-        elif tool == 'python_speech_features':
-            input_data_utt = w2f_psf(wav_path,
-                                     feature_type=config['feature_type'],
-                                     feature_dim=config['channels'],
-                                     use_energy=config['energy'],
-                                     use_delta1=config['delta'],
-                                     use_delta2=config['deltadelta'],
-                                     window=config['window'],
-                                     slide=config['slide'])
         if gender == 'm':
             input_data_list_male.append(input_data_utt)
             wav_paths_male.append(wav_path)

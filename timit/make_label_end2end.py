@@ -35,82 +35,30 @@ def main(model, label_type):
     label_save_path = mkdir_join(args.dataset_save_path, 'labels', model, label_type)
 
     if isfile(join(label_save_path, 'complete.txt')):
-        print('Already exists.')
+        print('Already exists.\n')
     else:
-        label_train_save_path = mkdir_join(label_save_path, 'train')
-        label_dev_save_path = mkdir_join(label_save_path, 'dev')
-        label_test_save_path = mkdir_join(label_save_path, 'test')
-
         print('=> Processing transcripts...')
-        # Read target labels and save labels as npy files
-        print('---------- train ----------')
-        if label_type == 'character':
-            label_train_paths = prep.text(data_type='train')
-            read_text(label_paths=label_train_paths,
-                      run_root_path=abspath('./'),
-                      model=model,
-                      save_map_file=True,
-                      save_path=label_train_save_path)
-        elif label_type == 'character_capital_divide':
-            label_train_paths = prep.text(data_type='train')
-            read_text(label_paths=label_train_paths,
-                      run_root_path=abspath('./'),
-                      model=model,
-                      save_map_file=True,
-                      save_path=label_train_save_path,
-                      divide_by_capital=True)
-        else:
-            label_train_paths = prep.phone(data_type='train')
-            read_phone(label_paths=label_train_paths,
-                       label_type=label_type,
-                       run_root_path=abspath('./'),
-                       model=model,
-                       save_map_file=True,
-                       save_path=label_train_save_path)
+        for data_type in ['train', 'dev', 'test']:
+            save_map_file = True if data_type == 'train' else False
 
-        print('---------- dev ----------')
-        if label_type == 'character':
-            label_dev_paths = prep.text(data_type='dev')
-            read_text(label_paths=label_dev_paths,
-                      run_root_path=abspath('./'),
-                      model=model,
-                      save_path=label_dev_save_path)
-        elif label_type == 'character_capital_divide':
-            label_dev_paths = prep.text(data_type='dev')
-            read_text(label_paths=label_dev_paths,
-                      run_root_path=abspath('./'),
-                      model=model,
-                      save_path=label_dev_save_path,
-                      divide_by_capital=True)
-        else:
-            label_dev_paths = prep.phone(data_type='dev')
-            read_phone(label_paths=label_dev_paths,
-                       label_type=label_type,
-                       run_root_path=abspath('./'),
-                       model=model,
-                       save_path=label_dev_save_path)
-
-        print('---------- test ----------')
-        if label_type == 'character':
-            label_test_paths = prep.text(data_type='test')
-            read_text(label_paths=label_test_paths,
-                      run_root_path=abspath('./'),
-                      model=model,
-                      save_path=label_test_save_path)
-        elif label_type == 'character_capital_divide':
-            label_test_paths = prep.text(data_type='test')
-            read_text(label_paths=label_test_paths,
-                      run_root_path=abspath('./'),
-                      model=model,
-                      save_path=label_test_save_path,
-                      divide_by_capital=True)
-        else:
-            label_test_paths = prep.phone(data_type='test')
-            read_phone(label_paths=label_test_paths,
-                       label_type=label_type,
-                       run_root_path=abspath('./'),
-                       model=model,
-                       save_path=label_test_save_path)
+            # Read target labels and save labels as npy files
+            print('---------- %s ----------' % data_type)
+            if label_type in ['character', 'character_capital_divide']:
+                divide_by_capital = False if label_type == 'character' else False
+                read_text(label_paths=prep.text(data_type=data_type),
+                          run_root_path=abspath('./'),
+                          model=model,
+                          save_map_file=save_map_file,
+                          save_path=mkdir_join(label_save_path, data_type),
+                          divide_by_capital=divide_by_capital)
+            else:
+                # 39 or 48 or 61 phones
+                read_phone(label_paths=prep.phone(data_type=data_type),
+                           label_type=label_type,
+                           run_root_path=abspath('./'),
+                           model=model,
+                           save_map_file=save_map_file,
+                           save_path=mkdir_join(label_save_path, data_type))
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:
