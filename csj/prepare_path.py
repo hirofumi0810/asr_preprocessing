@@ -192,6 +192,19 @@ class Prepare(object):
             else:
                 self.trans_paths['dialog'].append(wav_path.replace('.wav', '.sdb'))
 
+        file_number = {
+            'train_subset': 986,
+            'train_fullset': 3212,
+            'dev': 19,
+            'eval1': 10,
+            'eval2': 10,
+            'eval3': 10
+        }
+
+        for data_type in ['train_fullset', 'train_subset', 'dev', 'eval1', 'eval2', 'eval3']:
+            assert len(self.wav_paths[data_type]) == file_number[data_type], 'File number is not correct (True: %d, Now: %d).'.format(
+                file_number[data_type], len(self.wav_paths[data_type]))
+
     def wav(self, data_type):
         """Get paths to wav files.
         Args:

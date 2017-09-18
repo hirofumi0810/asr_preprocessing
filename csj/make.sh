@@ -57,7 +57,7 @@ if [ $TOOL = 'htk' ]; then
 
     # Make a config file to covert from wav to htk file
     python make_config.py \
-        --data_path $CSJ_PATH  \
+        --data_path $CSJ_PATH \
         --htk_save_path $HTK_SAVE_PATH \
         --run_root_path $RUN_ROOT_PATH \
         --feature_type $FEATURE_TYPE \
@@ -71,13 +71,13 @@ if [ $TOOL = 'htk' ]; then
         --config_path $CONFIG_PATH
 
     # Convert from wav to htk files
-    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_subset.scp
-    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_fullset.scp
-    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
-    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
-    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
-    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
-    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dialog.scp
+    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_subset.scp
+    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_fullset.scp
+    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
+    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
+    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
+    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
+    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dialog.scp
 fi
 
 
@@ -88,7 +88,7 @@ echo ===========================================================================
 # Make input features & transcripts
 # Note that feature extraction depends on transcription data
 python make_end2end.py \
-    --data_path $CSJ_PATH  \
+    --data_path $CSJ_PATH \
     --dataset_save_path $DATASET_SAVE_PATH \
     --run_root_path $RUN_ROOT_PATH \
     --tool $TOOL \

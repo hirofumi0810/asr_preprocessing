@@ -60,7 +60,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
             female over the training set
     """
     if not is_training:
-        if train_global_mean_male is None or train_global_mean_female is None or train_global_std_male is None or train_global_std_female is None:
+        if train_global_mean_male is None or train_global_mean_female is None:
             raise ValueError('Set mean & std computed in the training set.')
     if normalize not in ['global', 'speaker', 'utterance']:
         raise ValueError('normalize is "utterance" or "speaker" or "global".')
@@ -75,11 +75,11 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
 
     # Loop 1: Computing global mean and statistics
     if is_training:
-        print('===> Reading WAV files...')
+        print('===> Reading audio files...')
         for i, audio_path in enumerate(tqdm(audio_paths)):
             speaker = basename(audio_path).split('.')[0]
 
-            # Divide each WAV or HTK file into utterances
+            # Divide each audio file into utterances
             _, input_data_utt_sum, speaker_mean, _, total_frame_num_speaker = segment_htk(
                 audio_path,
                 speaker,
@@ -121,7 +121,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
         for audio_path in tqdm(audio_paths):
             speaker = basename(audio_path).split('.')[0]
 
-            # Divide each HTK into utterances
+            # Divide each audio into utterances
             input_data_dict_speaker, _, _, _, _ = segment_htk(
                 audio_path,
                 speaker,
@@ -168,7 +168,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
         else:
             speaker_mean = None
 
-        # Divide each HTK into utterances
+        # Divide each audio into utterances
         input_data_dict_speaker, _, speaker_mean, speaker_std, _ = segment_htk(
             audio_path,
             speaker,

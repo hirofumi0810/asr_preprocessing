@@ -80,9 +80,8 @@ def main(model, train_data_size, divide_by_space):
 
         # Read target labels and save labels as npy files
         print('---------- train ----------')
-        label_train_paths = prep.trans(data_type=train_data_size)
         speaker_dict_dict['train'] = read_sdb(
-            label_paths=label_train_paths,
+            label_paths=prep.trans(data_type=train_data_size),
             run_root_path=args.run_root_path,
             model=model,
             kanji_save_path=mkdir_join(kanji_label_save_path, 'train'),
@@ -96,9 +95,8 @@ def main(model, train_data_size, divide_by_space):
             is_test = False if data_type == 'dev' else True
 
             print('---------- %s ----------' % data_type)
-            label_paths = prep.trans(data_type=data_type)
             speaker_dict_dict[data_type] = read_sdb(
-                label_paths=label_paths,
+                label_paths=prep.trans(data_type=data_type),
                 run_root_path=args.run_root_path,
                 model=model,
                 is_test=is_test,
@@ -178,7 +176,7 @@ def main(model, train_data_size, divide_by_space):
 
 if __name__ == '__main__':
     for model in ['ctc', 'attention']:
-        for divide_by_space in [False, True]:
-            for train_data_size in ['train_fullset', 'train_subset']:
-                main(train_data_size, divide_by_space)
+        for train_data_size in ['train_fullset', 'train_subset']:
+            for divide_by_space in [False, True]:
+                main(model, train_data_size, divide_by_space)
         # TODO: remove this loop

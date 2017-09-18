@@ -27,7 +27,7 @@ class TestEnd2EndLabel(unittest.TestCase):
             'dev': self.prep.trans(data_type='dev'),
             'eval1': self.prep.trans(data_type='eval1'),
             'eval2': self.prep.trans(data_type='eval2'),
-            'eval3': self.prep.trans(data_type='eval3'),
+            'eval3': self.prep.trans(data_type='eval3')
         }
 
         # CTC
@@ -51,7 +51,7 @@ class TestEnd2EndLabel(unittest.TestCase):
                  model=model,
                  save_map_file=True,
                  divide_by_space=divide_by_space,
-                 stdout_transcript=True)
+                 stdout_transcript=False)
 
         for data_type in ['train_subset', 'dev', 'eval1', 'eval2', 'eval3']:
             print('---------- %s ----------' % data_type)

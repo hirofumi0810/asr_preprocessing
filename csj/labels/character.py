@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make target labels for the CTC model (CSJ corpus)."""
+"""Make target labels for the End-to-End model (CSJ corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -56,7 +56,8 @@ from csj.labels.fix_trans import is_hiragana, is_katakana
 ############################################################
 
 
-def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=False,
+def read_sdb(label_paths, run_root_path, model, is_test=None,
+             save_map_file=False,
              kanji_save_path=None, kana_save_path=None, phone_save_path=None,
              divide_by_space=False, stdout_transcript=False):
     """Read transcripts (.sdb) & save files (.npy).
@@ -77,7 +78,7 @@ def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=Fals
             transcripts to standard output
     Returns:
         speaker_dict (dict): the dictionary of utterances of each speaker
-            key (string) => speaker name
+            key (string) => speaker
             value (dict) => the dictionary of utterance information of each speaker
                 key (string) => utterance index
                 value (list) => [start_frame, end_frame, trans_kana, trans_kanji]
@@ -164,10 +165,8 @@ def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=Fals
                 else:
                     if model == 'ctc':
                         # Clean transcript
-                        trans_kana = '_' + fix_transcript(
-                            trans_kana) + '_'
-                        trans_kanji = '_' + fix_transcript(
-                            trans_kanji) + '_'
+                        trans_kana = '_' + fix_transcript(trans_kana) + '_'
+                        trans_kanji = '_' + fix_transcript(trans_kanji) + '_'
 
                         # Remove double underbar
                         while '__' in trans_kana:
@@ -195,10 +194,8 @@ def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=Fals
 
                     elif model == 'attention':
                         # Clean transcript
-                        trans_kana = '<' + fix_transcript(
-                            trans_kana) + '>'
-                        trans_kanji = '<' + fix_transcript(
-                            trans_kanji) + '>'
+                        trans_kana = '<' + fix_transcript(trans_kana) + '>'
+                        trans_kanji = '<' + fix_transcript(trans_kanji) + '>'
 
                         # Remove double underbar
                         while '__' in trans_kana:
@@ -262,9 +259,12 @@ def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=Fals
             kana2phone_dict['>'] = '>'
 
     # Make the mapping file (from kanji, kana, phone to number)
-    kanji_map_file_path = join(run_root_path, 'labels/mapping_files' + model + '/kanji2num.txt')
-    kana_map_file_path = join(run_root_path, 'labels/mapping_files' + model + '/kana2num.txt')
-    phone_map_file_path = join(run_root_path, 'labels/mapping_files' + model + '/phone2num.txt')
+    kanji_map_file_path = join(run_root_path, 'labels/mapping_files',
+                               model, 'kanji2num.txt')
+    kana_map_file_path = join(run_root_path, 'labels/mapping_files',
+                              model, 'kana2num.txt')
+    phone_map_file_path = join(run_root_path, 'labels/mapping_files',
+                               model, 'phone2num.txt')
     if save_map_file:
         # kanji
         with open(kanji_map_file_path, 'w') as f:
@@ -283,14 +283,14 @@ def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=Fals
             for kana in kana_list:
                 kanji_set.add(kana)
                 kanji_set.add(jaconv.kata2hira(kana))
-            # NOTE: 頻出するラベルにはなるべく小さいインデックスを与える？？
+
             if model == 'ctc':
                 kanji_list = ['_', 'NZ'] + sorted(list(kanji_set))
             elif model == 'attention':
                 kanji_list = ['_', '<', '>', 'NZ'] + sorted(list(kanji_set))
-
             for index, kanji in enumerate(kanji_list):
                 f.write('%s  %s\n' % (kanji, str(index)))
+            # NOTE: 頻出するラベルにはなるべく小さいインデックスを与える
 
         # kana
         with open(kana_map_file_path, 'w') as f:
@@ -298,7 +298,6 @@ def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=Fals
                 kana_list = ['_', 'NZ'] + kana_list
             elif model == 'attention':
                 kana_list = ['_', '<', '>', 'NZ'] + kana_list
-
             for index, kana in enumerate(kana_list):
                 f.write('%s  %s\n' % (kana, str(index)))
 
@@ -308,14 +307,13 @@ def read_sdb(label_paths, run_root_path, model, is_test=None, save_map_file=Fals
                 phone_list = ['_', 'NZ'] + sorted(list(phone_set))
             elif model == 'attention':
                 phone_list = ['_',  '<', '>', 'NZ'] + sorted(list(phone_set))
-
             for index, phone in enumerate(phone_list):
                 f.write('%s  %s\n' % (phone, str(index)))
 
     # for debug
-    for char in list(char_set):
-        if char not in kana_list:
-            print(char)
+    # for char in list(char_set):
+    #     if char not in kana_list:
+    #         print(char)
 
     if kanji_save_path is not None:
         # Save target labels

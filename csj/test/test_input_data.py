@@ -22,6 +22,7 @@ class TestInput(unittest.TestCase):
 
         self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/csj/data',
                             run_root_path=abspath('../'))
+
         self.label_paths = {
             'train': self.prep.trans(data_type='train_subset'),
             'dev': self.prep.trans(data_type='dev'),

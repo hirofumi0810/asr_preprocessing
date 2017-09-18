@@ -54,22 +54,11 @@ def main():
          deltadelta=args.deltadelta)
     # NOTE: 120-dim features are extracted by default
 
-    file_number = {
-        'train_subset': 986,
-        'train_fullset': 3212,
-        'dev': 19,
-        'eval1': 10,
-        'eval2': 10,
-        'eval3': 10
-    }
-
     for data_type in ['train_subset', 'train_fullset', 'dev', 'eval1', 'eval2', 'eval3']:
 
         wav_paths = prep.wav(data_type=data_type)
         save_path = mkdir_join(htk_save_path, data_type)
 
-        assert len(wav_paths) == file_number[data_type], 'File number is not correct (True: %d, Now: %d).'.format(
-            file_number[data_type], len(wav_paths))
         with open(join(args.run_root_path, 'config/wav2fbank_' + data_type + '.scp'), 'w') as f:
             for wav_path in wav_paths:
                 speaker_name = basename(wav_path).split('.')[0]
