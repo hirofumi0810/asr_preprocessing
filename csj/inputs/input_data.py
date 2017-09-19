@@ -177,7 +177,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
             sil_duration=0,
             tool=tool,
             config=config,
-            speaker_mean=speaker_mean)  # for compute speaker sttdev
+            mean=speaker_mean)  # for compute speaker sttdev
         # NOTE: input_data_dict_speaker have been not normalized yet
 
         for utt_index, input_data_utt in input_data_dict_speaker.items():

@@ -28,10 +28,10 @@ parser.add_argument('--channels', type=int, default=40, help='the number of freq
 parser.add_argument('--sampling_rate', type=float, default=16000, help='sampling rate')
 parser.add_argument('--window', type=float, default=0.025, help='window width to extract features')
 parser.add_argument('--slide', type=float, default=0.01, help='extract features per \'slide\'')
-parser.add_argument('--energy', type=bool, default=True, help='if True, add the energy feature')
-parser.add_argument('--delta', type=bool, default=True, help='if True, add the energy feature')
-parser.add_argument('--deltadelta', type=bool, default=True,
-                    help='if True, double delta features are also extracted')
+parser.add_argument('--energy', type=int, default=0, help='if 1, add the energy feature')
+parser.add_argument('--delta', type=int, default=1, help='if 1, add the energy feature')
+parser.add_argument('--deltadelta', type=int, default=1,
+                    help='if 1, double delta features are also extracted')
 parser.add_argument('--config_path', type=str, help='path to save the config file')
 
 
@@ -49,9 +49,9 @@ def main():
          sampling_rate=args.sampling_rate,
          window=args.window,
          slide=args.slide,
-         energy=args.energy,
-         delta=args.delta,
-         deltadelta=args.deltadelta)
+         energy=bool(args.energy),
+         delta=bool(args.delta),
+         deltadelta=bool(args.deltadelta))
     # NOTE: 120-dim features are extracted by default
 
     for data_type in ['train_subset', 'train_fullset', 'dev', 'eval1', 'eval2', 'eval3']:

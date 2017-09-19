@@ -15,8 +15,8 @@ from tqdm import tqdm
 import jaconv
 
 from utils.util import mkdir_join
-from utils.labels.character import kana2num
-from utils.labels.phone import phone2num
+from utils.labels.character import kana2index
+from utils.labels.phone import phone2index
 from csj.labels.fix_trans import fix_transcript
 from csj.labels.fix_trans import is_hiragana, is_katakana
 
@@ -260,11 +260,11 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
 
     # Make the mapping file (from kanji, kana, phone to number)
     kanji_map_file_path = join(run_root_path, 'labels/mapping_files',
-                               model, 'kanji2num.txt')
+                               model, 'kanji.txt')
     kana_map_file_path = join(run_root_path, 'labels/mapping_files',
-                              model, 'kana2num.txt')
+                              model, 'kana.txt')
     phone_map_file_path = join(run_root_path, 'labels/mapping_files',
-                               model, 'phone2num.txt')
+                               model, 'phone.txt')
     if save_map_file:
         # kanji
         with open(kanji_map_file_path, 'w') as f:
@@ -329,7 +329,7 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                 # kanji
                 if not is_test:
                     # Convert from kana character to index
-                    kanji_index_list = kana2num(trans_kanji, kanji_map_file_path)
+                    kanji_index_list = kana2index(trans_kanji, kanji_map_file_path)
 
                     # Save as npy file
                     np.save(join(kanji_save_path, speaker, save_file_name),
@@ -343,7 +343,7 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                 # kana
                 if not is_test:
                     # Convert from kana character to index
-                    kana_index_list = kana2num(trans_kana, kana_map_file_path)
+                    kana_index_list = kana2index(trans_kana, kana_map_file_path)
 
                     # Save as npy file
                     np.save(join(kana_save_path, speaker, save_file_name),
@@ -386,7 +386,7 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                     trans_phone_list.extend(phone_seq.split(' '))
 
                 # Convert from phone to index
-                phone_index_list = phone2num(
+                phone_index_list = phone2index(
                     trans_phone_list, phone_map_file_path)
 
                 # Save as npy file
