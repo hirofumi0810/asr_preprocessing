@@ -44,7 +44,7 @@ def main(model, label_type):
             # Read target labels and save labels as npy files
             print('---------- %s ----------' % data_type)
             if label_type in ['character', 'character_capital_divide']:
-                divide_by_capital = False if label_type == 'character' else False
+                divide_by_capital = False if label_type == 'character' else True
                 read_text(label_paths=prep.text(data_type=data_type),
                           run_root_path=abspath('./'),
                           model=model,

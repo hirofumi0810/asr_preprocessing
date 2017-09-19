@@ -11,7 +11,7 @@ from os.path import join
 import numpy as np
 from tqdm import tqdm
 
-from utils.labels.phone import phone2num
+from utils.labels.phone import phone2index
 from timit.util import map_phone2phone
 
 
@@ -53,7 +53,7 @@ def read_phone(label_paths, label_type, run_root_path, model,
 
         # Make the mapping file
         phone2num_map_file_path = join(
-            run_root_path, 'labels', 'mapping_files', model, label_type + '_to_num.txt')
+            run_root_path, 'labels', 'mapping_files', model, label_type + '.txt')
         phone_set = set([])
         with open(phone2phone_map_file_path, 'r') as f:
             for line in f:
@@ -87,7 +87,7 @@ def read_phone(label_paths, label_type, run_root_path, model,
         if stdout_transcript:
             print(' '.join(phone_list))
 
-        index_list = phone2num(phone_list, phone2num_map_file_path)
+        index_list = phone2index(phone_list, phone2num_map_file_path)
 
         if save_path is not None:
             # Save phone labels as npy file

@@ -120,9 +120,8 @@ class Prepare(object):
 
 if __name__ == '__main__':
 
-    data_path = '/n/sd8/inaguma/corpus/timit/original/'
-
-    prep = Prepare(data_path, abspath('./'))
+    prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
+                   run_root_path=abspath('./'))
 
     print('===== train =====')
     print(len(prep.wav(data_type='train')))

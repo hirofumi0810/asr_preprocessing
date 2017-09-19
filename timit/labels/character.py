@@ -12,7 +12,7 @@ import re
 import numpy as np
 from tqdm import tqdm
 
-from utils.labels.character import char2num
+from utils.labels.character import char2index
 
 # NOTE:
 ############################################################
@@ -113,10 +113,10 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
     # Make mapping file (from character to number)
     if divide_by_capital:
         mapping_file_path = join(
-            run_root_path, 'labels', 'mapping_files', model, 'character_to_num_capital.txt')
+            run_root_path, 'labels', 'mapping_files', model, 'character_capital.txt')
     else:
         mapping_file_path = join(
-            run_root_path, 'labels', 'mapping_files', model, 'character_to_num.txt')
+            run_root_path, 'labels', 'mapping_files', model, 'character.txt')
     char_set.discard('_')
     char_set.discard('\'')
     if model == 'attention':
@@ -146,9 +146,9 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
             file_name = label_path.split('/')[-1].split('.')[0]
             save_file_name = speaker_name + '_' + file_name + '.npy'
 
-            # Convert from character to number
-            char_index_list = char2num(transcript, mapping_file_path,
-                                       double_letter=divide_by_capital)
+            # Convert from character to index
+            char_index_list = char2index(transcript, mapping_file_path,
+                                         double_letter=divide_by_capital)
 
             # Save as npy file
             np.save(join(save_path, save_file_name), char_index_list)

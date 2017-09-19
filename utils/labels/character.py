@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 
-def char2num(str_char, map_file_path, double_letter=False):
-    """Convert from character to number.
+def char2index(str_char, map_file_path, double_letter=False):
+    """Convert from character to index.
     Args:
-        str_char: string of characters
-        map_file_path: path to the mapping file
-        double_letter: if True, group repeated letters
+        str_char (string): string of characters
+        map_file_path (string): path to the mapping file
+        double_letter (bool, optional): if True, group repeated letters
     Returns:
-        char_list: list of character indices
+        char_list (list): character indices
     """
     char_list = list(str_char)
 
@@ -20,7 +20,7 @@ def char2num(str_char, map_file_path, double_letter=False):
             line = line.strip().split()
             map_dict[line[0]] = int(line[1])
 
-    # Convert from character to number
+    # Convert from character to index
     if double_letter:
         skip_flag = False
         for i in range(len(char_list) - 1):
@@ -50,16 +50,16 @@ def char2num(str_char, map_file_path, double_letter=False):
     return char_list
 
 
-def kana2num(str_char, map_file_path):
-    """Convert from kana character to number.
+def kana2index(str_char, map_file_path):
+    """Convert from kana character to index.
     Args:
-        str_char: string of kana characters
-        map_file_path: path to the mapping file
+        str_char (string): string of kana characters
+        map_file_path (string): path to the mapping file
     Returns:
-        num_list: list of kana character indices
+        index_list (list): kana character indices
     """
     kana_list = list(str_char)
-    num_list = []
+    index_list = []
 
     # Lead the mapping file
     map_dict = {}
@@ -73,31 +73,31 @@ def kana2num(str_char, map_file_path):
         # Check whether next kana character is a double consonant
         if i != len(kana_list) - 1:
             if kana_list[i] + kana_list[i + 1] in map_dict.keys():
-                num_list.append(int(map_dict[kana_list[i] + kana_list[i + 1]]))
+                index_list.append(int(map_dict[kana_list[i] + kana_list[i + 1]]))
                 i += 1
             elif kana_list[i] in map_dict.keys():
-                num_list.append(int(map_dict[kana_list[i]]))
+                index_list.append(int(map_dict[kana_list[i]]))
             else:
                 raise ValueError(
                     'There are no kana character such as %s' % kana_list[i])
         else:
             if kana_list[i] in map_dict.keys():
-                num_list.append(int(map_dict[kana_list[i]]))
+                index_list.append(int(map_dict[kana_list[i]]))
             else:
                 raise ValueError(
                     'There are no kana character such as %s' % kana_list[i])
         i += 1
 
-    return num_list
+    return index_list
 
 
-def num2char(num_list, map_file_path):
-    """Convert from number to character.
+def index2char(index_list, map_file_path):
+    """Convert from index to character.
     Args:
-        num_list: list of character indices
-        map_file_path: path to the mapping file
+        index_list (list): list of character indices
+        map_file_path (string): path to the mapping file
     Returns:
-        str_char: string of characters
+        str_char (string): string of characters
     """
     # Lead the mapping file
     map_dict = {}
@@ -108,8 +108,8 @@ def num2char(num_list, map_file_path):
 
     # Convert from indices to the corresponding characters
     char_list = []
-    for i in range(len(num_list)):
-        char_list.append(map_dict[num_list[i]])
+    for i in range(len(index_list)):
+        char_list.append(map_dict[index_list[i]])
 
     str_char = ''.join(char_list)
     return str_char

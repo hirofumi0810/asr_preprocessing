@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 
-def word2num(word_list, map_file_path):
-    """Convert from word to number.
+def word2index(word_list, map_file_path):
+    """Convert from word to index.
     Args:
-        word_list: list of words (string)
-        map_file_path: path to the mapping file
+        word_list (list): words (string)
+        map_file_path (string): path to the mapping file
     Returns:
-        word_list: list of word indices (int)
+        word_list (lisr): word indices
     """
     # read the mapping file
     map_dict = {}
@@ -17,7 +17,7 @@ def word2num(word_list, map_file_path):
             line = line.strip().split('  ')
             map_dict[str(line[0])] = int(line[1])
 
-    # convert from word to number
+    # convert from word to index
     for i in range(len(word_list)):
         if word_list[i] in map_dict.keys():
             word_list[i] = map_dict[word_list[i]]

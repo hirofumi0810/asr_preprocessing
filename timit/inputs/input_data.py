@@ -196,8 +196,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                                               wav_paths_male + wav_paths_female):
             speaker = audio_path.split('/')[-2]
             gender = speaker[0]
-            input_data_save_name = basename(audio_path).split('.')[0] + '.npy'
-            input_data_save_path = join(save_path, input_data_save_name)
+            utt_index = speaker + '_' + basename(audio_path).split('.')[0]
+            input_data_save_path = join(save_path, utt_index + '.npy')
 
             # Normalize by global mean & std over the training set
             if normalize == 'speaker' and is_training:
@@ -217,7 +217,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                     input_data_utt /= train_global_std_female
 
             np.save(input_data_save_path, input_data_utt)
-            frame_num_dict[input_data_save_name.split('.')[0]] = input_data_utt.shape[0]
+            frame_num_dict[utt_index] = input_data_utt.shape[0]
 
         # Save a frame number dictionary
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
