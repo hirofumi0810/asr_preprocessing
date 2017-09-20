@@ -19,9 +19,8 @@ from utils.util import mkdir
 class Prepare(object):
     """Prepare for making dataset.
     Args:
-        data_path (string): path to csj corpus
+        data_path (string): path to CSJ corpus
         run_root_path (string): path to ./make.sh
-        dataset_save_path (string): path to save dataset
     """
 
     def __init__(self, data_path, run_root_path):
@@ -201,7 +200,8 @@ class Prepare(object):
             'eval3': 10
         }
 
-        for data_type in ['train_fullset', 'train_subset', 'dev', 'eval1', 'eval2', 'eval3']:
+        for data_type in ['train_fullset', 'train_subset', 'dev',
+                          'eval1', 'eval2', 'eval3']:
             assert len(self.wav_paths[data_type]) == file_number[data_type], 'File number is not correct (True: %d, Now: %d).'.format(
                 file_number[data_type], len(self.wav_paths[data_type]))
 
@@ -228,34 +228,12 @@ class Prepare(object):
 
 if __name__ == '__main__':
 
-    data_path = '/n/sd8/inaguma/corpus/csj/data'
+    prep = Prepare(data_path='/n/sd8/inaguma/corpus/csj/data',
+                   run_root_path=abspath('./'))
 
-    prep = Prepare(data_path, abspath('./'))
+    for data_type in ['train_fullset', 'train_subset', 'dev',
+                      'eval1', 'eval2', 'eval3', 'dialog']:
 
-    print('===== train subset (240h) =====')
-    print(len(prep.wav('train_subset')))
-    print(len(prep.trans('train_subset')))
-
-    print('===== train fullset (586h) =====')
-    print(len(prep.wav('train_fullset')))
-    print(len(prep.trans('train_fullset')))
-
-    print('===== dev =====')
-    print(len(prep.wav('dev')))
-    print(len(prep.trans('dev')))
-
-    print('===== eval1 =====')
-    print(len(prep.wav('eval1')))
-    print(len(prep.trans('eval1')))
-
-    print('===== eval2 =====')
-    print(len(prep.wav('eval2')))
-    print(len(prep.trans('eval2')))
-
-    print('===== eval3 =====')
-    print(len(prep.wav('eval3')))
-    print(len(prep.trans('eval3')))
-
-    print('===== dialog =====')
-    print(len(prep.wav('dialog')))
-    print(len(prep.trans('dialog')))
+        print('===== %s =====' % data_type)
+        print(len(prep.wav(data_type=data_type)))
+        print(len(prep.trans(data_type=data_type)))

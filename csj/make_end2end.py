@@ -62,10 +62,17 @@ def main(model, train_data_size, divide_by_space):
     # labels
     ####################
     print('=> Processing transcripts...')
-    if isfile(join(label_save_path, 'complete.txt')) and isfile(join(input_save_path, 'complete.txt')):
+    if not divide_by_space and isfile(join(label_save_path, 'complete.txt')) and isfile(join(input_save_path, 'complete.txt')):
+        print('Already exists.')
+    elif divide_by_space and isfile(join(label_save_path, 'complete_wakachi.txt')) and isfile(join(input_save_path, 'complete.txt')):
         print('Already exists.')
     else:
-        if isfile(join(label_save_path, 'complete.txt')):
+        if not divide_by_space and isfile(join(label_save_path, 'complete.txt')):
+            kanji_label_save_path = None
+            kana_label_save_path = None
+            phone_label_save_path = None
+            # NOTE: do not save
+        elif divide_by_space and isfile(join(label_save_path, 'complete_wakachi.txt')):
             kanji_label_save_path = None
             kana_label_save_path = None
             phone_label_save_path = None
@@ -102,8 +109,12 @@ def main(model, train_data_size, divide_by_space):
                 divide_by_space=divide_by_space)
 
         # Make a confirmation file to prove that dataset was saved correctly
-        with open(join(label_save_path, 'complete.txt'), 'w') as f:
-            f.write('')
+        if divide_by_space:
+            with open(join(label_save_path, 'complete_wakachi.txt'), 'w') as f:
+                f.write('')
+        else:
+            with open(join(label_save_path, 'complete.txt'), 'w') as f:
+                f.write('')
 
         ####################
         # inputs
@@ -127,16 +138,16 @@ def main(model, train_data_size, divide_by_space):
             print('---------- train ----------')
 
             if args.tool == 'htk':
-                audio_train_paths = [path for path in sorted(
+                audio_paths = [path for path in sorted(
                     glob(join(args.htk_save_path, train_data_size + '/*.htk')))]
                 # NOTE: these are htk file paths
             else:
-                audio_train_paths = prep.wav(data_type=train_data_size)
+                audio_paths = prep.wav(data_type=train_data_size)
 
             # Read htk or wav files, and save input data and frame num dict
             train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
-                audio_paths=audio_train_paths,
-                speaker_dict=speaker_dict_dict['train'],
+                audio_paths=audio_paths,
+                speaker_dict=speaker_dict_dict[train_data_size],
                 tool=args.tool,
                 config=config,
                 normalize=args.normalize,
@@ -153,6 +164,7 @@ def main(model, train_data_size, divide_by_space):
                 else:
                     audio_paths = prep.wav(data_type=data_type)
 
+                # Read htk or wav files, and save input data and frame num dict
                 read_audio(audio_paths=audio_paths,
                            speaker_dict=speaker_dict_dict[data_type],
                            tool=args.tool,

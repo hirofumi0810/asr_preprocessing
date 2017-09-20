@@ -15,7 +15,7 @@ def segment_htk(audio_path, speaker, utterance_dict, is_training,
                 sil_duration=0., tool='htk', config=None, mean=None,
                 dtype=np.float64):
     """Segment each HTK or WAV file into utterances. Normalization will not be
-        conducted here.
+       conducted here.
     Args:
         audio_path (string): path to a HTK or WAV file
         speaker (string): speaker name
@@ -29,7 +29,7 @@ def segment_htk(audio_path, speaker, utterance_dict, is_training,
         dtype (optional): default is np.float64
     Returns:
         input_data_dict (dict):
-            key (string) => speaker + '_' + utt_index
+            key (string) => utt_index
             value (np.ndarray )=> a feature vector of size
                 `(frame_num, feature_dim)`
         input_data_utt_sum (np.ndarray): A sum of feature vectors of a speaker
@@ -141,7 +141,7 @@ def segment_htk(audio_path, speaker, utterance_dict, is_training,
         input_data_utt = input_data[start_frame_extend:end_frame_extend]
         input_data_utt_sum += np.sum(input_data_utt, axis=0)
         total_frame_num_file += (end_frame_extend - start_frame_extend)
-        input_data_dict[speaker + '_' + str(utt_index)] = input_data_utt
+        input_data_dict[str(utt_index)] = input_data_utt
 
         # For computing stddev over the file
         if mean is not None:

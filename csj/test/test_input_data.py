@@ -31,21 +31,21 @@ class TestInput(unittest.TestCase):
             'eval3': self.prep.trans(data_type='eval3'),
         }
 
-        htk_save_path = '/n/sd8/inaguma/corpus/csj/htk'
-
-        self.audio_paths = {
-            'train': [path for path in sorted(
-                glob(join(htk_save_path, 'train_subset/*.htk')))],
-            'dev': [path for path in sorted(glob(join(htk_save_path, 'dev/*.htk')))],
-            'eval1': [path for path in sorted(glob(join(htk_save_path, 'dev/*.htk')))],
-            'eval2': [path for path in sorted(glob(join(htk_save_path, 'dev/*.htk')))],
-            'eval3': [path for path in sorted(glob(join(htk_save_path, 'dev/*.htk')))]
-        }
+        self.htk_save_path = '/n/sd8/inaguma/corpus/csj/htk'
 
         self.check_reading(normalize='global', tool='htk')
         self.check_reading(normalize='speaker', tool='htk')
         self.check_reading(normalize='utterance', tool='htk')
 
+        self.check_reading(normalize='global', tool='python_speech_features')
+        self.check_reading(normalize='speaker', tool='python_speech_features')
+        self.check_reading(normalize='utterance', tool='python_speech_features')
+
+        self.check_reading(normalize='global', tool='librosa')
+        self.check_reading(normalize='speaker', tool='librosa')
+        self.check_reading(normalize='utterance', tool='librosa')
+
+    @profile
     def check_reading(self, normalize, tool):
 
         print('==================================================')
@@ -53,12 +53,31 @@ class TestInput(unittest.TestCase):
         print('  tool: %s' % tool)
         print('==================================================')
 
+        if tool == 'htk':
+            audio_paths = {
+                'train': [path for path in sorted(
+                    glob(join(self.htk_save_path, 'train_subset/*.htk')))],
+                'dev': [path for path in sorted(glob(join(self.htk_save_path, 'dev/*.htk')))],
+                'eval1': [path for path in sorted(glob(join(self.htk_save_path, 'eval1/*.htk')))],
+                'eval2': [path for path in sorted(glob(join(self.htk_save_path, 'eval2/*.htk')))],
+                'eval3': [path for path in sorted(glob(join(self.htk_save_path, 'eval3/*.htk')))]
+            }
+            # NOTE: these are htk file paths
+        else:
+            audio_paths = {
+                'train': self.prep.wav(data_type='train'),
+                'dev': self.prep.wav(data_type='dev'),
+                'eval1': self.prep.wav(data_type='eval1'),
+                'eval2': self.prep.wav(data_type='eval2'),
+                'eval3': self.prep.wav(data_type='eval3'),
+            }
+
         print('---------- train ----------')
         speaker_dict = read_sdb(label_paths=self.label_paths['train'],
                                 run_root_path=self.prep.run_root_path,
                                 model='ctc')
         train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
-            audio_paths=self.audio_paths['train'],
+            audio_paths=audio_paths['train'],
             tool=tool,
             config=None,
             speaker_dict=speaker_dict,
@@ -70,7 +89,7 @@ class TestInput(unittest.TestCase):
             speaker_dict = read_sdb(label_paths=self.label_paths[data_type],
                                     run_root_path=self.prep.run_root_path,
                                     model='ctc')
-            read_audio(audio_paths=self.audio_paths[data_type],
+            read_audio(audio_paths=audio_paths[data_type],
                        tool=tool,
                        config=None,
                        speaker_dict=speaker_dict,

@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import jaconv
+import pickle
 
 from utils.util import mkdir_join
 from utils.labels.character import kana2index
@@ -84,12 +85,12 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                 value (list) => [start_frame, end_frame, trans_kana, trans_kanji]
     """
     if model not in ['ctc', 'attention']:
-        raise ValueError('model must be ctc or attention.')
+        raise TypeError('model must be ctc or attention.')
 
     print('===> Reading target labels...')
     speaker_dict = {}
     char_set = set([])
-    all_char_set = set([])
+    all_char_set = set([])  # kana + kanji
     for label_path in tqdm(label_paths):
         col_names = [j for j in range(25)]
         df = pd.read_csv(label_path, names=col_names,
@@ -316,43 +317,43 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
     #         print(char)
 
     if kanji_save_path is not None:
+        label_num_dict_kanji = {}
+        label_num_dict_kana = {}
+        label_num_dict_phone = {}
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            mkdir_join(kanji_save_path, speaker)
-            mkdir_join(kana_save_path, speaker)
-            mkdir_join(phone_save_path, speaker)
             for utt_index, utt_info in utterance_dict.items():
                 start_frame, end_frame, trans_kana, trans_kanji = utt_info
                 save_file_name = speaker + '_' + utt_index + '.npy'
 
-                # kanji
+                # kanji & kanji
                 if not is_test:
-                    # Convert from kana character to index
+                    # Convert from kanji & kana character to index
                     kanji_index_list = kana2index(trans_kanji, kanji_map_file_path)
-
-                    # Save as npy file
-                    np.save(join(kanji_save_path, speaker, save_file_name),
-                            kanji_index_list)
-                else:
-                    # Save as npy file
-                    np.save(join(kanji_save_path, speaker, save_file_name),
-                            trans_kanji)
-                    # NOTE: save test transcripts as stirng rather than index
-
-                # kana
-                if not is_test:
-                    # Convert from kana character to index
                     kana_index_list = kana2index(trans_kana, kana_map_file_path)
 
                     # Save as npy file
-                    np.save(join(kana_save_path, speaker, save_file_name),
+                    np.save(mkdir_join(kanji_save_path, speaker, save_file_name),
+                            kanji_index_list)
+                    np.save(mkdir_join(kana_save_path, speaker, save_file_name),
                             kana_index_list)
+
+                    # Count label num
+                    label_num_dict_kanji[speaker + '_' + utt_index] = len(kanji_index_list)
+                    label_num_dict_kana[speaker + '_' + utt_index] = len(kana_index_list)
+
                 else:
                     # Save as npy file
+                    np.save(mkdir_join(kanji_save_path, speaker, save_file_name),
+                            trans_kanji)
                     np.save(join(kana_save_path, speaker, save_file_name),
                             trans_kana)
                     # NOTE: save test transcripts as stirng rather than index
+
+                    # Count label num
+                    label_num_dict_kanji[speaker + '_' + utt_index] = len(trans_kanji)
+                    label_num_dict_kana[speaker + '_' + utt_index] = len(trans_kana)
 
                 # Convert kana character to phone
                 trans_kana_list = list(trans_kana)
@@ -390,7 +391,19 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                     trans_phone_list, phone_map_file_path)
 
                 # Save as npy file
-                np.save(join(phone_save_path, speaker, save_file_name),
+                np.save(mkdir_join(phone_save_path, speaker, save_file_name),
                         phone_index_list)
+
+                # Count label num
+                label_num_dict_phone[speaker + '_' + utt_index] = len(phone_index_list)
+
+        # Save the label number dictionary
+        print('===> Saving : frame_num.pickle')
+        with open(join(kanji_save_path, 'frame_num.pickle'), 'wb') as f:
+            pickle.dump(label_num_dict_kanji, f)
+        with open(join(kana_save_path, 'frame_num.pickle'), 'wb') as f:
+            pickle.dump(label_num_dict_kana, f)
+        with open(join(phone_save_path, 'frame_num.pickle'), 'wb') as f:
+            pickle.dump(label_num_dict_phone, f)
 
     return speaker_dict

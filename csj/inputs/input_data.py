@@ -106,6 +106,8 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 audio_path_list_female.append(audio_path)
                 train_global_mean_female += input_data_utt_sum
                 total_frame_num_female += total_frame_num_speaker
+            else:
+                raise ValueError
 
             # For computing speaker stddev
             if normalize == 'speaker':
@@ -140,6 +142,8 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 for input_data_utt in input_data_dict_speaker.values():
                     train_global_std_female += np.sum(
                         np.abs(input_data_utt - train_global_mean_female) ** 2, axis=0)
+            else:
+                raise ValueError
 
         # Compute global stddev per gender
         train_global_std_male = np.sqrt(train_global_std_male / (total_frame_num_male - 1))
@@ -200,6 +204,8 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 elif speaker[3] == 'F':
                     input_data_utt -= train_global_mean_female
                     input_data_utt /= train_global_std_female
+                else:
+                    raise ValueError
 
             if save_path is not None:
                 # Save input features
@@ -207,7 +213,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 input_data_save_path = join(
                     save_path, speaker, speaker + '_' + utt_index + '.npy')
                 np.save(input_data_save_path, input_data_utt)
-                frame_num_dict[utt_index] = input_data_utt.shape[0]
+                frame_num_dict[speaker + '_' + utt_index] = input_data_utt.shape[0]
 
     if save_path is not None:
         # Save the frame number dictionary
