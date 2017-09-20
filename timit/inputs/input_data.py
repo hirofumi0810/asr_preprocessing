@@ -223,7 +223,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                     raise ValueError
 
             np.save(join(save_path, speaker + '_' + utt_index + '.npy'), input_data_utt)
-            frame_num_dict[utt_index] = input_data_utt.shape[0]
+            frame_num_dict[speaker + '_' + utt_index] = input_data_utt.shape[0]
 
         # Save a frame number dictionary
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
