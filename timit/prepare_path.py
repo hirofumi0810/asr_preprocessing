@@ -14,9 +14,8 @@ from glob import glob
 class Prepare(object):
     """Prepare for making dataset.
     Args:
-        data_path (string): path to timit corpus
+        data_path (string): path to TIMIT corpus
         run_root_path (string): path to ./make.sh
-        dataset_save_path (string): path to save dataset
     """
 
     def __init__(self, data_path, run_root_path):
@@ -123,20 +122,10 @@ if __name__ == '__main__':
     prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
                    run_root_path=abspath('./'))
 
-    print('===== train =====')
-    print(len(prep.wav(data_type='train')))
-    print(len(prep.text(data_type='train')))
-    print(len(prep.word(data_type='train')))
-    print(len(prep.phone(data_type='train')))
+    for data_type in ['train', 'dev', 'test']:
 
-    print('===== dev ======')
-    print(len(prep.wav(data_type='dev')))
-    print(len(prep.text(data_type='dev')))
-    print(len(prep.word(data_type='dev')))
-    print(len(prep.phone(data_type='dev')))
-
-    print('===== test =====')
-    print(len(prep.wav(data_type='test')))
-    print(len(prep.text(data_type='test')))
-    print(len(prep.word(data_type='test')))
-    print(len(prep.phone(data_type='test')))
+        print('===== %s ======' % data_type)
+        print(len(prep.wav(data_type=data_type)))
+        print(len(prep.text(data_type=data_type)))
+        print(len(prep.word(data_type=data_type)))
+        print(len(prep.phone(data_type=data_type)))

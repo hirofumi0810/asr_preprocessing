@@ -7,9 +7,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join
+from os.path import join, basename
 import numpy as np
 from tqdm import tqdm
+import pickle
 
 from utils.labels.phone import phone2index
 from timit.util import map_phone2phone
@@ -28,16 +29,16 @@ def read_phone(label_paths, label_type, run_root_path, model,
         stdout_transcript (bool, optional): if True, print transcripts to standard output
     """
     if label_type not in ['phone39', 'phone48', 'phone61']:
-        raise ValueError('data_type is "phone39" or "phone48" or "phone61".')
+        raise TypeError('data_type is "phone39" or "phone48" or "phone61".')
     if model not in ['ctc', 'attention']:
-        raise ValueError('model must be ctc or attention.')
+        raise TypeError('model must be ctc or attention.')
 
     print('===> Reading & Saving target labels...')
+    label_num_dict = {}
     phone2phone_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
     for label_path in tqdm(label_paths):
-        speaker_name = label_path.split('/')[-2]
-        file_name = label_path.split('/')[-1].split('.')[0]
-        save_file_name = speaker_name + '_' + file_name + '.npy'
+        speaker = label_path.split('/')[-2]
+        utt_index = basename(label_path).split('.')[0]
 
         phone_list = []
         with open(label_path, 'r') as f:
@@ -85,10 +86,20 @@ def read_phone(label_paths, label_type, run_root_path, model,
             phone_list = ['<'] + phone_list + ['>']  # add <SOS> & <EOS>
 
         if stdout_transcript:
-            print(' '.join(phone_list))
+            # print(' '.join(phone_list))
+            print(speaker + '_' + utt_index)
 
         index_list = phone2index(phone_list, phone2num_map_file_path)
 
         if save_path is not None:
             # Save phone labels as npy file
-            np.save(join(save_path, save_file_name), index_list)
+            np.save(join(save_path, speaker + '_' + utt_index + '.npy'), index_list)
+
+            # Count label number
+            label_num_dict[speaker + '_' + utt_index] = len(index_list)
+
+    if save_path is not None:
+        # Save the label number dictionary
+        print('===> Saving : label_num.pickle')
+        with open(join(save_path, 'label_num.pickle'), 'wb') as f:
+            pickle.dump(label_num_dict, f)

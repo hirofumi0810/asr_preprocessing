@@ -34,10 +34,10 @@ def main(model, label_type):
     prep = Prepare(args.data_path, args.run_root_path)
     label_save_path = mkdir_join(args.dataset_save_path, 'labels', model, label_type)
 
+    print('=> Processing transcripts...')
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.\n')
     else:
-        print('=> Processing transcripts...')
         for data_type in ['train', 'dev', 'test']:
             save_map_file = True if data_type == 'train' else False
 

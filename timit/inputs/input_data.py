@@ -72,6 +72,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
     for audio_path in tqdm(audio_paths):
         speaker = audio_path.split('/')[-2]
         gender = speaker[0]  # f (female) or m (male)
+        utt_index = basename(audio_path).split('.')[0]
 
         if tool == 'htk':
             input_data_utt = read_htk_utt(audio_path)
@@ -103,6 +104,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         elif gender == 'f':
             input_data_list_female.append(input_data_utt)
             wav_paths_female.append(audio_path)
+        else:
+            raise ValueError
 
         if is_training:
             speaker = audio_path.split('/')[-2]
@@ -113,6 +116,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                 total_frame_num_male += frame_num_utt
             elif gender == 'f':
                 total_frame_num_female += frame_num_utt
+            else:
+                raise ValueError
 
             if normalize == 'speaker':
                 # Initialization
@@ -195,9 +200,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         for input_data_utt, audio_path in zip(tqdm(input_data_list_male + input_data_list_female),
                                               wav_paths_male + wav_paths_female):
             speaker = audio_path.split('/')[-2]
+            utt_index = basename(audio_path).split('.')[0]
             gender = speaker[0]
-            utt_index = speaker + '_' + basename(audio_path).split('.')[0]
-            input_data_save_path = join(save_path, utt_index + '.npy')
 
             # Normalize by global mean & std over the training set
             if normalize == 'speaker' and is_training:
@@ -215,8 +219,10 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                 elif gender == 'f':
                     input_data_utt -= train_global_mean_female
                     input_data_utt /= train_global_std_female
+                else:
+                    raise ValueError
 
-            np.save(input_data_save_path, input_data_utt)
+            np.save(join(save_path, speaker + '_' + utt_index + '.npy'), input_data_utt)
             frame_num_dict[utt_index] = input_data_utt.shape[0]
 
         # Save a frame number dictionary

@@ -19,6 +19,10 @@ class TestInputNorm(unittest.TestCase):
 
     def test(self):
 
+        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
+                            run_root_path=abspath('../'))
+        self.htk_save_path = '/n/sd8/inaguma/corpus/timit/htk'
+
         self.config = {
             'feature_type': 'logmelfbank',
             'channels': 40,
@@ -50,26 +54,23 @@ class TestInputNorm(unittest.TestCase):
         print('  normalize: %s' % normalize)
         print('==================================================')
 
-        htk_save_path = '/n/sd8/inaguma/corpus/timit/htk'
-        prep = Prepare('/n/sd8/inaguma/corpus/timit/original', abspath('../'))
-
         if tool == 'htk':
-            wav_paths = {
-                'train': [path for path in glob(join(htk_save_path, 'train/*/*.htk'))],
-                'dev': [path for path in glob(join(htk_save_path, 'dev/*/*.htk'))],
-                'test': [path for path in glob(join(htk_save_path, 'test/*/*.htk'))]
+            audio_paths = {
+                'train': [path for path in glob(join(self.htk_save_path, 'train/*/*.htk'))],
+                'dev': [path for path in glob(join(self.htk_save_path, 'dev/*/*.htk'))],
+                'test': [path for path in glob(join(self.htk_save_path, 'test/*/*.htk'))]
             }
             # NOTE: these are htk file paths
         else:
-            wav_paths = {
-                'train': prep.wav(data_type='train'),
-                'dev': prep.wav(data_type='dev'),
-                'test': prep.wav(data_type='test')
+            audio_paths = {
+                'train': self.prep.wav(data_type='train'),
+                'dev': self.prep.wav(data_type='dev'),
+                'test': self.prep.wav(data_type='test')
             }
 
         print('---------- train ----------')
         train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_audio(
-            audio_paths=wav_paths['train'],
+            audio_paths=audio_paths['train'],
             tool=tool,
             config=self.config,
             normalize=normalize,

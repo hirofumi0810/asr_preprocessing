@@ -47,6 +47,7 @@ def main():
 
     input_save_path = mkdir_join(args.dataset_save_path, 'inputs', args.tool, args.normalize)
 
+    print('=> Processing input data...')
     if isfile(join(input_save_path, 'complete.txt')):
         print('Already exists.\n')
     else:
@@ -61,18 +62,18 @@ def main():
             'deltadelta': bool(args.deltadelta)
         }
 
-        print('=> Processing input data...')
         print('---------- train ----------')
 
         if args.tool == 'htk':
-            wav_train_paths = [path for path in sorted(
+            audio_paths = [path for path in sorted(
                 glob(join(args.htk_save_path, 'train/*/*.htk')))]
             # NOTE: these are htk file paths
         else:
-            wav_train_paths = prep.wav(data_type='train')
+            audio_paths = prep.wav(data_type='train')
 
+        # Read htk or wav files, and save input data and frame num dict
         train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_audio(
-            audio_paths=wav_train_paths,
+            audio_paths=audio_paths,
             tool=args.tool,
             config=config,
             normalize=args.normalize,
@@ -89,6 +90,7 @@ def main():
             else:
                 audio_paths = prep.wav(data_type=data_type)
 
+            # Read htk or wav files, and save input data and frame num dict
             read_audio(audio_paths=audio_paths,
                        tool=args.tool,
                        config=config,
