@@ -87,14 +87,23 @@ def main(model, train_data_size, divide_by_space):
             phone_label_save_path = mkdir_join(label_save_path, 'phone')
 
         speaker_dict_dict = {}  # dict of speaker_dict
-        for data_type in ['train', 'dev', 'eval1', 'eval2', 'eval3']:
+
+        print('---------- train ----------')
+        # Read target labels and save labels as npy files
+        speaker_dict_dict['train'] = read_sdb(
+            label_paths=prep.trans(data_type=train_data_size),
+            run_root_path=args.run_root_path,
+            model=model,
+            kanji_save_path=mkdir_join(kanji_label_save_path, 'train'),
+            kana_save_path=mkdir_join(kana_label_save_path, 'train'),
+            phone_save_path=mkdir_join(phone_label_save_path, 'train'),
+            save_map_file=True,
+            divide_by_space=divide_by_space)
+
+        for data_type in ['dev', 'eval1', 'eval2', 'eval3']:
 
             print('---------- %s ----------' % data_type)
-            save_map_file = True if train_data_size == 'train_fullset' and data_type == 'train' else False
-            is_test = False if data_type in ['train', 'dev'] else True
-
-            if data_type == 'train':
-                data_type = train_data_size
+            is_test = False if data_type != 'dev' else True
 
             # Read target labels and save labels as npy files
             speaker_dict_dict[data_type] = read_sdb(
@@ -105,7 +114,6 @@ def main(model, train_data_size, divide_by_space):
                 kanji_save_path=mkdir_join(kanji_label_save_path, data_type),
                 kana_save_path=mkdir_join(kana_label_save_path, data_type),
                 phone_save_path=mkdir_join(phone_label_save_path, data_type),
-                save_map_file=save_map_file,
                 divide_by_space=divide_by_space)
 
         # Make a confirmation file to prove that dataset was saved correctly
@@ -147,7 +155,7 @@ def main(model, train_data_size, divide_by_space):
             # Read htk or wav files, and save input data and frame num dict
             train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
                 audio_paths=audio_paths,
-                speaker_dict=speaker_dict_dict[train_data_size],
+                speaker_dict=speaker_dict_dict['train'],
                 tool=args.tool,
                 config=config,
                 normalize=args.normalize,

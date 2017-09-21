@@ -347,7 +347,7 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                     # Save as npy file
                     np.save(mkdir_join(kanji_save_path, speaker, save_file_name),
                             trans_kanji)
-                    np.save(join(kana_save_path, speaker, save_file_name),
+                    np.save(mkdir_join(kana_save_path, speaker, save_file_name),
                             trans_kana)
                     # NOTE: save test transcripts as stirng rather than index
 
@@ -398,12 +398,12 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                 label_num_dict_phone[speaker + '_' + utt_index] = len(phone_index_list)
 
         # Save the label number dictionary
-        print('===> Saving : frame_num.pickle')
-        with open(join(kanji_save_path, 'frame_num.pickle'), 'wb') as f:
+        print('===> Saving : label_num.pickle')
+        with open(join(kanji_save_path, 'label_num.pickle'), 'wb') as f:
             pickle.dump(label_num_dict_kanji, f)
-        with open(join(kana_save_path, 'frame_num.pickle'), 'wb') as f:
+        with open(join(kana_save_path, 'label_num.pickle'), 'wb') as f:
             pickle.dump(label_num_dict_kana, f)
-        with open(join(phone_save_path, 'frame_num.pickle'), 'wb') as f:
+        with open(join(phone_save_path, 'label_num.pickle'), 'wb') as f:
             pickle.dump(label_num_dict_phone, f)
 
     return speaker_dict
