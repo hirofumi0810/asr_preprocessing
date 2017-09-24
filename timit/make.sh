@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo '----------------------------------------------------'
-echo '|                      TIMIT                        |'
-echo '----------------------------------------------------'
+echo ============================================================================
+echo "                                  TIMIT                                    "
+echo ============================================================================
 
 ### Set paths
 TIMIT_PATH='/n/sd8/inaguma/corpus/timit/original'
@@ -28,6 +28,7 @@ DELTADELTA=1
 NORMALIZE='speaker'
 # NORMALIZE='utterance'
 
+
 ##############################
 # Don't change from here ↓↓↓
 ##############################
@@ -47,10 +48,9 @@ fi
 RUN_ROOT_PATH=`pwd`
 
 
-echo ============================================================================
-echo "                           Feature extraction                             "
-echo ============================================================================
-
+########################################
+# Feature extraction by HTK toolkit
+########################################
 if [ $TOOL = 'htk' ]; then
     # Set the path to HTK (optional, set only when using HTK toolkit)
     CONFIG_PATH="./config/config_file"
@@ -76,8 +76,11 @@ if [ $TOOL = 'htk' ]; then
     $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
 fi
 
-# Make input features
-python make_input.py \
+
+########################################
+# Main function
+########################################
+python main.py \
     --data_path $TIMIT_PATH \
     --dataset_save_path $DATASET_SAVE_PATH \
     --run_root_path $RUN_ROOT_PATH \
@@ -92,17 +95,6 @@ python make_input.py \
     --delta $DELTA \
     --deltadelta $DELTADELTA \
     --normalize $NORMALIZE
-
-
-echo ============================================================================
-echo "                         Process transcriptions                           "
-echo ============================================================================
-
-# Make transcripts for the End-to-End models (CTC and Attention)
-python make_label_end2end.py \
-    --data_path $TIMIT_PATH \
-    --dataset_save_path $DATASET_SAVE_PATH \
-    --run_root_path $RUN_ROOT_PATH
 
 
 echo 'Successfully completed!!!'
