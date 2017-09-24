@@ -15,21 +15,30 @@ from utils.util import mkdir_join, mkdir
 from utils.inputs.htk import save
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_path', type=str, help='path to  Librispeech dataset')
+parser.add_argument('--data_path', type=str,
+                    help='path to  Librispeech dataset')
 parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
-parser.add_argument('--run_root_path', type=str, help='path to run this script')
+parser.add_argument('--run_root_path', type=str,
+                    help='path to run this script')
 
 parser.add_argument('--feature_type', type=str, default='logmelfbank',
                     help='the type of features, logmelfbank or mfcc')
-parser.add_argument('--channels', type=int, default=40, help='the number of frequency channels')
-parser.add_argument('--sampling_rate', type=float, default=16000, help='sampling rate')
-parser.add_argument('--window', type=float, default=0.025, help='window width to extract features')
-parser.add_argument('--slide', type=float, default=0.01, help='extract features per \'slide\'')
-parser.add_argument('--energy', type=int, default=0, help='if 1, add the energy feature')
-parser.add_argument('--delta', type=int, default=1, help='if 1, add the energy feature')
+parser.add_argument('--channels', type=int, default=40,
+                    help='the number of frequency channels')
+parser.add_argument('--sampling_rate', type=float,
+                    default=16000, help='sampling rate')
+parser.add_argument('--window', type=float, default=0.025,
+                    help='window width to extract features')
+parser.add_argument('--slide', type=float, default=0.01,
+                    help='extract features per \'slide\'')
+parser.add_argument('--energy', type=int, default=0,
+                    help='if 1, add the energy feature')
+parser.add_argument('--delta', type=int, default=1,
+                    help='if 1, add the energy feature')
 parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
-parser.add_argument('--config_path', type=str, help='path to save the config file')
+parser.add_argument('--config_path', type=str,
+                    help='path to save the config file')
 
 
 def main():
@@ -55,16 +64,15 @@ def main():
                       'dev_clean', 'dev_other', 'test_clean', 'test_other']:
 
         wav_paths = prep.wav(data_type=data_type)
-        save_path = mkdir_join(htk_save_path, data_type)
-
         with open(join(args.run_root_path, 'config/wav2fbank_' + data_type + '.scp'), 'w') as f:
             for wav_path in wav_paths:
-                uttrance_name = basename(wav_path).split('.')[0]
-                speaker_index, book_index, uttrance_index = uttrance_name.split('-')
-                mkdir_join(save_path, speaker_index)
-                save_path = join(
-                    save_path, speaker_index, uttrance_name + '.htk')
+                # ex.) wav_path: speaker/book/speaker-book-utt_index.wav
+                speaker, book, utt_index = basename(
+                    wav_path).split('.')[0].split('-')
+                save_path = mkdir_join(
+                    htk_save_path, data_type, speaker, book, basename(wav_paths).split('.')[0] + '.htk')
                 f.write(wav_path + '  ' + save_path + '\n')
+                # ex.) htk_path: speaker/book/speaker-book-utt_index.htk
 
 
 if __name__ == '__main__':

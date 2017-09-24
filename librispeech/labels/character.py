@@ -12,7 +12,7 @@ import re
 import numpy as np
 from tqdm import tqdm
 
-from utils.labels.character import char2index
+from utils.labels.character import char2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -43,7 +43,7 @@ from utils.util import mkdir_join
 ############################################################
 
 
-def read_text(label_paths, run_root_path, model, save_map_file=False,
+def read_char(label_paths, run_root_path, model, save_map_file=False,
               save_path=None, divide_by_capital=False,
               stdout_transcript=False):
     """Read text transcript.
@@ -79,7 +79,7 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
-                utt_name = line[0]
+                utt_index = line[0]
                 transcript = ' '.join(line[1:])
 
                 if divide_by_capital:
@@ -105,7 +105,7 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
                 if model == 'attention':
                     transcript = '<' + transcript + '>'
 
-                speaker_dict[speaker][utt_name] = transcript
+                speaker_dict[speaker][utt_index] = transcript
 
                 if stdout_transcript:
                     print(transcript)
@@ -145,14 +145,13 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_name, transcript in utterance_dict.items():
-                save_file_name = utt_name + '.npy'
+            for utt_index, transcript in utterance_dict.items():
 
                 # Convert from character to index
-                char_index_list = char2index(transcript, mapping_file_path,
-                                             double_letter=divide_by_capital)
+                char_index_list = char2idx(transcript, mapping_file_path,
+                                           double_letter=divide_by_capital)
 
                 # Save as npy file
                 mkdir_join(save_path, speaker)
-                np.save(join(save_path, speaker, save_file_name),
+                np.save(join(save_path, speaker, utt_index + '.npy'),
                         char_index_list)

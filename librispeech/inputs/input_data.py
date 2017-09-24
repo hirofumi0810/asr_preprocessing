@@ -75,8 +75,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
     # Loop 1: Divide all audio paths into speakers
     print('===> Reading audio files...')
     for i, audio_path in enumerate(tqdm(audio_paths)):
-        utt_index = basename(audio_path).split('.')[0]
-        speaker = utt_index.split('-')[0]
+        # ex.) audio_path: speaker-book-utt_index.***
+        speaker, book, utt_index = basename(audio_path).split('.')[0].split('-')
         if speaker not in audio_path_dict.keys():
             audio_path_dict[speaker] = []
         audio_path_dict[speaker].append(audio_path)
@@ -154,8 +154,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 speaker_mean_dict[speaker] /= total_frame_num_dict[speaker]
 
             for audio_path in audio_paths_speaker:
-                utt_index = basename(audio_path).split('.')[0]
-                speaker = utt_index.split('-')[0]
+                speaker, book, utt_index = basename(audio_path).split('.')[0].split('-')
 
                 # Read each audio file
                 if tool == 'htk':
@@ -190,6 +189,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 elif speaker_gender_dict[speaker] == 'F':
                     train_global_std_female += np.sum(
                         np.abs(input_data_utt - train_global_mean_female) ** 2, axis=0)
+                else:
+                    raise ValueError
 
                 if normalize == 'speaker':
                     # For computing speaker stddev
@@ -222,8 +223,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
     frame_num_dict = {}
     for speaker, audio_paths_speaker in tqdm(audio_path_dict.items()):
         for audio_path in audio_paths_speaker:
-            utt_index = basename(audio_path).split('.')[0]
-            speaker = utt_index.split('-')[0]
+            speaker, book, utt_index = basename(audio_path).split('.')[0].split('-')
 
             # Read each audio file
             if tool == 'htk':
@@ -270,6 +270,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 elif speaker_gender_dict[speaker] == 'F':
                     input_data_utt -= train_global_mean_female
                     input_data_utt /= train_global_std_female
+                else:
+                    raise ValueError
 
             if save_path is not None:
                 # Save input features

@@ -11,7 +11,7 @@ from os.path import join
 import numpy as np
 from tqdm import tqdm
 
-from utils.labels.word import word2index
+from utils.labels.word import word2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -58,7 +58,7 @@ from utils.util import mkdir_join
 ############################################################
 
 
-def read_text(label_paths, data_type, train_data_size, run_root_path, model,
+def read_word(label_paths, data_type, train_data_size, run_root_path, model,
               save_map_file=False, save_path=None,
               frequency_threshold=5, stdout_transcript=False):
     """Read text transcript.
@@ -68,10 +68,11 @@ def read_text(label_paths, data_type, train_data_size, run_root_path, model,
             or train_all or dev_clean or dev_other or test_clean or test_clean
         run_root_path (string): absolute path of make.sh
         model (string): ctc or attention
+        vocab_path: (string): path to the vocabulary dict
         save_map_file (bool ,optional): if True, save the mapping file
         save_path (string, optional): path to save labels. If None, don't save
             labels
-        frequency_threshold (int, optional): the vocaburary is restricted to
+        frequency_threshold (int, optional): the vocabulary is restricted to
             words which appear more than 'frequency_threshold' in the training
             set
         stdout_transcript (bool, optional): if True, print processed
@@ -98,7 +99,7 @@ def read_text(label_paths, data_type, train_data_size, run_root_path, model,
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
-                utt_name = line[0]
+                utt_index = line[0]
                 word_list = line[1:]
 
                 if is_training:
@@ -111,7 +112,7 @@ def read_text(label_paths, data_type, train_data_size, run_root_path, model,
                 if model == 'attention':
                     word_list = ['<'] + word_list + ['>']
 
-                speaker_dict[speaker][utt_name] = word_list
+                speaker_dict[speaker][utt_index] = word_list
 
                 if stdout_transcript:
                     print(' '.join(word_list))
@@ -120,7 +121,7 @@ def read_text(label_paths, data_type, train_data_size, run_root_path, model,
         run_root_path, 'labels', model, 'word_' + train_data_size + '.txt')
 
     if is_training:
-        # Restrict the vocaburary
+        # Restrict the vocabulary
         oov_list = [word for word, frequency in word_count_dict.items()
                     if frequency < frequency_threshold]
         original_vocab_num = len(vocab_set)
@@ -154,13 +155,11 @@ def read_text(label_paths, data_type, train_data_size, run_root_path, model,
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_name, word_list in utterance_dict.items():
-                save_file_name = utt_name + '.npy'
+            for utt_index, word_list in utterance_dict.items():
 
                 # Save as npy file
-                mkdir_join(save_path, speaker)
                 if is_test:
-                    np.save(join(save_path, speaker, save_file_name), word_list)
+                    np.save(mkdir_join(save_path, speaker, utt_index + '.npy'), word_list)
                     # NOTE: save a transcript as the list of words
                 else:
                     # Convert to OOV
@@ -168,7 +167,7 @@ def read_text(label_paths, data_type, train_data_size, run_root_path, model,
                         word if word in vocab_set else 'OOV' for word in word_list]
 
                     # Convert from word to index
-                    word_index_list = word2index(word_list, mapping_file_path)
+                    word_index_list = word2idx(word_list, mapping_file_path)
 
-                    np.save(join(save_path, speaker, save_file_name),
+                    np.save(mkdir_join(save_path, speaker, utt_index + '.npy'),
                             word_index_list)
