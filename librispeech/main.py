@@ -68,6 +68,10 @@ CONFIG = {
 
 def make_input(train_data_size):
 
+    print('==================================================')
+    print('  train_data_size: %s' % train_data_size)
+    print('==================================================')
+
     input_save_path = mkdir_join(
         args.dataset_save_path, 'inputs', train_data_size)
 
@@ -79,14 +83,14 @@ def make_input(train_data_size):
         if args.tool == 'htk':
             if train_data_size == 'train_all':
                 audio_paths = [path for path in sorted(
-                    glob(join(args.htk_save_path, 'train_clean100/*/*.htk')))]
+                    glob(join(args.htk_save_path, 'train_clean100/*/*/*.htk')))]
                 audio_paths += [path for path in sorted(
-                    glob(join(args.htk_save_path, 'train_clean360/*/*.htk')))]
+                    glob(join(args.htk_save_path, 'train_clean360/*/*/*.htk')))]
                 audio_paths += [path for path in sorted(
-                    glob(join(args.htk_save_path, 'train_other500/*/*.htk')))]
+                    glob(join(args.htk_save_path, 'train_other500/*/*/*.htk')))]
             else:
                 audio_paths = [path for path in sorted(
-                    glob(join(args.htk_save_path, train_data_size + '/*/*.htk')))]
+                    glob(join(args.htk_save_path, train_data_size + '/*/*/*.htk')))]
             # NOTE: these are htk file paths
         else:
             audio_paths = prep.wav(data_type=train_data_size)
@@ -106,7 +110,7 @@ def make_input(train_data_size):
 
             if args.tool == 'htk':
                 audio_paths = [path for path in sorted(
-                    glob(join(args.htk_save_path, data_type + '/*/*.htk')))]
+                    glob(join(args.htk_save_path, data_type + '/*/*/*.htk')))]
             # NOTE: these are htk file paths
             else:
                 audio_paths = prep.wav(data_type=data_type)
@@ -148,39 +152,22 @@ def make_label(model, label_type):
         # Read target labels and save labels as npy files
         print('---------- train_ ----------')
         label_paths = prep.text(data_type=train_data_size)
-        if label_type == 'phone':
-            read_phone(label_paths=label_paths,
-                       data_type=train_data_size,
-                       train_data_size=train_data_size,
-                       run_root_path=prep.run_root_path,
-                       model=model,
-                       save_map_file=True,
-                       save_path=mkdir_join(label_save_path, train_data_size),
-                       frequency_threshold=10)
-        else:
-            read_char(label_paths=label_paths,
-                      run_root_path=prep.run_root_path,
-                      model=model,
-                      save_path=mkdir_join(label_save_path, train_data_size),
-                      divide_by_capital=divide_by_capital)
+        read_char(label_paths=label_paths,
+                  run_root_path=prep.run_root_path,
+                  model=model,
+                  save_map_file=True,
+                  save_path=mkdir_join(label_save_path, train_data_size),
+                  divide_by_capital=divide_by_capital)
 
         for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
 
             # Read target labels and save labels as npy files
             print('---------- %s ----------' % data_type)
-            if label_type == 'word':
-                read_phone(label_paths=prep.text(data_type=data_type),
-                           data_type=data_type,
-                           train_data_size=train_data_size,
-                           run_root_path=prep.run_root_path,
-                           model=model,
-                           save_path=mkdir_join(label_save_path, data_type))
-            else:
-                read_char(label_paths=prep.text(data_type=data_type),
-                          run_root_path=prep.run_root_path,
-                          model=model,
-                          save_path=mkdir_join(label_save_path, data_type),
-                          divide_by_capital=divide_by_capital)
+            read_char(label_paths=prep.text(data_type=data_type),
+                      run_root_path=prep.run_root_path,
+                      model=model,
+                      save_path=mkdir_join(label_save_path, data_type),
+                      divide_by_capital=divide_by_capital)
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:
@@ -201,44 +188,28 @@ def make_label_word(model, train_data_size):
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')
     else:
-        divide_by_capital = True if label_type == 'character_capital_divide' else False
-
         # Read target labels and save labels as npy files
         print('---------- train_ ----------')
         label_paths = prep.text(data_type=train_data_size)
-        if label_type == 'word':
-            read_word(label_paths=label_paths,
-                      data_type=train_data_size,
-                      train_data_size=train_data_size,
-                      run_root_path=prep.run_root_path,
-                      model=model,
-                      save_map_file=True,
-                      save_path=mkdir_join(label_save_path, train_data_size),
-                      frequency_threshold=10)
-        else:
-            read_char(label_paths=label_paths,
-                      run_root_path=prep.run_root_path,
-                      model=model,
-                      save_path=mkdir_join(label_save_path, train_data_size),
-                      divide_by_capital=divide_by_capital)
+        read_word(label_paths=label_paths,
+                  data_type=train_data_size,
+                  train_data_size=train_data_size,
+                  run_root_path=prep.run_root_path,
+                  model=model,
+                  save_map_file=True,
+                  save_path=mkdir_join(label_save_path, train_data_size),
+                  frequency_threshold=10)
 
         for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
 
             # Read target labels and save labels as npy files
             print('---------- %s ----------' % data_type)
-            if label_type == 'word':
-                read_word(label_paths=prep.text(data_type=data_type),
-                          data_type=data_type,
-                          train_data_size=train_data_size,
-                          run_root_path=prep.run_root_path,
-                          model=model,
-                          save_path=mkdir_join(label_save_path, data_type))
-            else:
-                read_char(label_paths=prep.text(data_type=data_type),
-                          run_root_path=prep.run_root_path,
-                          model=model,
-                          save_path=mkdir_join(label_save_path, data_type),
-                          divide_by_capital=divide_by_capital)
+            read_word(label_paths=prep.text(data_type=data_type),
+                      data_type=data_type,
+                      train_data_size=train_data_size,
+                      run_root_path=prep.run_root_path,
+                      model=model,
+                      save_path=mkdir_join(label_save_path, data_type))
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:

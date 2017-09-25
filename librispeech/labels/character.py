@@ -112,11 +112,13 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
 
     # Make mapping file (from character to index)
     if divide_by_capital:
-        mapping_file_path = join(
-            run_root_path, 'labels', model, 'character_capital.txt')
+        mapping_file_path = mkdir_join(
+            run_root_path, 'labels', 'mapping_files', model,
+            'character_capital.txt')
     else:
-        mapping_file_path = join(
-            run_root_path, 'labels', model, 'character.txt')
+        mapping_file_path = mkdir_join(
+            run_root_path, 'labels', 'mapping_files', model,
+            'character.txt')
     char_set.discard('_')
     char_set.discard('\'')
     if model == 'attention':
@@ -137,7 +139,8 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
                 if divide_by_capital:
                     char_list = ['<', '>'] + sorted(list(char_set)) + ['\'']
                 else:
-                    char_list = ['_', '<', '>'] + sorted(list(char_set)) + ['\'']
+                    char_list = ['_', '<', '>'] + \
+                        sorted(list(char_set)) + ['\'']
             for i, char in enumerate(char_list):
                 f.write('%s  %s\n' % (char, str(i)))
 
@@ -152,6 +155,5 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
                                            double_letter=divide_by_capital)
 
                 # Save as npy file
-                mkdir_join(save_path, speaker)
-                np.save(join(save_path, speaker, utt_index + '.npy'),
+                np.save(mkdir_join(save_path, speaker, utt_index + '.npy'),
                         char_index_list)

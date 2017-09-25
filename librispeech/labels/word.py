@@ -7,7 +7,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join
 import numpy as np
 from tqdm import tqdm
 
@@ -117,8 +116,9 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
                 if stdout_transcript:
                     print(' '.join(word_list))
 
-    mapping_file_path = join(
-        run_root_path, 'labels', model, 'word_' + train_data_size + '.txt')
+    mapping_file_path = mkdir_join(
+        run_root_path, 'labels', 'mapping_files', model,
+        'word_' + train_data_size + '.txt')
 
     if is_training:
         # Restrict the vocabulary
@@ -159,7 +159,8 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
 
                 # Save as npy file
                 if is_test:
-                    np.save(mkdir_join(save_path, speaker, utt_index + '.npy'), word_list)
+                    np.save(mkdir_join(save_path, speaker,
+                                       utt_index + '.npy'), word_list)
                     # NOTE: save a transcript as the list of words
                 else:
                     # Convert to OOV

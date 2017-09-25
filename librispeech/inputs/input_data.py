@@ -279,8 +279,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
 
             if save_path is not None:
                 # Save input features
-                mkdir_join(save_path, speaker)
-                input_data_save_path = join(
+                input_data_save_path = mkdir_join(
                     save_path, speaker, utt_index + '.npy')
                 np.save(input_data_save_path, input_data_utt)
                 frame_num_dict[utt_index] = input_data_utt.shape[0]

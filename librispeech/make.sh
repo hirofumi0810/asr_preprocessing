@@ -6,8 +6,7 @@ echo ===========================================================================
 
 ### Set paths
 DATA_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/data'
-# DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/dataset'
-DATASET_SAVE_PATH='/data/inaguma/librispeech'
+DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/dataset'
 WAV_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/wav'
 HTK_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/htk'
 HTK_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'

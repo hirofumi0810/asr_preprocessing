@@ -20,6 +20,26 @@ prep = Prepare(
     run_root_path=abspath('../'))
 
 htk_save_path = '/n/sd8/inaguma/corpus/librispeech/htk'
+htk_paths = {
+    'train': [path for path in sorted(glob(
+        join(htk_save_path, 'train_clean100/*/*/*.htk')))],
+    'dev_clean': [path for path in sorted(glob(
+        join(htk_save_path, 'dev_clean/*/*/*.htk')))],
+    'dev_other': [path for path in sorted(glob(
+        join(htk_save_path, 'dev_other/*/*/*.htk')))],
+    'test_clean': [path for path in sorted(glob(
+        join(htk_save_path, 'test_clean/*/*/*.htk')))],
+    'test_other': [path for path in sorted(glob(
+        join(htk_save_path, 'test_other/*/*/*.htk')))],
+}
+
+wav_paths = {
+    'train': prep.wav(data_type='train'),
+    'dev_clean': prep.wav(data_type='dev_clean'),
+    'dev_other': prep.wav(data_type='_otherdev'),
+    'test_clean': prep.wav(data_type='test_clean'),
+    'test_other': prep.wav(data_type='test_other')
+}
 
 CONFIG = {
     'feature_type': 'logmelfbank',
@@ -60,27 +80,7 @@ class TestInputSpeakerNorm(unittest.TestCase):
         print('  tool: %s' % tool)
         print('==================================================')
 
-        if tool == 'htk':
-            audio_paths = {
-                'train': [path for path in sorted(glob(
-                    join(htk_save_path, 'train_clean100/*/*/*.htk')))],
-                'dev_clean': [path for path in sorted(glob(
-                    join(htk_save_path, 'dev_clean/*/*/*.htk')))],
-                'dev_other': [path for path in sorted(glob(
-                    join(htk_save_path, 'dev_other/*/*/*.htk')))],
-                'test_clean': [path for path in sorted(glob(
-                    join(htk_save_path, 'test_clean/*/*/*.htk')))],
-                'test_other': [path for path in sorted(glob(
-                    join(htk_save_path, 'test_other/*/*/*.htk')))],
-            }
-        else:
-            audio_paths = {
-                'train': prep.wav(data_type='train'),
-                'dev_clean': prep.wav(data_type='dev_clean'),
-                'dev_other': prep.wav(data_type='_otherdev'),
-                'test_clean': prep.wav(data_type='test_clean'),
-                'test_other': prep.wav(data_type='test_other')
-            }
+        audio_paths = htk_paths if tool == 'htk' else wav_paths
 
         print('---------- train ----------')
         train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
