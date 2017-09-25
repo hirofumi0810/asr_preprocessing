@@ -130,20 +130,20 @@ echo ===========================================================================
 echo "                        Convert from flac to wav                          "
 echo ============================================================================
 flac_paths=$(find $DATA_SAVE_PATH -type f)
-# for flac_path in $flac_paths ; do
-#     dir_path=$(dirname $flac_path)
-#     file_name=$(basename $flac_path)
-#     base=${file_name%.*}
-#     ext=${file_name##*.}
-#     wav_path=$dir_path"/"$base".wav"
-#     if [ $ext = "flac" ]; then
-#         echo "Converting from"$flac_path" to "$wav_path
-#         sox $flac_path -t wav $wav_path
-#         rm -f $flac_path
-#     else
-#         echo "Already converted: "$wav_path
-#     fi
-# done
+for flac_path in $flac_paths ; do
+    dir_path=$(dirname $flac_path)
+    file_name=$(basename $flac_path)
+    base=${file_name%.*}
+    ext=${file_name##*.}
+    wav_path=$dir_path"/"$base".wav"
+    if [ $ext = "flac" ]; then
+        echo "Converting from"$flac_path" to "$wav_path
+        sox $flac_path -t wav $wav_path
+        rm -f $flac_path
+    else
+        echo "Already converted: "$wav_path
+    fi
+done
 
 
 echo ============================================================================
@@ -169,13 +169,13 @@ if [ $TOOL = 'htk' ]; then
       --config_path $CONFIG_PATH
 
   # Convert from wav to htk files
-  # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean100.scp
-  # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean360.scp
-  # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_other500.scp
-  # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_clean.scp
-  # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_other.scp
-  # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_clean.scp
-  # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_other.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean100.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean360.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_other500.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_clean.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_other.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_clean.scp
+  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_other.scp
 fi
 
 

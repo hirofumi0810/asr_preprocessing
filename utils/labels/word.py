@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-def word2index(word_list, map_file_path):
+def word2idx(word_list, map_file_path):
     """Convert from word to index.
     Args:
         word_list (list): words (string)

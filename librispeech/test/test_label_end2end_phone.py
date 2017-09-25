@@ -12,6 +12,7 @@ import unittest
 sys.path.append('../../')
 from librispeech.prepare_path import Prepare
 from librispeech.labels.phone import read_phone
+from utils.measure_time_func import measure_time
 
 prep = Prepare(
     data_path='/n/sd8/inaguma/corpus/librispeech/data',
@@ -39,6 +40,7 @@ class TestCTCLabelPhone(unittest.TestCase):
         # Attention
         self.check_reading(model='attention')
 
+    @measure_time
     def check_reading(self, model):
 
         print('==================================================')

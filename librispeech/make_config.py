@@ -70,7 +70,7 @@ def main():
                 speaker, book, utt_index = basename(
                     wav_path).split('.')[0].split('-')
                 save_path = mkdir_join(
-                    htk_save_path, data_type, speaker, book, basename(wav_paths).split('.')[0] + '.htk')
+                    htk_save_path, data_type, speaker, book, basename(wav_path).split('.')[0] + '.htk')
                 f.write(wav_path + '  ' + save_path + '\n')
                 # ex.) htk_path: speaker/book/speaker-book-utt_index.htk
 

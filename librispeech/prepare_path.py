@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import re
 from os.path import join, basename, splitext, abspath
 from glob import glob
 
@@ -41,9 +42,12 @@ class Prepare(object):
                 line = line.strip()
                 if line[0] == ';':
                     continue
-                speaker_index = line.split(' ')[0]
+                # Remove consecutive spaces
+                while '  ' in line:
+                    line = re.sub(r'[\s]+', ' ', line)
+                speaker = line.split(' ')[0]
                 gender = line.split(' ')[2]
-                self.speaker_gender_dict[speaker_index] = gender
+                self.speaker_gender_dict[speaker] = gender
 
         self.__make()
 

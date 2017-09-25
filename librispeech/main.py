@@ -187,16 +187,15 @@ def make_label(model, label_type):
             f.write('')
 
 
-def make_label_word(model, train_data_size, label_type):
+def make_label_word(model, train_data_size):
 
     print('==================================================')
     print('  model: %s' % model)
     print('  train_data_size: %s' % train_data_size)
-    print('  label_type: %s' % label_type)
     print('==================================================')
 
-    label_save_path = mkdir_join(args.dataset_save_path, 'labels',
-                                 model, train_data_size, label_type)
+    label_save_path = mkdir_join(
+        args.dataset_save_path, 'labels', model, 'word_' + train_data_size)
 
     print('=> Processing transcripts...')
     if isfile(join(label_save_path, 'complete.txt')):
@@ -253,8 +252,9 @@ if __name__ == '__main__':
         make_input(train_data_size)
 
     for model in ['ctc', 'attention']:
-        for label_type in ['character', 'character_capital_divide', 'phone']:
+        for label_type in ['character', 'character_capital_divide']:
             make_label(model, label_type)
+            # TODO: add phone
 
         for train_data_size in ['train_clean100', 'train_clean360',
                                 'train_other500', 'train_all']:

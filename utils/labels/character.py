@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-def char2index(str_char, map_file_path, double_letter=False):
+def char2idx(str_char, map_file_path, double_letter=False):
     """Convert from character to index.
     Args:
         str_char (string): string of characters
@@ -50,7 +50,7 @@ def char2index(str_char, map_file_path, double_letter=False):
     return char_list
 
 
-def kana2index(str_char, map_file_path):
+def kana2idx(str_char, map_file_path):
     """Convert from kana character to index.
     Args:
         str_char (string): string of kana characters
@@ -91,7 +91,7 @@ def kana2index(str_char, map_file_path):
     return index_list
 
 
-def index2char(index_list, map_file_path):
+def idx2char(index_list, map_file_path):
     """Convert from index to character.
     Args:
         index_list (list): list of character indices

@@ -76,7 +76,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
     print('===> Reading audio files...')
     for i, audio_path in enumerate(tqdm(audio_paths)):
         # ex.) audio_path: speaker-book-utt_index.***
-        speaker, book, utt_index = basename(audio_path).split('.')[0].split('-')
+        speaker, book, utt_index = basename(
+            audio_path).split('.')[0].split('-')
         if speaker not in audio_path_dict.keys():
             audio_path_dict[speaker] = []
         audio_path_dict[speaker].append(audio_path)
@@ -112,12 +113,12 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 # Initialize global statistics
                 feature_dim = input_data_utt.shape[1]
                 train_global_mean_male = np.zeros((feature_dim,), dtype=dtype)
-                train_global_mean_female = np.zeros((feature_dim,), dtype=dtype)
+                train_global_mean_female = np.zeros(
+                    (feature_dim,), dtype=dtype)
                 train_global_std_male = np.zeros((feature_dim,), dtype=dtype)
                 train_global_std_female = np.zeros((feature_dim,), dtype=dtype)
 
             # For computing global mean
-            print(speaker_gender_dict[speaker])
             if speaker_gender_dict[speaker] == 'M':
                 audio_path_list_male.append(input_data_utt)
                 train_global_mean_male += input_data_utt_sum
@@ -154,7 +155,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 speaker_mean_dict[speaker] /= total_frame_num_dict[speaker]
 
             for audio_path in audio_paths_speaker:
-                speaker, book, utt_index = basename(audio_path).split('.')[0].split('-')
+                speaker, book, utt_index = basename(
+                    audio_path).split('.')[0].split('-')
 
                 # Read each audio file
                 if tool == 'htk':
@@ -203,7 +205,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                     speaker_std_dict[speaker] / (total_frame_num_dict[speaker] - 1))
 
         # Compute global stddev per gender
-        train_global_std_male = np.sqrt(train_global_std_male / (total_frame_num_male - 1))
+        train_global_std_male = np.sqrt(
+            train_global_std_male / (total_frame_num_male - 1))
         train_global_std_female = np.sqrt(
             train_global_std_female / (total_frame_num_female - 1))
 
@@ -223,7 +226,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
     frame_num_dict = {}
     for speaker, audio_paths_speaker in tqdm(audio_path_dict.items()):
         for audio_path in audio_paths_speaker:
-            speaker, book, utt_index = basename(audio_path).split('.')[0].split('-')
+            speaker, book, utt_index = basename(
+                audio_path).split('.')[0].split('-')
 
             # Read each audio file
             if tool == 'htk':

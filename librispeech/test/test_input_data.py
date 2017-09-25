@@ -13,6 +13,7 @@ from glob import glob
 sys.path.append('../../')
 from librispeech.prepare_path import Prepare
 from librispeech.inputs.input_data import read_audio
+from utils.measure_time_func import measure_time
 
 prep = Prepare(
     data_path='/n/sd8/inaguma/corpus/librispeech/data',
@@ -36,19 +37,23 @@ class TestInputSpeakerNorm(unittest.TestCase):
 
     def test(self):
 
-        self.check_reading(normalize='global', tool='htk')
-        self.check_reading(normalize='speaker', tool='htk')
-        self.check_reading(normalize='utterance', tool='htk')
+        self.check_feature_extraction(normalize='global', tool='htk')
+        self.check_feature_extraction(normalize='speaker', tool='htk')
+        self.check_feature_extraction(normalize='utterance', tool='htk')
 
-        self.check_reading(normalize='global', tool='python_speech_features')
-        self.check_reading(normalize='speaker', tool='python_speech_features')
-        self.check_reading(normalize='utterance', tool='python_speech_features')
+        self.check_feature_extraction(
+            normalize='global', tool='python_speech_features')
+        self.check_feature_extraction(
+            normalize='speaker', tool='python_speech_features')
+        self.check_feature_extraction(
+            normalize='utterance', tool='python_speech_features')
 
-        self.check_reading(normalize='global', tool='librosa')
-        self.check_reading(normalize='speaker', tool='librosa')
-        self.check_reading(normalize='utterance', tool='librosa')
+        self.check_feature_extraction(normalize='global', tool='librosa')
+        self.check_feature_extraction(normalize='speaker', tool='librosa')
+        self.check_feature_extraction(normalize='utterance', tool='librosa')
 
-    def check_reading(self, normalize, tool):
+    @measure_time
+    def check_feature_extraction(self, normalize, tool):
 
         print('==================================================')
         print('  normalize: %s' % normalize)

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-def phone2index(phone_list, map_file_path):
+def phone2idx(phone_list, map_file_path):
     """Convert from phone to index.
     Args:
         phone_list (list): phones (string)
@@ -24,7 +24,7 @@ def phone2index(phone_list, map_file_path):
     return phone_list
 
 
-def index2phone(index_list, map_file_path):
+def idx2phone(index_list, map_file_path):
     """Convert from index to phone.
     Args:
         index_list (list): phone indices
