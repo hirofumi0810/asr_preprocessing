@@ -79,7 +79,7 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
-                utt_index = line[0]
+                utt_name = line[0]  # ex.) speaker-book-utt_index
                 transcript = ' '.join(line[1:])
 
                 if divide_by_capital:
@@ -105,7 +105,7 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
                 if model == 'attention':
                     transcript = '<' + transcript + '>'
 
-                speaker_dict[speaker][utt_index] = transcript
+                speaker_dict[speaker][utt_name] = transcript
 
                 if stdout_transcript:
                     print(transcript)
@@ -148,12 +148,12 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_index, transcript in utterance_dict.items():
+            for utt_name, transcript in utterance_dict.items():
 
                 # Convert from character to index
                 char_index_list = char2idx(transcript, mapping_file_path,
                                            double_letter=divide_by_capital)
 
                 # Save as npy file
-                np.save(mkdir_join(save_path, speaker, utt_index + '.npy'),
+                np.save(mkdir_join(save_path, utt_name + '.npy'),
                         char_index_list)

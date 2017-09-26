@@ -279,14 +279,14 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
 
             if save_path is not None:
                 # Save input features
+                input_name = basename(audio_path).split('.')[0]
                 input_data_save_path = mkdir_join(
-                    save_path, speaker, utt_index + '.npy')
+                    save_path, input_name + '.npy')
                 np.save(input_data_save_path, input_data_utt)
-                frame_num_dict[utt_index] = input_data_utt.shape[0]
+                frame_num_dict[input_name] = input_data_utt.shape[0]
 
     if save_path is not None:
         # Save the frame number dictionary
-        print('===> Saving : frame_num.pickle')
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
             pickle.dump(frame_num_dict, f)
 

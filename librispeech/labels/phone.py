@@ -81,7 +81,7 @@ def read_phone(label_paths, data_type, run_root_path, model,
             for line in f:
                 line = line.strip().lower().split(' ')
                 # print
-                utt_index = line[0]
+                utt_name = line[0]  # ex.) speaker-book-utt_index
                 word_list = line[1:]
 
                 # Convert from word to phone
@@ -104,7 +104,7 @@ def read_phone(label_paths, data_type, run_root_path, model,
                 if model == 'attention':
                     phone_list = ['<'] + phone_list + ['>']
 
-                speaker_dict[speaker][utt_index] = phone_list
+                speaker_dict[speaker][utt_name] = phone_list
 
                 # if stdout_transcript:
                 #     print(' '.join(phone_list))
@@ -125,11 +125,11 @@ def read_phone(label_paths, data_type, run_root_path, model,
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_index, phone_list in utterance_dict.items():
+            for utt_name, phone_list in utterance_dict.items():
 
                 # Convert from word to index
                 phone_index_list = phone2idx(phone_list, mapping_file_path)
 
                 # Save as npy file
-                np.save(mkdir_join(save_path, speaker, utt_index + '.npy'),
+                np.save(mkdir_join(save_path, utt_name + '.npy'),
                         phone_index_list)

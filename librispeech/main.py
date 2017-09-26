@@ -150,7 +150,7 @@ def make_label(model, label_type):
         divide_by_capital = True if label_type == 'character_capital_divide' else False
 
         # Read target labels and save labels as npy files
-        print('---------- train_ ----------')
+        print('---------- train ----------')
         label_paths = prep.text(data_type=train_data_size)
         read_char(label_paths=label_paths,
                   run_root_path=prep.run_root_path,
@@ -189,7 +189,7 @@ def make_label_word(model, train_data_size):
         print('Already exists.')
     else:
         # Read target labels and save labels as npy files
-        print('---------- train_ ----------')
+        print('---------- train ----------')
         label_paths = prep.text(data_type=train_data_size)
         read_word(label_paths=label_paths,
                   data_type=train_data_size,

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo '----------------------------------------------------'
-echo '|                       CSJ                         |'
-echo '----------------------------------------------------'
+echo ============================================================================
+echo "                                   CSJ                                     "
+echo ============================================================================
 
 # Set paths
 CSJ_PATH='/n/sd8/inaguma/corpus/csj/data'
@@ -28,9 +28,10 @@ DELTADELTA=1
 NORMALIZE='speaker'
 # NORMALIZE='utterance'
 
-##############################
-# Don't change from here ↓↓↓
-##############################
+
+########################################
+# ↓↓↓ Don't change from here ↓↓↓
+########################################
 set -eu
 
 if [ ! -e $CSJ_PATH ]; then
@@ -48,9 +49,8 @@ RUN_ROOT_PATH=`pwd`
 
 
 echo ============================================================================
-echo "                           Feature extraction                             "
+echo "                   Feature extraction by HTK toolkit                      "
 echo ============================================================================
-
 if [ $TOOL = 'htk' ]; then
     # Set the path to HTK (optional, set only when using HTK toolkit)
     CONFIG_PATH="./config/config_file"
@@ -71,22 +71,19 @@ if [ $TOOL = 'htk' ]; then
         --config_path $CONFIG_PATH
 
     # Convert from wav to htk files
-    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_subset.scp
-    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_fullset.scp
-    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
-    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
-    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
-    # $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_subset.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_fullset.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval1.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval2.scp
+    $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_eval3.scp
 fi
 
 
 echo ============================================================================
-echo "                         Process transcriptions                           "
+echo "                                  Main                                    "
 echo ============================================================================
-
-# Make input features & transcripts
-# Note that feature extraction depends on transcription data
-python make_end2end.py \
+python main.py \
     --data_path $CSJ_PATH \
     --dataset_save_path $DATASET_SAVE_PATH \
     --run_root_path $RUN_ROOT_PATH \
@@ -101,5 +98,6 @@ python make_end2end.py \
     --delta $DELTA \
     --deltadelta $DELTADELTA \
     --normalize $NORMALIZE
+
 
 echo 'Successfully completed!!!'

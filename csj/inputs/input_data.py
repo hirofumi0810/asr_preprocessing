@@ -93,7 +93,8 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 # Initialize global statistics
                 feature_dim = input_data_utt_sum.shape[0]
                 train_global_mean_male = np.zeros((feature_dim,), dtype=dtype)
-                train_global_mean_female = np.zeros((feature_dim,), dtype=dtype)
+                train_global_mean_female = np.zeros(
+                    (feature_dim,), dtype=dtype)
                 train_global_std_male = np.zeros((feature_dim,), dtype=dtype)
                 train_global_std_female = np.zeros((feature_dim,), dtype=dtype)
 
@@ -146,7 +147,8 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 raise ValueError
 
         # Compute global stddev per gender
-        train_global_std_male = np.sqrt(train_global_std_male / (total_frame_num_male - 1))
+        train_global_std_male = np.sqrt(
+            train_global_std_male / (total_frame_num_male - 1))
         train_global_std_female = np.sqrt(
             train_global_std_female / (total_frame_num_female - 1))
 
@@ -209,15 +211,14 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
 
             if save_path is not None:
                 # Save input features
-                mkdir_join(save_path, speaker)
-                input_data_save_path = join(
-                    save_path, speaker, speaker + '_' + utt_index + '.npy')
+                input_data_save_path = mkdir_join(
+                    save_path, speaker + '_' + utt_index + '.npy')
                 np.save(input_data_save_path, input_data_utt)
-                frame_num_dict[speaker + '_' + utt_index] = input_data_utt.shape[0]
+                frame_num_dict[speaker + '_' +
+                               utt_index] = input_data_utt.shape[0]
 
     if save_path is not None:
         # Save the frame number dictionary
-        print('===> Saving : frame_num.pickle')
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
             pickle.dump(frame_num_dict, f)
 

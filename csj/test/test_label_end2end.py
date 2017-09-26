@@ -12,23 +12,24 @@ import unittest
 sys.path.append('../../')
 from csj.prepare_path import Prepare
 from csj.labels.character import read_sdb
+from utils.measure_time_func import measure_time
+
+prep = Prepare(data_path='/n/sd8/inaguma/corpus/csj/data',
+               run_root_path=os.path.abspath('../'))
+
+label_paths = {
+    'train_fullset': prep.trans(data_type='train_fullset'),
+    'train_subset': prep.trans(data_type='train_subset'),
+    'dev': prep.trans(data_type='dev'),
+    'eval1': prep.trans(data_type='eval1'),
+    'eval2': prep.trans(data_type='eval2'),
+    'eval3': prep.trans(data_type='eval3')
+}
 
 
 class TestEnd2EndLabel(unittest.TestCase):
 
     def test(self):
-
-        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/csj/data',
-                            run_root_path=os.path.abspath('../'))
-
-        self.label_paths = {
-            'train_fullset': self.prep.trans(data_type='train_fullset'),
-            'train_subset': self.prep.trans(data_type='train_subset'),
-            'dev': self.prep.trans(data_type='dev'),
-            'eval1': self.prep.trans(data_type='eval1'),
-            'eval2': self.prep.trans(data_type='eval2'),
-            'eval3': self.prep.trans(data_type='eval3')
-        }
 
         # CTC
         self.check_reading(model='ctc', divide_by_space=True)
@@ -38,6 +39,7 @@ class TestEnd2EndLabel(unittest.TestCase):
         self.check_reading(model='attention', divide_by_space=True)
         self.check_reading(model='attention', divide_by_space=False)
 
+    @measure_time
     def check_reading(self, model, divide_by_space):
 
         print('==================================================')
@@ -46,8 +48,8 @@ class TestEnd2EndLabel(unittest.TestCase):
         print('==================================================')
 
         print('---------- train_fullset ----------')
-        read_sdb(label_paths=self.label_paths['train_fullset'],
-                 run_root_path=self.prep.run_root_path,
+        read_sdb(label_paths=label_paths['train_fullset'],
+                 run_root_path=prep.run_root_path,
                  model=model,
                  save_map_file=True,
                  divide_by_space=divide_by_space,
@@ -55,8 +57,8 @@ class TestEnd2EndLabel(unittest.TestCase):
 
         for data_type in ['train_subset', 'dev', 'eval1', 'eval2', 'eval3']:
             print('---------- %s ----------' % data_type)
-            read_sdb(label_paths=self.label_paths[data_type],
-                     run_root_path=self.prep.run_root_path,
+            read_sdb(label_paths=label_paths[data_type],
+                     run_root_path=prep.run_root_path,
                      model=model,
                      divide_by_space=divide_by_space)
 

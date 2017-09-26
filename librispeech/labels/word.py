@@ -98,7 +98,7 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
-                utt_index = line[0]
+                utt_name = line[0]  # ex.) speaker-book-utt_index
                 word_list = line[1:]
 
                 if is_training:
@@ -111,7 +111,7 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
                 if model == 'attention':
                     word_list = ['<'] + word_list + ['>']
 
-                speaker_dict[speaker][utt_index] = word_list
+                speaker_dict[speaker][utt_name] = word_list
 
                 if stdout_transcript:
                     print(' '.join(word_list))
@@ -155,13 +155,13 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_index, word_list in utterance_dict.items():
+            for utt_name, word_list in utterance_dict.items():
 
                 # Save as npy file
                 if is_test:
-                    np.save(mkdir_join(save_path, speaker,
-                                       utt_index + '.npy'), word_list)
-                    # NOTE: save a transcript as the list of words
+                    np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),
+                            ' '.join(word_list))
+                    # NOTE: save a transcript as string
                 else:
                     # Convert to OOV
                     word_list = [
@@ -170,5 +170,5 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
                     # Convert from word to index
                     word_index_list = word2idx(word_list, mapping_file_path)
 
-                    np.save(mkdir_join(save_path, speaker, utt_index + '.npy'),
+                    np.save(mkdir_join(save_path, utt_name + '.npy'),
                             word_index_list)

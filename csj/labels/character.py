@@ -16,8 +16,8 @@ import jaconv
 import pickle
 
 from utils.util import mkdir_join
-from utils.labels.character import kana2index
-from utils.labels.phone import phone2index
+from utils.labels.character import kana2idx
+from utils.labels.phone import phone2idx
 from csj.labels.fix_trans import fix_transcript
 from csj.labels.fix_trans import is_hiragana, is_katakana
 
@@ -260,12 +260,12 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
             kana2phone_dict['>'] = '>'
 
     # Make the mapping file (from kanji, kana, phone to number)
-    kanji_map_file_path = join(run_root_path, 'labels/mapping_files',
-                               model, 'kanji.txt')
-    kana_map_file_path = join(run_root_path, 'labels/mapping_files',
-                              model, 'kana.txt')
-    phone_map_file_path = join(run_root_path, 'labels/mapping_files',
-                               model, 'phone.txt')
+    kanji_map_file_path = mkdir_join(run_root_path, 'labels/mapping_files',
+                                     model, 'kanji.txt')
+    kana_map_file_path = mkdir_join(run_root_path, 'labels/mapping_files',
+                                    model, 'kana.txt')
+    phone_map_file_path = mkdir_join(run_root_path, 'labels/mapping_files',
+                                     model, 'phone.txt')
     if save_map_file:
         # kanji
         with open(kanji_map_file_path, 'w') as f:
@@ -330,30 +330,29 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                 # kanji & kanji
                 if not is_test:
                     # Convert from kanji & kana character to index
-                    kanji_index_list = kana2index(trans_kanji, kanji_map_file_path)
-                    kana_index_list = kana2index(trans_kana, kana_map_file_path)
+                    kanji_index_list = kana2idx(
+                        trans_kanji, kanji_map_file_path)
+                    kana_index_list = kana2idx(trans_kana, kana_map_file_path)
 
                     # Save as npy file
-                    np.save(mkdir_join(kanji_save_path, speaker, save_file_name),
+                    np.save(mkdir_join(kanji_save_path, save_file_name),
                             kanji_index_list)
-                    np.save(mkdir_join(kana_save_path, speaker, save_file_name),
+                    np.save(mkdir_join(kana_save_path, save_file_name),
                             kana_index_list)
 
                     # Count label num
-                    label_num_dict_kanji[speaker + '_' + utt_index] = len(kanji_index_list)
-                    label_num_dict_kana[speaker + '_' + utt_index] = len(kana_index_list)
+                    label_num_dict_kanji[speaker + '_' +
+                                         utt_index] = len(kanji_index_list)
+                    label_num_dict_kana[speaker + '_' +
+                                        utt_index] = len(kana_index_list)
 
                 else:
                     # Save as npy file
-                    np.save(mkdir_join(kanji_save_path, speaker, save_file_name),
+                    np.save(mkdir_join(kanji_save_path, save_file_name),
                             trans_kanji)
-                    np.save(mkdir_join(kana_save_path, speaker, save_file_name),
+                    np.save(mkdir_join(kana_save_path, save_file_name),
                             trans_kana)
                     # NOTE: save test transcripts as stirng rather than index
-
-                    # Count label num
-                    label_num_dict_kanji[speaker + '_' + utt_index] = len(trans_kanji)
-                    label_num_dict_kana[speaker + '_' + utt_index] = len(trans_kana)
 
                 # Convert kana character to phone
                 trans_kana_list = list(trans_kana)
@@ -387,18 +386,19 @@ def read_sdb(label_paths, run_root_path, model, is_test=None,
                     trans_phone_list.extend(phone_seq.split(' '))
 
                 # Convert from phone to index
-                phone_index_list = phone2index(
+                phone_index_list = phone2idx(
                     trans_phone_list, phone_map_file_path)
 
                 # Save as npy file
-                np.save(mkdir_join(phone_save_path, speaker, save_file_name),
+                np.save(mkdir_join(phone_save_path, save_file_name),
                         phone_index_list)
 
-                # Count label num
-                label_num_dict_phone[speaker + '_' + utt_index] = len(phone_index_list)
+                if not is_test:
+                    # Count label num
+                    label_num_dict_phone[speaker + '_' +
+                                         utt_index] = len(phone_index_list)
 
         # Save the label number dictionary
-        print('===> Saving : label_num.pickle')
         with open(join(kanji_save_path, 'label_num.pickle'), 'wb') as f:
             pickle.dump(label_num_dict_kanji, f)
         with open(join(kana_save_path, 'label_num.pickle'), 'wb') as f:
