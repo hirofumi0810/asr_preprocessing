@@ -131,5 +131,5 @@ def read_phone(label_paths, data_type, run_root_path, model,
                 phone_index_list = phone2idx(phone_list, mapping_file_path)
 
                 # Save as npy file
-                np.save(mkdir_join(save_path, utt_name + '.npy'),
+                np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),
                         phone_index_list)

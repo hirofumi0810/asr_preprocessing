@@ -170,5 +170,5 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
                     # Convert from word to index
                     word_index_list = word2idx(word_list, mapping_file_path)
 
-                    np.save(mkdir_join(save_path, utt_name + '.npy'),
+                    np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),
                             word_index_list)

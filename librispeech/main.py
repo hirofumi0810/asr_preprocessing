@@ -15,7 +15,7 @@ from glob import glob
 sys.path.append('../')
 from librispeech.prepare_path import Prepare
 from librispeech.inputs.input_data import read_audio
-from librispeech.labels.phone import read_phone
+# from librispeech.labels.phone import read_phone
 from librispeech.labels.character import read_char
 from librispeech.labels.word import read_word
 from utils.util import mkdir_join
@@ -133,20 +133,22 @@ def make_input(train_data_size):
             f.write('')
 
 
-def make_label(model, label_type):
+def make_label(model, train_data_size, label_type):
 
     print('==================================================')
     print('  model: %s' % model)
+    print('  train_data_size: %s' % train_data_size)
     print('  label_type: %s' % label_type)
     print('==================================================')
 
     label_save_path = mkdir_join(
-        args.dataset_save_path, 'labels', model, label_type)
+        args.dataset_save_path, 'labels', model, label_type, train_data_size)
 
     print('=> Processing transcripts...')
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')
     else:
+        save_map_file = True if train_data_size == 'train_clean100' else False
         divide_by_capital = True if label_type == 'character_capital_divide' else False
 
         # Read target labels and save labels as npy files
@@ -155,8 +157,8 @@ def make_label(model, label_type):
         read_char(label_paths=label_paths,
                   run_root_path=prep.run_root_path,
                   model=model,
-                  save_map_file=True,
-                  save_path=mkdir_join(label_save_path, train_data_size),
+                  save_map_file=save_map_file,
+                  save_path=mkdir_join(label_save_path, 'train'),
                   divide_by_capital=divide_by_capital)
 
         for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
@@ -182,7 +184,7 @@ def make_label_word(model, train_data_size):
     print('==================================================')
 
     label_save_path = mkdir_join(
-        args.dataset_save_path, 'labels', model, 'word_' + train_data_size)
+        args.dataset_save_path, 'labels', model, 'word', train_data_size)
 
     print('=> Processing transcripts...')
     if isfile(join(label_save_path, 'complete.txt')):
@@ -197,7 +199,7 @@ def make_label_word(model, train_data_size):
                   run_root_path=prep.run_root_path,
                   model=model,
                   save_map_file=True,
-                  save_path=mkdir_join(label_save_path, train_data_size),
+                  save_path=mkdir_join(label_save_path, 'train'),
                   frequency_threshold=10)
 
         for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
@@ -220,13 +222,12 @@ if __name__ == '__main__':
 
     for train_data_size in ['train_clean100', 'train_clean360',
                             'train_other500', 'train_all']:
+        # input
         make_input(train_data_size)
 
-    for model in ['ctc', 'attention']:
-        for label_type in ['character', 'character_capital_divide']:
-            make_label(model, label_type)
-            # TODO: add phone
-
-        for train_data_size in ['train_clean100', 'train_clean360',
-                                'train_other500', 'train_all']:
+        # label
+        for model in ['ctc', 'attention']:
+            for label_type in ['character', 'character_capital_divide']:
+                make_label(model, train_data_size, label_type)
+                # TODO: add phone
             make_label_word(model, train_data_size)

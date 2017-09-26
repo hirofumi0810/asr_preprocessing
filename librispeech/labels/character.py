@@ -155,5 +155,5 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
                                            double_letter=divide_by_capital)
 
                 # Save as npy file
-                np.save(mkdir_join(save_path, utt_name + '.npy'),
+                np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),
                         char_index_list)
