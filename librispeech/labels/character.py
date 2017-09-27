@@ -12,7 +12,7 @@ import re
 import numpy as np
 from tqdm import tqdm
 
-from utils.labels.character import char2idx
+from utils.labels.character import Char2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -112,11 +112,11 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
 
     # Make mapping file (from character to index)
     if divide_by_capital:
-        mapping_file_path = mkdir_join(
+        map_file_path = mkdir_join(
             run_root_path, 'labels', 'mapping_files', model,
-            'character_capital.txt')
+            'character_capital_divide.txt')
     else:
-        mapping_file_path = mkdir_join(
+        map_file_path = mkdir_join(
             run_root_path, 'labels', 'mapping_files', model,
             'character.txt')
     char_set.discard('_')
@@ -129,7 +129,7 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
     # print(sorted(list(char_set)))
 
     if save_map_file:
-        with open(mapping_file_path, 'w') as f:
+        with open(map_file_path, 'w') as f:
             if model == 'ctc':
                 if divide_by_capital:
                     char_list = sorted(list(char_set)) + ['\'']
@@ -145,14 +145,16 @@ def read_char(label_paths, run_root_path, model, save_map_file=False,
                 f.write('%s  %s\n' % (char, str(i)))
 
     if save_path is not None:
+        char2idx = Char2idx(map_file_path=map_file_path)
+
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
             for utt_name, transcript in utterance_dict.items():
 
                 # Convert from character to index
-                char_index_list = char2idx(transcript, mapping_file_path,
-                                           double_letter=divide_by_capital)
+                char_index_list = char2idx(
+                    transcript, double_letter=divide_by_capital)
 
                 # Save as npy file
                 np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),

@@ -75,9 +75,6 @@ def fix_transcript(kana_seq):
     kana_seq = re.sub(r'\?', '', kana_seq)
     kana_seq = re.sub(r'<>', '', kana_seq)
 
-    # Convert space to underbar
-    kana_seq = re.sub(r'\s', '_', kana_seq)
-
     return kana_seq
 
 

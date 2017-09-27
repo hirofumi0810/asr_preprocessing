@@ -53,7 +53,7 @@ class TestCTCLabelChar(unittest.TestCase):
         for data_type in ['train_clean100', 'train_clean360', 'train_other500',
                           'dev_clean', 'dev_other', 'test_clean', 'test_other']:
 
-            save_map_file = True if data_type == 'train_other500' else False
+            save_map_file = True if data_type == 'train_all' else False
 
             print('---------- %s ----------' % data_type)
             read_char(label_paths=label_paths[data_type],

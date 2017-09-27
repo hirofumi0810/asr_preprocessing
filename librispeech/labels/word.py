@@ -10,7 +10,7 @@ from __future__ import print_function
 import numpy as np
 from tqdm import tqdm
 
-from utils.labels.word import word2idx
+from utils.labels.word import Word2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -116,7 +116,7 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
                 if stdout_transcript:
                     print(' '.join(word_list))
 
-    mapping_file_path = mkdir_join(
+    map_file_path = mkdir_join(
         run_root_path, 'labels', 'mapping_files', model,
         'word_' + train_data_size + '.txt')
 
@@ -128,7 +128,7 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
         vocab_set -= set(oov_list)
     else:
         # Read the mapping file
-        with open(mapping_file_path, 'r') as f:
+        with open(map_file_path, 'r') as f:
             for line in f:
                 line = line.strip().split()
                 vocab_set.add(line[0])
@@ -138,7 +138,7 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
         word_list = sorted(list(vocab_set)) + ['OOV']
         if model == 'attention':
             word_list = ['<', '>'] + word_list
-        with open(mapping_file_path, 'w') as f:
+        with open(map_file_path, 'w') as f:
             for i, word in enumerate(word_list):
                 f.write('%s  %s\n' % (word, str(i)))
 
@@ -152,6 +152,8 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
               ((total_oov_word_count / total_word_count) * 100))
 
     if save_path is not None:
+        word2idx = Word2idx(map_file_path=map_file_path)
+
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
@@ -168,7 +170,7 @@ def read_word(label_paths, data_type, train_data_size, run_root_path, model,
                         word if word in vocab_set else 'OOV' for word in word_list]
 
                     # Convert from word to index
-                    word_index_list = word2idx(word_list, mapping_file_path)
+                    word_index_list = word2idx(word_list)
 
                     np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),
                             word_index_list)

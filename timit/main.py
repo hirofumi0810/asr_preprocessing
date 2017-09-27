@@ -13,7 +13,7 @@ import argparse
 from glob import glob
 
 sys.path.append('../')
-from prepare_path import Prepare
+from timit.prepare_path import Prepare
 from timit.labels.character import read_text
 from timit.labels.phone import read_phone
 from timit.inputs.input_data import read_audio
@@ -21,8 +21,10 @@ from utils.util import mkdir_join
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
-parser.add_argument('--dataset_save_path', type=str, help='path to save dataset')
-parser.add_argument('--run_root_path', type=str, help='path to run this script')
+parser.add_argument('--dataset_save_path', type=str,
+                    help='path to save dataset')
+parser.add_argument('--run_root_path', type=str,
+                    help='path to run this script')
 
 parser.add_argument('--tool', type=str,
                     help='the tool to extract features, htk or python_speech_features or htk')
@@ -33,12 +35,18 @@ parser.add_argument('--normalize', type=str, default='speaker',
 
 parser.add_argument('--feature_type', type=str, default='logmelfbank',
                     help='the type of features, logmelfbank or mfcc or linearmelfbank')
-parser.add_argument('--channels', type=int, default=40, help='the number of frequency channels')
-parser.add_argument('--sampling_rate', type=float, default=16000, help='sampling rate')
-parser.add_argument('--window', type=float, default=0.025, help='window width to extract features')
-parser.add_argument('--slide', type=float, default=0.01, help='extract features per \'slide\'')
-parser.add_argument('--energy', type=int, default=0, help='if 1, add the energy feature')
-parser.add_argument('--delta', type=int, default=1, help='if 1, add the energy feature')
+parser.add_argument('--channels', type=int, default=40,
+                    help='the number of frequency channels')
+parser.add_argument('--sampling_rate', type=float,
+                    default=16000, help='sampling rate')
+parser.add_argument('--window', type=float, default=0.025,
+                    help='window width to extract features')
+parser.add_argument('--slide', type=float, default=0.01,
+                    help='extract features per \'slide\'')
+parser.add_argument('--energy', type=int, default=0,
+                    help='if 1, add the energy feature')
+parser.add_argument('--delta', type=int, default=1,
+                    help='if 1, add the energy feature')
 parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
 
@@ -59,7 +67,8 @@ CONFIG = {
 
 def make_input():
 
-    input_save_path = mkdir_join(args.dataset_save_path, 'inputs', args.tool, args.normalize)
+    input_save_path = mkdir_join(
+        args.dataset_save_path, 'inputs', args.tool, args.normalize)
 
     print('=> Processing input data...')
     if isfile(join(input_save_path, 'complete.txt')):
@@ -115,7 +124,8 @@ def make_label(model, label_type):
     print('  label_type: %s' % label_type)
     print('==================================================')
 
-    label_save_path = mkdir_join(args.dataset_save_path, 'labels', model, label_type)
+    label_save_path = mkdir_join(
+        args.dataset_save_path, 'labels', model, label_type)
 
     print('=> Processing transcripts...')
     if isfile(join(label_save_path, 'complete.txt')):

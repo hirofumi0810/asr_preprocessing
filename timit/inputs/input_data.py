@@ -12,6 +12,7 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 
+from utils.util import mkdir_join
 from utils.inputs.segmentation import read_htk as read_htk_utt
 from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
 from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
@@ -58,7 +59,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
     """
     if not is_training:
         if train_global_mean_male is None or train_global_std_male is None:
-            raise ValueError('Set global mean & std computed over the training set.')
+            raise ValueError(
+                'Set global mean & std computed over the training set.')
     if normalize not in ['global', 'speaker', 'utterance']:
         raise ValueError('normalize is "utterance" or "speaker" or "global".')
 
@@ -150,7 +152,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                                               wav_paths_male):
             speaker = audio_path.split('/')[-2]
             frame_num_utt = input_data_utt.shape[0]
-            train_data_male[frame_offset:frame_offset + frame_num_utt] = input_data_utt
+            train_data_male[frame_offset:frame_offset +
+                            frame_num_utt] = input_data_utt
             frame_offset += frame_num_utt
 
             if normalize == 'speaker':
@@ -163,7 +166,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                                               wav_paths_female):
             speaker = audio_path.split('/')[-2]
             frame_num_utt = input_data_utt.shape[0]
-            train_data_female[frame_offset:frame_offset + frame_num_utt] = input_data_utt
+            train_data_female[frame_offset:frame_offset +
+                              frame_num_utt] = input_data_utt
             frame_offset += frame_num_utt
 
             if normalize == 'speaker':
@@ -222,12 +226,12 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                 else:
                     raise ValueError
 
-            np.save(join(save_path, speaker + '_' + utt_index + '.npy'), input_data_utt)
+            np.save(mkdir_join(save_path, speaker + '_' +
+                               utt_index + '.npy'), input_data_utt)
             frame_num_dict[speaker + '_' + utt_index] = input_data_utt.shape[0]
 
         # Save a frame number dictionary
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
-            print('===> Saving : frame_num.pickle')
             pickle.dump(frame_num_dict, f)
 
     return (train_global_mean_male, train_global_std_male,

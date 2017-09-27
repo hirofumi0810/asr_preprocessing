@@ -148,7 +148,7 @@ def make_label(model, train_data_size, label_type):
     if isfile(join(label_save_path, 'complete.txt')):
         print('Already exists.')
     else:
-        save_map_file = True if train_data_size == 'train_clean100' else False
+        save_map_file = True if train_data_size == 'train_all' else False
         divide_by_capital = True if label_type == 'character_capital_divide' else False
 
         # Read target labels and save labels as npy files
@@ -220,8 +220,8 @@ def make_label_word(model, train_data_size):
 
 if __name__ == '__main__':
 
-    for train_data_size in ['train_clean100', 'train_clean360',
-                            'train_other500', 'train_all']:
+    for train_data_size in ['train_all', 'train_clean100', 'train_clean360',
+                            'train_other500']:
         # input
         make_input(train_data_size)
 

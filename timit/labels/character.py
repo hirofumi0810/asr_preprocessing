@@ -13,7 +13,8 @@ import numpy as np
 from tqdm import tqdm
 import pickle
 
-from utils.labels.character import char2index
+from utils.labels.character import Char2idx
+from utils.util import mkdir_join
 
 # NOTE:
 ############################################################
@@ -109,17 +110,14 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
 
         # for debug
         if stdout_transcript:
-            # print(transcript)
-            speaker = label_path.split('/')[-2]
-            utt_index = basename(label_path).split('.')[0]
-            print(speaker + '_' + utt_index)
+            print(transcript)
 
     # Make mapping file (from character to number)
     if divide_by_capital:
-        mapping_file_path = join(
+        map_file_path = mkdir_join(
             run_root_path, 'labels', 'mapping_files', model, 'character_capital.txt')
     else:
-        mapping_file_path = join(
+        map_file_path = mkdir_join(
             run_root_path, 'labels', 'mapping_files', model, 'character.txt')
     char_set.discard('_')
     char_set.discard('\'')
@@ -128,7 +126,7 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
         char_set.discard('>')
 
     if save_map_file:
-        with open(mapping_file_path, 'w') as f:
+        with open(map_file_path, 'w') as f:
             if model == 'attention':
                 char_list = ['<', '>']
             elif model == 'ctc':
@@ -143,7 +141,9 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
                 f.write('%s  %s\n' % (char, str(i)))
 
     if save_path is not None:
+        char2idx = Char2idx(map_file_path=map_file_path)
         label_num_dict = {}
+
         # Save target labels
         print('===> Saving target labels...')
         for label_path, transcript in tqdm(text_dict.items()):
@@ -151,16 +151,15 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
             utt_index = basename(label_path).split('.')[0]
 
             # Convert from character to index
-            index_list = char2index(transcript, mapping_file_path,
-                                    double_letter=divide_by_capital)
+            index_list = char2idx(transcript, double_letter=divide_by_capital)
 
             # Save as npy file
-            np.save(join(save_path, speaker + '_' + utt_index + '.npy'), index_list)
+            np.save(mkdir_join(save_path, speaker + '_' +
+                               utt_index + '.npy'), index_list)
 
             # Count label number
             label_num_dict[speaker + '_' + utt_index] = len(index_list)
 
         # Save the label number dictionary
-        print('===> Saving : label_num.pickle')
         with open(join(save_path, 'label_num.pickle'), 'wb') as f:
             pickle.dump(label_num_dict, f)

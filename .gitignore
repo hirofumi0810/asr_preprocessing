@@ -5,7 +5,7 @@ __pychache__
 *.pyc
 *.scp
 .nfs*
-*.txt
+mapping_files
 make_mine.sh
 
 # tools

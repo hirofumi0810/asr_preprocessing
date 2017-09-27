@@ -29,9 +29,9 @@ NORMALIZE='speaker'
 # NORMALIZE='utterance'
 
 
-##############################
-# Don't change from here ↓↓↓
-##############################
+########################################
+# ↓↓↓ Don't change from here ↓↓↓
+########################################
 set -eu
 
 if [ ! -e $TIMIT_PATH ]; then
@@ -48,9 +48,9 @@ fi
 RUN_ROOT_PATH=`pwd`
 
 
-########################################
-# Feature extraction by HTK toolkit
-########################################
+echo ============================================================================
+echo "                   Feature extraction by HTK toolkit                      "
+echo ============================================================================
 if [ $TOOL = 'htk' ]; then
     # Set the path to HTK (optional, set only when using HTK toolkit)
     CONFIG_PATH="./config/config_file"
@@ -77,9 +77,9 @@ if [ $TOOL = 'htk' ]; then
 fi
 
 
-########################################
-# Main function
-########################################
+echo ============================================================================
+echo "                                  Main                                    "
+echo ============================================================================
 python main.py \
     --data_path $TIMIT_PATH \
     --dataset_save_path $DATASET_SAVE_PATH \

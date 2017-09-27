@@ -12,20 +12,21 @@ import unittest
 sys.path.append('../../')
 from timit.prepare_path import Prepare
 from timit.labels.phone import read_phone
+from utils.measure_time_func import measure_time
+
+prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
+               run_root_path=os.path.abspath('../'))
+
+label_paths = {
+    'train': prep.phone(data_type='train'),
+    'dev': prep.phone(data_type='dev'),
+    'test': prep.phone(data_type='test')
+}
 
 
 class TestEnd2EndLabelPhone(unittest.TestCase):
 
     def test(self):
-
-        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
-                            run_root_path=os.path.abspath('../'))
-
-        self.label_paths = {
-            'train': self.prep.phone(data_type='train'),
-            'dev': self.prep.phone(data_type='dev'),
-            'test': self.prep.phone(data_type='test')
-        }
 
         # CTC
         self.check_reading(model='ctc', label_type='phone61')
@@ -37,6 +38,7 @@ class TestEnd2EndLabelPhone(unittest.TestCase):
         self.check_reading(model='attention', label_type='phone48')
         self.check_reading(model='attention', label_type='phone39')
 
+    @measure_time
     def check_reading(self, model, label_type):
 
         print('==================================================')
@@ -48,9 +50,9 @@ class TestEnd2EndLabelPhone(unittest.TestCase):
             save_map_file = True if data_type == 'train' else False
 
             print('---------- %s ----------' % data_type)
-            read_phone(label_paths=self.label_paths[data_type],
+            read_phone(label_paths=label_paths[data_type],
                        label_type=label_type,
-                       run_root_path=self.prep.run_root_path,
+                       run_root_path=prep.run_root_path,
                        model=model,
                        save_map_file=save_map_file,
                        stdout_transcript=True)

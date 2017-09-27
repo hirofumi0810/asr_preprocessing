@@ -17,7 +17,7 @@ from glob import glob
 sys.path.append('../')
 from csj.prepare_path import Prepare
 from csj.inputs.input_data import read_audio
-from csj.labels.character import read_sdb
+from csj.labels.target import read_sdb
 from utils.util import mkdir_join
 
 parser = argparse.ArgumentParser()
@@ -116,10 +116,11 @@ def main(model, train_data_size, divide_by_space):
             label_paths=prep.trans(data_type=train_data_size),
             run_root_path=args.run_root_path,
             model=model,
+            train_data_size=train_data_size,
+            save_map_file=True,
             kanji_save_path=mkdir_join(kanji_label_save_path, 'train'),
             kana_save_path=mkdir_join(kana_label_save_path, 'train'),
             phone_save_path=mkdir_join(phone_label_save_path, 'train'),
-            save_map_file=True,
             divide_by_space=divide_by_space)
 
         for data_type in ['dev', 'eval1', 'eval2', 'eval3']:
@@ -132,6 +133,7 @@ def main(model, train_data_size, divide_by_space):
                 label_paths=prep.trans(data_type=data_type),
                 run_root_path=args.run_root_path,
                 model=model,
+                train_data_size=train_data_size,
                 is_test=is_test,
                 kanji_save_path=mkdir_join(kanji_label_save_path, data_type),
                 kana_save_path=mkdir_join(kana_label_save_path, data_type),

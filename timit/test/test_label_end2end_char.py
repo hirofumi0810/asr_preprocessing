@@ -12,20 +12,21 @@ import unittest
 sys.path.append('../../')
 from timit.prepare_path import Prepare
 from timit.labels.character import read_text
+from utils.measure_time_func import measure_time
+
+prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
+               run_root_path=os.path.abspath('../'))
+
+label_paths = {
+    'train': prep.text(data_type='train'),
+    'dev': prep.text(data_type='dev'),
+    'test': prep.text(data_type='test')
+}
 
 
 class TestEnd2EndLabelChar(unittest.TestCase):
 
     def test(self):
-
-        self.prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
-                            run_root_path=os.path.abspath('../'))
-
-        self.label_paths = {
-            'train': self.prep.text(data_type='train'),
-            'dev': self.prep.text(data_type='dev'),
-            'test': self.prep.text(data_type='test')
-        }
 
         # CTC
         self.check_reading(model='ctc', divide_by_capital=False)
@@ -35,6 +36,7 @@ class TestEnd2EndLabelChar(unittest.TestCase):
         self.check_reading(model='attention', divide_by_capital=False)
         self.check_reading(model='attention', divide_by_capital=True)
 
+    @measure_time
     def check_reading(self, model, divide_by_capital):
 
         print('==================================================')
@@ -46,8 +48,8 @@ class TestEnd2EndLabelChar(unittest.TestCase):
             save_map_file = True if data_type == 'train' else False
 
             print('---------- %s ----------' % data_type)
-            read_text(label_paths=self.label_paths[data_type],
-                      run_root_path=self.prep.run_root_path,
+            read_text(label_paths=label_paths[data_type],
+                      run_root_path=prep.run_root_path,
                       model=model,
                       save_map_file=save_map_file,
                       divide_by_capital=divide_by_capital,

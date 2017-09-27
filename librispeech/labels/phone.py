@@ -12,7 +12,7 @@ from os.path import join
 import numpy as np
 from tqdm import tqdm
 
-from utils.labels.phone import phone2idx
+from utils.labels.phone import Phone2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -109,7 +109,7 @@ def read_phone(label_paths, data_type, run_root_path, model,
                 # if stdout_transcript:
                 #     print(' '.join(phone_list))
 
-    mapping_file_path = mkdir_join(
+    map_file_path = mkdir_join(
         run_root_path, 'labels', 'mapping_files', model, 'phone.txt')
 
     # Make mapping file (from phone to index)
@@ -117,18 +117,20 @@ def read_phone(label_paths, data_type, run_root_path, model,
         all_phone_list = sorted(list(phone_set))
         if model == 'attention':
             all_phone_list = ['<', '>'] + all_phone_list
-        with open(mapping_file_path, 'w') as f:
+        with open(map_file_path, 'w') as f:
             for i, phone in enumerate(all_phone_list):
                 f.write('%s  %s\n' % (phone, str(i)))
 
     if save_path is not None:
+        phone2idx = Phone2idx(map_file_path=map_file_path)
+
         # Save target labels
         print('===> Saving target labels...')
         for speaker, utterance_dict in tqdm(speaker_dict.items()):
             for utt_name, phone_list in utterance_dict.items():
 
                 # Convert from word to index
-                phone_index_list = phone2idx(phone_list, mapping_file_path)
+                phone_index_list = phone2idx(phone_list)
 
                 # Save as npy file
                 np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),
