@@ -9,7 +9,7 @@ DATA_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/data'
 DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/dataset'
 WAV_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/wav'
 HTK_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/htk'
-HTK_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
+HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
 
 ### Select one tool to extract features (HTK is the fastest)
 TOOL='htk'
@@ -175,13 +175,13 @@ if [ $TOOL = 'htk' ]; then
     --config_path $CONFIG_PATH
 
   # Convert from wav to htk files
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean100.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean360.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_other500.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_clean.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_other.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_clean.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_other.scp
+  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean100.scp
+  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean360.scp
+  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_other500.scp
+  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_clean.scp
+  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_other.scp
+  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_clean.scp
+  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_other.scp
 fi
 
 
