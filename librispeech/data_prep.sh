@@ -64,9 +64,11 @@ for part in train-clean-100 \
   if [ -d $DATA_SAVE_PATH/$part ]; then
     echo file exists: $part
   else
-    wget http://www.openslr.org/resources/12/$part.tar.gz -P $DATA_SAVE_PATH
-    tar xvfz $DATA_SAVE_PATH/LibriSpeech/$part.tar.gz -C $DATA_SAVE_PATH
-    rm $DATA_SAVE_PATH/LibriSpeech/$part.tar.gz
+    if [ ! -e $DATA_SAVE_PATH/$part.tar.gz ]; then
+      wget http://www.openslr.org/resources/12/$part.tar.gz -P $DATA_SAVE_PATH
+    fi
+    tar xvfz $DATA_SAVE_PATH/$part.tar.gz -C $DATA_SAVE_PATH
+    rm $DATA_SAVE_PATH/$part.tar.gzwget http://www.openslr.org/resources/12/$part.tar.gz -P $DATA_SAVE_PATH
   fi
 done
 
