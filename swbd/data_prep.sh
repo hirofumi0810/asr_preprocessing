@@ -6,23 +6,24 @@ echo ===========================================================================
 
 # Set paths
 SWBD_PATH='/n/sd8/inaguma/corpus/swbd/data/LDC97S62/'
-FISHER_PATH='/n/sd8/inaguma/corpus/swbd/data/fisher/'
 EVAL2000_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002S09/'
 EVAL2000_TRANS_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002T43/'
+FISHER_PATH='/n/sd8/inaguma/corpus/swbd/data/fisher/'
 DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/swbd/dataset'
-WAV_SAVE_PATH='/n/sd8/inaguma/corpus/swbd/wav2'
+WAV_SAVE_PATH='/n/sd8/inaguma/corpus/swbd/wav'
 HTK_SAVE_PATH='/n/sd8/inaguma/corpus/swbd/htk'
-HTK_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
+HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
 
 ### Select one tool to extract features (HTK is the fastest)
 TOOL='htk'
-# TOOL='python_speech_features'
-# TOOL='librosa'
+# TOOL='python_speech_features'  # under implementation
+# TOOL='librosa'  # under implementation
+# TOOL='kaldi'  # under implementation
 
 ### Configuration (Set by yourself)
 FEATURE_TYPE='logmelfbank'  # or mfcc
 CHANNELS=40
-SAMPLING_RATE=16000
+SAMPLING_RATE=8000
 WINDOW=0.025
 SLIDE=0.01
 ENERGY=0
@@ -42,9 +43,6 @@ if [ ! -e $SWBD_PATH ]; then
   echo "Switchboard directory was not found."
   exit 1
 fi
-if [ ! -e $FISHER_PATH ]; then
-  echo "Warning: Fisher directory was not found."
-fi
 if [ ! -e $EVAL2000_AUDIO_PATH ]; then
   echo "eval2000 (audio) directory was not found."
   exit 1
@@ -53,6 +51,10 @@ if [ ! -e $EVAL2000_TRANS_PATH ]; then
   echo "eval2000 (trans) directory was not found."
   exit 1
 fi
+if [ ! $FISHER_PATH = '' ] && [ ! -e $FISHER_PATH ]; then
+  echo "Warning: Fisher directory was not found."
+fi
+
 if [ ! -e $DATASET_SAVE_PATH ]; then
   mkdir $DATASET_SAVE_PATH
 fi
@@ -76,7 +78,7 @@ else
   fi
 
   wget http://www.openslr.org/resources/5/switchboard_word_alignments.tar.gz -P $DATASET_SAVE_PATH
-    # wget http://www.isip.piconepress.com/projects/switchboard/releases/switchboard_word_alignments.tar.gz
+  # alternative: wget http://www.isip.piconepress.com/projects/switchboard/releases/switchboard_word_alignments.tar.gz
   tar xzvf $DATASET_SAVE_PATH/switchboard_word_alignments.tar.gz -C $DATASET_SAVE_PATH
   rm $DATASET_SAVE_PATH/switchboard_word_alignments.tar.gz
 fi
@@ -84,7 +86,6 @@ fi
 # Option A: SWBD dictionary file check
 [ ! -f $DATASET_SAVE_PATH/swb_ms98_transcriptions/sw-ms98-dict.text ] && \
   echo  "SWBD dictionary file does not exist" &&  exit 1;
-
 
 
 if [ ! -e ../tools/sph2pipe_v2.5/sph2pipe ]; then
@@ -127,10 +128,10 @@ echo ===========================================================================
 
 mkdir -p $WAV_SAVE_PATH
 mkdir -p $WAV_SAVE_PATH/swbd
-mkdir -p $WAV_SAVE_PATH/fisher
 mkdir -p $WAV_SAVE_PATH/eval2000/
 mkdir -p $WAV_SAVE_PATH/eval2000/swbd
 mkdir -p $WAV_SAVE_PATH/eval2000/callhome
+mkdir -p $WAV_SAVE_PATH/fisher
 
 ##############################
 # Switchboard
@@ -162,41 +163,10 @@ else
 fi
 
 ##############################
-# Fisher
-##############################
-fisher_wav_paths=$(find $WAV_SAVE_PATH/fisher/ -iname '*.wav')
-fisher_wav_file_num=$(find $WAV_SAVE_PATH/fisher/ -iname '*.wav' | wc -l)
-
-if [[ $fisher_wav_file_num -ne 23398 ]]; then
-  fisher_sph_paths=$(find $FISHER_PATH -iname '*.sph')
-
-  # file check
-  fisher_sph_file_num=$(find $FISHER_PATH -iname '*.sph' | wc -l)
-  [ $fisher_sph_file_num -ne 11699 ] && \
-    echo Warning: expected 11699 data data files, found $fisher_sph_file_num
-
-  for sph_path in $fisher_sph_paths ; do
-    speaker=`echo $sph_path | awk -F "/" '{ print $(NF - 1) }'`
-    file_name=$(basename $sph_path)
-    base=${file_name%.*}
-    ext=${file_name##*.}
-    mkdir -p $WAV_SAVE_PATH/fisher/$speaker
-    wav_path_a=$WAV_SAVE_PATH/fisher/$speaker/$base"-A.wav"
-    wav_path_b=$WAV_SAVE_PATH/fisher/$speaker/$base"-B.wav"
-    echo "Converting from "$sph_path" to "$wav_path_a
-    ../tools/sph2pipe_v2.5/sph2pipe -f wav -p -c 1 $sph_path $wav_path_a
-    echo "Converting from "$sph_path" to "$wav_path_b
-    ../tools/sph2pipe_v2.5/sph2pipe -f wav -p -c 2 $sph_path $wav_path_b
-  done
-else
-  echo "Already converted: Fisher"
-fi
-
-##############################
 # eval2000 (swbd, callhome)
 ##############################
-eval2000_wav_paths=$(find $EVAL2000_AUDIO_PATH -iname '*.wav')
-eval2000_wav_file_num=$(find $EVAL2000_AUDIO_PATH -iname '*.wav' | wc -l)
+eval2000_wav_paths=$(find $WAV_SAVE_PATH/eval2000/ -iname '*.wav')
+eval2000_wav_file_num=$(find $WAV_SAVE_PATH/eval2000/ -iname '*.wav' | wc -l)
 
 if [[ $eval2000_wav_file_num -ne 80 ]]; then
   eval2000_sph_paths=$(find $EVAL2000_AUDIO_PATH -iname '*.sph')
@@ -228,6 +198,39 @@ else
   echo "Already converted: eval2000"
 fi
 
+##############################
+# Fisher
+##############################
+if [ ! $FISHER_PATH = '' ]; then
+  fisher_wav_paths=$(find $WAV_SAVE_PATH/fisher/ -iname '*.wav')
+  fisher_wav_file_num=$(find $WAV_SAVE_PATH/fisher/ -iname '*.wav' | wc -l)
+
+  if [[ $fisher_wav_file_num -ne 23398 ]]; then
+    fisher_sph_paths=$(find $FISHER_PATH -iname '*.sph')
+
+    # file check
+    fisher_sph_file_num=$(find $FISHER_PATH -iname '*.sph' | wc -l)
+    [ $fisher_sph_file_num -ne 11699 ] && \
+      echo Warning: expected 11699 data data files, found $fisher_sph_file_num
+
+    for sph_path in $fisher_sph_paths ; do
+      speaker=`echo $sph_path | awk -F "/" '{ print $(NF - 1) }'`
+      file_name=$(basename $sph_path)
+      base=${file_name%.*}
+      ext=${file_name##*.}
+      mkdir -p $WAV_SAVE_PATH/fisher/$speaker
+      wav_path_a=$WAV_SAVE_PATH/fisher/$speaker/$base"-A.wav"
+      wav_path_b=$WAV_SAVE_PATH/fisher/$speaker/$base"-B.wav"
+      echo "Converting from "$sph_path" to "$wav_path_a
+      ../tools/sph2pipe_v2.5/sph2pipe -f wav -p -c 1 $sph_path $wav_path_a
+      echo "Converting from "$sph_path" to "$wav_path_b
+      ../tools/sph2pipe_v2.5/sph2pipe -f wav -p -c 2 $sph_path $wav_path_b
+    done
+  else
+    echo "Already converted: Fisher"
+  fi
+fi
+
 
 if [ $TOOL = 'htk' ]; then
   echo ============================================================================
@@ -235,11 +238,11 @@ if [ $TOOL = 'htk' ]; then
   echo ============================================================================
 
   mkdir -p $HTK_SAVE_PATH
-  mkdir -p $HTK_SAVE_PATH/htk/swbd
-  mkdir -p $HTK_SAVE_PATH/htk/fisher
-  mkdir -p $HTK_SAVE_PATH/htk/eval2000/
-  mkdir -p $HTK_SAVE_PATH/htk/eval2000/swbd
-  mkdir -p $HTK_SAVE_PATH/htk/eval2000/callhome
+  mkdir -p $HTK_SAVE_PATH/swbd
+  mkdir -p $HTK_SAVE_PATH/eval2000/
+  mkdir -p $HTK_SAVE_PATH/eval2000/swbd
+  mkdir -p $HTK_SAVE_PATH/eval2000/callhome
+  mkdir -p $HTK_SAVE_PATH/fisher
 
   # Set the path to HTK (optional, set only when using HTK toolkit)
   if [ $FEATURE_TYPE = 'logmelfbank' ]; then
@@ -263,11 +266,36 @@ if [ $TOOL = 'htk' ]; then
     --deltadelta $DELTADELTA \
     --config_path $CONFIG_PATH
 
-  # Convert from wav to htk files
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_swbd.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_fisher.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_eval2000_swbd.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S wav2fbank_eval2000_ch.scp
+  ### Convert from wav to htk files
+  # Switchboard
+  swbd_htk_paths=$(find $HTK_SAVE_PATH/swbd/ -iname '*.htk')
+  swbd_htk_file_num=$(find $HTK_SAVE_PATH/swbd/ -iname '*.htk' | wc -l)
+  if [ $swbd_htk_file_num -ne 4870 ] && [ $swbd_htk_file_num -ne 4876 ]; then
+    $HCOPY_PATH -T 1 -C $CONFIG_PATH -S ./config/wav2htk_swbd.scp
+  else
+    echo "Already extracted: LDC97S62"
+  fi
+
+  # eval2000
+  eval2000_htk_paths=$(find $HTK_SAVE_PATH/eval2000/ -iname '*.htk')
+  eval2000_htk_file_num=$(find $HTK_SAVE_PATH/eval2000/ -iname '*.htk' | wc -l)
+  if [[ $eval2000_htk_file_num -ne 80 ]]; then
+    $HCOPY_PATH -T 1 -C $CONFIG_PATH -S ./config/wav2htk_eval2000_swbd.scp
+    $HCOPY_PATH -T 1 -C $CONFIG_PATH -S ./config/wav2htk_eval2000_ch.scp
+  else
+    echo "Already extracted: eval2000"
+  fi
+
+  # Fisher
+  if [ ! $FISHER_PATH = '' ]; then
+    fisher_htk_paths=$(find $HTK_SAVE_PATH/fisher/ -iname '*.htk')
+    fisher_htk_file_num=$(find $HTK_SAVE_PATH/fisher/ -iname '*.htk' | wc -l)
+    if [[ $fisher_htk_file_num -ne 23398 ]]; then
+      $HCOPY_PATH -T 1 -C $CONFIG_PATH -S ./config/wav2htk_fisher.scp
+    else
+      echo "Already extracted: Fisher"
+    fi
+  fi
 fi
 
 
@@ -277,24 +305,24 @@ echo ===========================================================================
 
 exit 1
 
-python main.py \
-  --swbd_path $SWBD_PATH \
-  --fisher_path $FISHER_PATH \
-  --eval2000_trans_path $EVAL2000_TRANS_PATH \
-  --dataset_save_path $DATASET_SAVE_PATH \
-  --run_root_path $RUN_ROOT_PATH \
-  --tool $TOOL \
-  --wav_save_path $WAV_SAVE_PATH \
-  --htk_save_path $HTK_SAVE_PATH \
-  --feature_type $FEATURE_TYPE \
-  --channels $CHANNELS \
-  --sampling_rate $SAMPLING_RATE \
-  --window $WINDOW \
-  --slide $SLIDE \
-  --energy $ENERGY \
-  --delta $DELTA \
-  --deltadelta $DELTADELTA \
-  --normalize $NORMALIZE
+# python main.py \
+#   --swbd_path $SWBD_PATH \
+#   --eval2000_trans_path $EVAL2000_TRANS_PATH \
+#   --fisher_path $FISHER_PATH \
+#   --dataset_save_path $DATASET_SAVE_PATH \
+#   --run_root_path $RUN_ROOT_PATH \
+#   --tool $TOOL \
+#   --wav_save_path $WAV_SAVE_PATH \
+#   --htk_save_path $HTK_SAVE_PATH \
+#   --feature_type $FEATURE_TYPE \
+#   --channels $CHANNELS \
+#   --sampling_rate $SAMPLING_RATE \
+#   --window $WINDOW \
+#   --slide $SLIDE \
+#   --energy $ENERGY \
+#   --delta $DELTA \
+#   --deltadelta $DELTADELTA \
+#   --normalize $NORMALIZE
 
 
 echo 'Successfully completed!!!'
