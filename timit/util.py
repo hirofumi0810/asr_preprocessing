@@ -9,11 +9,11 @@ from __future__ import print_function
 def map_phone2phone(phone_list, label_type, map_file_path):
     """Map from 61 phones to 39 or 48 phones.
     Args:
-        phone_list: list of 61 phones (string)
-        label_type: phone39 or phone48 or phone61
-        map_file_path: path to the phone2phone mapping file
+        phone_list (list): list of 61 phones (string)
+        label_type (string): phone39 or phone48 or phone61
+        map_file_path (string): path to the phone2phone mapping file
     Returns:
-        phone_list: list of phones (string)
+        mapped_phone_list (list): list of phones (string)
     """
     if label_type == 'phone61':
         return phone_list
@@ -32,12 +32,15 @@ def map_phone2phone(phone_list, label_type, map_file_path):
                 map_dict[line[0]] = ''
 
     # mapping from 61 phones to 39 or 48 phones
+    mapped_phone_list = []
     for i in range(len(phone_list)):
         if phone_list[i] in map_dict.keys():
-            phone_list[i] = map_dict[phone_list[i]]
+            mapped_phone_list.append(map_dict[phone_list[i]])
+        else:
+            mapped_phone_list.append(phone_list[i])
 
     # ignore "q"
-    while '' in phone_list:
-        phone_list.remove('')
+    while '' in mapped_phone_list:
+        mapped_phone_list.remove('')
 
-    return phone_list
+    return mapped_phone_list

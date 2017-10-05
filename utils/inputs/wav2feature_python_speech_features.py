@@ -37,7 +37,7 @@ def wav2feature(wav_path, feature_type='logfbank', feature_dim=40,
         feature_type = 'logfbank'
     if feature_type not in ['logfbank', 'fbank', 'mfcc']:
         raise ValueError('feature_type is or "logfbank" or "fbank" or "mfcc".')
-    if use_delta2 and not use_delta1:
+    if use_delta2:
         delta1 = True
 
     # Read wav file
@@ -56,13 +56,6 @@ def wav2feature(wav_path, feature_type='logfbank', feature_dim=40,
         fs, audio = scipy.io.wavfile.read(wav_path_tmp)
         subprocess.call(['rm', wav_path_tmp])
 
-    if use_energy:
-        feature_dim + 1
-    if use_delta2:
-        feature_dim *= 3
-    elif delta1:
-        feature_dim *= 2
-
     if feature_type == 'mfcc':
         feat = mfcc(audio,
                     samplerate=fs,
@@ -71,7 +64,8 @@ def wav2feature(wav_path, feature_type='logfbank', feature_dim=40,
             energy_feat = fbank(audio,
                                 samplerate=fs,
                                 nfilt=feature_dim)[1]
-            feat = np.c_[feat, energy_feat]
+            energy_feat = energy_feat.reshape(-1, 1)
+            feat = np.concatenate((feat, energy_feat), axis=1)
             # NOTE: only fbank function retures energy
     else:
         fbank_feat, energy_feat = fbank(audio,
@@ -87,17 +81,19 @@ def wav2feature(wav_path, feature_type='logfbank', feature_dim=40,
         if feature_type == 'logfbank':
             feat = np.log(fbank_feat)
         if use_energy:
+            energy_feat = energy_feat.reshape(-1, 1)
             # logenergy = np.log(energy_feat)
-            feat = np.c_[feat, energy_feat]
+
+            feat = np.concatenate((feat, energy_feat), axis=1)
             # NOTE: energy_feat may be not log-scale.
 
     if use_delta2:
         delta1_feat = _delta(feat, N=2)
         delta2_feat = _delta(delta1_feat, N=2)
-        feat = np.c_[feat, delta1_feat, delta2_feat]
+        feat = np.concatenate((feat, delta1_feat, delta2_feat), axis=1)
     elif delta1:
         delta1_feat = _delta(feat, N=2)
-        feat = np.c_[feat, delta1_feat]
+        feat = np.concatenate((feat, delta1_feat), axis=1)
 
     return feat
 

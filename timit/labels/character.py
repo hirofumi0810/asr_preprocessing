@@ -7,11 +7,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, basename
+from os.path import basename
 import re
 import numpy as np
 from tqdm import tqdm
-import pickle
 
 from utils.labels.character import Char2idx
 from utils.util import mkdir_join
@@ -45,33 +44,37 @@ from utils.util import mkdir_join
 # = 26 * 2 + 2 + 19 + 1 = 74 labels
 ############################################################
 
+DOUBLE_LETTERS = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh', 'ii', 'jj',
+                  'kk', 'll', 'mm', 'nn', 'oo', 'pp', 'qq', 'rr', 'ss', 'tt',
+                  'uu', 'vv', 'ww', 'xx', 'yy', 'zz']
+SPACE = '_'
+APOSTROPHE = '\''
+SOS = '<'
+EOS = '>'
 
-def read_text(label_paths, run_root_path, model, save_map_file=False,
-              save_path=None, divide_by_capital=False, stdout_transcript=False):
+
+def read_char(label_paths, run_root_path, save_map_file=False,
+              ctc_char_save_path=None, att_char_save_path=None,
+              ctc_char_capital_save_path=None, att_char_capital_save_path=None):
     """Read text transcript.
     Args:
         label_paths (list): list of paths to label files
         run_root_path (string): absolute path of make.sh
-        model (string): ctc or attention
         save_map_file (string): if True, save the mapping file
-        save_path (string, optional): path to save labels. If None, don't save labels
-        divide_by_capital (bool, optional): if True, each word will be diveded
-            by capital letters rather than spaces. In addition, repeated letters
-            will be grouped by a special double-letter unit.
-                ex.) hello => h e ll o
-            This implementation is based on
-                https://arxiv.org/abs/1609.05935.
-                    Zweig, Geoffrey, et al.
-                    "Advances in all-neural speech recognition."
-                    in Proceedings of ICASSP, 2017.
-        stdout_transcript (bool, optional): if True, print transcripts to standard output
+        ctc_char_save_path (string, optional): path to save character-level
+            labels for the CTC models. If None, don't save labels.
+        ctc_char_capital_save_path (string, optional): path to save
+            capital-divided character-level labels for the CTC models.
+            If None, don't save labels.
+        att_char_save_path (string, optional): path to save character-level
+            labels for the Attention-based models. If None, don't save labels.
+        att_char_capital_save_path (string, optional): path to save
+            capital-divided character-level labels for the Attention-based
+            models. If None, don't save labels.
     """
-    if model not in ['ctc', 'attention']:
-        raise TypeError('model must be ctc or attention.')
-
     print('===> Reading target labels...')
     text_dict = {}
-    char_set = set([])
+    char_set, char_capital_set = set([]), set([])
     for label_path in tqdm(label_paths):
         with open(label_path, 'r') as f:
             line = f.readlines()[-1]
@@ -80,86 +83,113 @@ def read_text(label_paths, run_root_path, model, save_map_file=False,
             # Convert to lowercase
             line = re.sub(r'[\":;!?,.-]+', '', line.strip().lower())
 
-            if divide_by_capital:
-                transcript = ''
-                for word in line.split(' ')[2:]:
-                    if len(word) == 0:
-                        continue
+            transcript = ' '.join(line.split(' ')[2:])
 
-                    # Replace space with a capital letter
+            # Remove double spaces
+            while '  ' in transcript:
+                transcript = re.sub(r'  ', ' ', transcript)
+
+            # Remove first and last space
+            if transcript[0] == ' ':
+                transcript = transcript[1:]
+            if transcript[-1] == ' ':
+                transcript = transcript[:-1]
+
+            # capital-divided version
+            transcript_capital = ''
+            for word in transcript.split(' '):
+                if len(word) == 1:
+                    char_capital_set.add(word)
+                    transcript_capital += word
+                else:
+                    # Replace the first character with the capital letter
                     word = word[0].upper() + word[1:]
 
                     # Check double-letters
                     for i in range(0, len(word) - 1, 1):
-                        if word[i] == word[i + 1]:
-                            char_set.add(word[i] * 2)
+                        if word[i:i + 2] in DOUBLE_LETTERS:
+                            char_capital_set.add(word[i] * 2)
+                        else:
+                            char_capital_set.add(word[i])
+                    transcript_capital += word
 
-                    transcript += word
+            # Convert space to "_"
+            transcript = re.sub(r'\s', SPACE, transcript)
 
-            else:
-                # Convert space to "_"
-                transcript = '_'.join(line.split(' ')[2:])
+            for c in list(transcript):
+                char_set.add(c)
 
-            if model == 'attention':
-                transcript = '<' + transcript + '>'
-
-        for c in list(transcript):
-            char_set.add(c)
-
-        text_dict[label_path] = transcript
+        text_dict[label_path] = [transcript, transcript_capital]
 
         # for debug
-        if stdout_transcript:
-            print(transcript)
+        # print(transcript)
+        # print(transcript_capital)
 
-    # Make mapping file (from character to number)
-    if divide_by_capital:
-        map_file_path = mkdir_join(
-            run_root_path, 'labels', 'mapping_files', model, 'character_capital.txt')
-    else:
-        map_file_path = mkdir_join(
-            run_root_path, 'labels', 'mapping_files', model, 'character.txt')
-    char_set.discard('_')
-    char_set.discard('\'')
-    if model == 'attention':
-        char_set.discard('<')
-        char_set.discard('>')
+    # Make mapping file (from character to index)
+    char_map_file_path = mkdir_join(
+        run_root_path, 'labels', 'mapping_files', 'character.txt')
+    char_capital_map_file_path = mkdir_join(
+        run_root_path, 'labels', 'mapping_files', 'character_capital_divide.txt')
+
+    # Reserve some indices
+    char_set.discard(SPACE)
+    char_set.discard(APOSTROPHE)
+    char_capital_set.discard(APOSTROPHE)
 
     if save_map_file:
-        with open(map_file_path, 'w') as f:
-            if model == 'attention':
-                char_list = ['<', '>']
-            elif model == 'ctc':
-                char_list = []
-
-            if divide_by_capital:
-                char_list += sorted(list(char_set)) + ['\'']
-            else:
-                char_list += ['_'] + sorted(list(char_set)) + ['\'']
+        with open(char_map_file_path, 'w') as f:
+            char_list = [SPACE] + \
+                sorted(list(char_set)) + [APOSTROPHE, SOS, EOS]
 
             for i, char in enumerate(char_list):
                 f.write('%s  %s\n' % (char, str(i)))
 
-    if save_path is not None:
-        char2idx = Char2idx(map_file_path=map_file_path)
-        label_num_dict = {}
+        with open(char_capital_map_file_path, 'w') as f:
+            char_capital_list = sorted(
+                list(char_capital_set)) + [APOSTROPHE, SOS, EOS]
 
-        # Save target labels
-        print('===> Saving target labels...')
-        for label_path, transcript in tqdm(text_dict.items()):
-            speaker = label_path.split('/')[-2]
-            utt_index = basename(label_path).split('.')[0]
+            for i, char in enumerate(char_capital_list):
+                f.write('%s  %s\n' % (char, str(i)))
 
+    char2idx = Char2idx(map_file_path=char_map_file_path)
+    char2idx_capital = Char2idx(map_file_path=char_capital_map_file_path)
+
+    # Save target labels
+    print('===> Saving target labels...')
+    for label_path, [transcript, transcript_capital] in tqdm(text_dict.items()):
+        speaker = label_path.split('/')[-2]
+        utt_index = basename(label_path).split('.')[0]
+        save_file_name = speaker + '_' + utt_index + '.npy'
+
+        if ctc_char_save_path is not None:
             # Convert from character to index
-            index_list = char2idx(transcript, double_letter=divide_by_capital)
+            index_list = char2idx(transcript, double_letter=False)
 
             # Save as npy file
-            np.save(mkdir_join(save_path, speaker + '_' +
-                               utt_index + '.npy'), index_list)
+            np.save(mkdir_join(ctc_char_save_path, save_file_name), index_list)
 
-            # Count label number
-            label_num_dict[speaker + '_' + utt_index] = len(index_list)
+        if att_char_save_path is not None:
+            # Convert from character to index
+            index_list = char2idx(
+                SOS + transcript + EOS, double_letter=False)
 
-        # Save the label number dictionary
-        with open(join(save_path, 'label_num.pickle'), 'wb') as f:
-            pickle.dump(label_num_dict, f)
+            # Save as npy file
+            np.save(mkdir_join(att_char_save_path, save_file_name), index_list)
+
+        if ctc_char_capital_save_path is not None:
+            # Convert from character to index
+            index_list = char2idx_capital(
+                transcript_capital, double_letter=True)
+
+            # Save as npy file
+            np.save(mkdir_join(ctc_char_capital_save_path,
+                               save_file_name), index_list)
+
+        if att_char_capital_save_path is not None:
+            # Convert from character to index
+            index_list = char2idx_capital(
+                SOS + transcript_capital + EOS, double_letter=True)
+
+            # Save as npy file
+            np.save(mkdir_join(att_char_capital_save_path,
+                               save_file_name), index_list)

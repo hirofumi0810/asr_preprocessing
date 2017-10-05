@@ -5,30 +5,28 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, abspath
 import sys
-from glob import glob
 import unittest
 
 sys.path.append('../../')
-from timit.prepare_path import Prepare
+from timit.path import Path
 from timit.inputs.input_data import read_audio
 from utils.measure_time_func import measure_time
 
-prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
-               run_root_path=abspath('../'))
+path = Path(data_path='/n/sd8/inaguma/corpus/timit/original',
+            run_root_path='../',
+            htk_save_path='/n/sd8/inaguma/corpus/timit/htk')
 
-htk_save_path = '/n/sd8/inaguma/corpus/timit/htk'
 htk_paths = {
-    'train': [path for path in glob(join(htk_save_path, 'train/*/*.htk'))],
-    'dev': [path for path in glob(join(htk_save_path, 'dev/*/*.htk'))],
-    'test': [path for path in glob(join(htk_save_path, 'test/*/*.htk'))]
+    'train': path.htk(data_type='train'),
+    'dev': path.htk(data_type='dev'),
+    'test': path.htk(data_type='test')
 }
 
 wav_paths = {
-    'train': prep.wav(data_type='train'),
-    'dev': prep.wav(data_type='dev'),
-    'test': prep.wav(data_type='test')
+    'train': path.wav(data_type='train'),
+    'dev': path.wav(data_type='dev'),
+    'test': path.wav(data_type='test')
 }
 
 CONFIG = {

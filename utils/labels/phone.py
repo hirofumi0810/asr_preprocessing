@@ -21,13 +21,13 @@ class Phone2idx(object):
         Args:
             phone_list (list): phones (string)
         Returns:
-            phone_list (list): phone indices
+            index_list (list): phone indices
         """
         # Convert from phone to index
+        index_list = []
         for i in range(len(phone_list)):
-            phone_list[i] = self.map_dict[phone_list[i]]
-
-        return phone_list
+            index_list.append(self.map_dict[phone_list[i]])
+        return index_list
 
 
 class Idx2phone(object):
@@ -55,5 +55,4 @@ class Idx2phone(object):
         phone_list = []
         for i in range(len(index_list)):
             phone_list.append(self.map_dict[index_list[i]])
-
         return phone_list

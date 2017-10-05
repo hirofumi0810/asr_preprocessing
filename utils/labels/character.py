@@ -36,7 +36,8 @@ class Char2idx(object):
                     continue
 
                 if char_list[i] + char_list[i + 1] in self.map_dict.keys():
-                    char_list[i] = self.map_dict[char_list[i] + char_list[i + 1]]
+                    char_list[i] = self.map_dict[char_list[i] +
+                                                 char_list[i + 1]]
                     skip_flag = True
                 else:
                     char_list[i] = self.map_dict[char_list[i]]
@@ -85,7 +86,8 @@ class Kana2idx(object):
             # Check whether next kana character is a double consonant
             if i != len(kana_list) - 1:
                 if kana_list[i] + kana_list[i + 1] in self.map_dict.keys():
-                    index_list.append(int(self.map_dict[kana_list[i] + kana_list[i + 1]]))
+                    index_list.append(
+                        int(self.map_dict[kana_list[i] + kana_list[i + 1]]))
                     i += 1
                 elif kana_list[i] in self.map_dict.keys():
                     index_list.append(int(self.map_dict[kana_list[i]]))

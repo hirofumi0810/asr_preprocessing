@@ -13,7 +13,7 @@ from os.path import join, basename
 import argparse
 
 sys.path.append('../')
-from timit.prepare_path import Prepare
+from timit.path import Path
 from utils.util import mkdir_join, mkdir
 from utils.inputs.htk import save
 
@@ -47,13 +47,13 @@ def main():
 
     args = parser.parse_args()
     htk_save_path = mkdir(args.htk_save_path)
-    prep = Prepare(args.data_path, args.run_root_path)
+    path = Path(args.data_path, args.run_root_path)
 
     # HTK settings
     save(audio_file_type='nist',
          feature_type=args.feature_type,
          channels=args.channels,
-         config_path=args.config_path,
+         config_save_path=args.config_path,
          sampling_rate=args.sampling_rate,
          window=args.window,
          slide=args.slide,
@@ -64,10 +64,10 @@ def main():
 
     for data_type in ['train', 'dev', 'test']:
 
-        wav_paths = prep.wav(data_type=data_type)
+        wav_paths = path.wav(data_type=data_type)
         save_path = mkdir_join(htk_save_path, data_type)
 
-        with open(join(args.run_root_path, 'config/wav2fbank_' + data_type + '.scp'), 'w') as f:
+        with open('./config/wav2htk_' + data_type + '.scp', 'w') as f:
             for wav_path in wav_paths:
                 speaker = wav_path.split('/')[-2]
                 wav_index = basename(wav_path).split('.')[0]

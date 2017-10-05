@@ -21,14 +21,15 @@ class Word2idx(object):
         Args:
             word_list (list): words (string)
         Returns:
-            word_list (lisr): word indices
+            index_list (lisr): word indices
         """
         # Convert from word to index
+        index_list = []
         for i in range(len(word_list)):
             if word_list[i] in self.map_dict.keys():
-                word_list[i] = self.map_dict[word_list[i]]
+                index_list.append(self.map_dict[word_list[i]])
             else:
-                # Pad by UNK
-                word_list[i] = len(self.map_dict.keys())
-
-        return word_list
+                # Pad by <UNK> (the last index)
+                index_list.append(len(self.map_dict.keys()))
+            # TODO: add unk index clearly
+        return index_list

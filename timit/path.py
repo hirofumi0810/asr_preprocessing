@@ -7,18 +7,21 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, basename, splitext, abspath
+from os.path import join, basename, splitext
 from glob import glob
 
 
-class Prepare(object):
+class Path(object):
     """Prepare for making dataset.
     Args:
         data_path (string): path to TIMIT corpus
         run_root_path (string): path to ./make.sh
     """
 
-    def __init__(self, data_path, run_root_path):
+    def __init__(self, data_path, run_root_path, htk_save_path=None):
+
+        self.data_path = data_path
+        self.htk_save_path = htk_save_path
 
         # Paths to TIMIT data
         self.train_data_path = join(data_path, 'train')
@@ -31,17 +34,17 @@ class Prepare(object):
 
     def __make(self):
 
-        self.wav_paths = {}
-        self.text_paths = {}
-        self.word_paths = {}
-        self.phone_paths = {}
+        self._wav_paths = {}
+        self._text_paths = {}
+        self._word_paths = {}
+        self._phone_paths = {}
 
         for data_type in ['train', 'dev', 'test']:
 
-            self.wav_paths[data_type] = []
-            self.text_paths[data_type] = []
-            self.word_paths[data_type] = []
-            self.phone_paths[data_type] = []
+            self._wav_paths[data_type] = []
+            self._text_paths[data_type] = []
+            self._word_paths[data_type] = []
+            self._phone_paths[data_type] = []
             data_path = self.train_data_path if data_type == 'train' else self.test_data_path
 
             if data_type != 'train':
@@ -62,70 +65,79 @@ class Prepare(object):
 
                 if basename(file_name)[0: 2] in ['sx', 'si']:
                     if ext == '.wav':
-                        self.wav_paths[data_type].append(join(data_path, file_path))
+                        self._wav_paths[data_type].append(
+                            join(data_path, file_path))
                     elif ext == '.txt':
-                        self.text_paths[data_type].append(join(data_path, file_path))
+                        self._text_paths[data_type].append(
+                            join(data_path, file_path))
                     elif ext == '.wrd':
-                        self.word_paths[data_type].append(join(data_path, file_path))
+                        self._word_paths[data_type].append(
+                            join(data_path, file_path))
                     elif ext == '.phn':
-                        self.phone_paths[data_type].append(join(data_path, file_path))
-
-        file_number = {
-            'train': 3696,
-            'dev': 400,
-            'test': 192
-        }
-
-        for data_type in ['train', 'dev', 'test']:
-            assert len(self.wav_paths[data_type]) == file_number[data_type], 'File number is not correct (True: %d, Now: %d).'.format(
-                file_number[data_type], len(self.wav_paths[data_type]))
+                        self._phone_paths[data_type].append(
+                            join(data_path, file_path))
 
     def wav(self, data_type):
         """Get paths to wav files.
         Args:
             data_type (string): train or dev or test
         Returns:
-            paths to wav files
+            list of paths to wav files
         """
-        return sorted(self.wav_paths[data_type])
+        return sorted(self._wav_paths[data_type])
 
-    def text(self, data_type):
+    def htk(self, data_type):
+        """Get paths to htk files.
+        Args:
+            data_type (string): train or dev or test
+        Returns:
+            list of paths to htk files
+        """
+        if self.htk_save_path is None:
+            raise ValueError('Set path to htk files.')
+
+        # ex.) htk/data_type/speaker/*.htk
+        return [p for p in glob(join(self.htk_save_path, data_type, '*/*.htk'))]
+
+    def trans(self, data_type):
         """Get paths to sentence-level transcription files.
         Args:
             data_type (string): train or dev or test
         Returns:
-            paths to transcription files
+            list of paths to transcription files
         """
-        return sorted(self.text_paths[data_type])
+        return sorted(self._text_paths[data_type])
 
     def word(self, data_type):
         """Get paths to word-level transcription files.
         Args:
             data_type (string): train or dev or test
         Returns:
-            paths to transcription files
+            list of paths to transcription files
         """
-        return sorted(self.word_paths[data_type])
+        return sorted(self._word_paths[data_type])
 
     def phone(self, data_type):
         """Get paths to phone-level transcription files.
         Args:
             data_type (string): train or dev or test
         Returns:
-            paths to transcription files
+            list of paths to transcription files
         """
-        return sorted(self.phone_paths[data_type])
+        return sorted(self._phone_paths[data_type])
 
 
 if __name__ == '__main__':
 
-    prep = Prepare(data_path='/n/sd8/inaguma/corpus/timit/original',
-                   run_root_path=abspath('./'))
+    path = Path(data_path='/n/sd8/inaguma/corpus/timit/original',
+                run_root_path='./',
+                htk_save_path='/n/sd8/inaguma/corpus/timit/htk')
 
     for data_type in ['train', 'dev', 'test']:
 
         print('===== %s ======' % data_type)
-        print(len(prep.wav(data_type=data_type)))
-        print(len(prep.text(data_type=data_type)))
-        print(len(prep.word(data_type=data_type)))
-        print(len(prep.phone(data_type=data_type)))
+        print(len(path.wav(data_type=data_type)))
+        print(len(path.htk(data_type=data_type)))
+        print(len(path.trans(data_type=data_type)))
+        print(len(path.word(data_type=data_type)))
+        print(len(path.phone(data_type=data_type)))

@@ -10,98 +10,129 @@ from __future__ import print_function
 from os.path import join, basename
 import numpy as np
 from tqdm import tqdm
-import pickle
 
 from utils.labels.phone import Phone2idx
 from utils.util import mkdir_join
 from timit.util import map_phone2phone
 
+SOS = '<'
+EOS = '>'
 
-def read_phone(label_paths, label_type, run_root_path, model,
-               save_map_file=False, save_path=None, stdout_transcript=False):
+
+def read_phone(label_paths, run_root_path, save_map_file=False,
+               ctc_phone61_save_path=None, ctc_phone48_save_path=None,
+               ctc_phone39_save_path=None, att_phone61_save_path=None,
+               att_phone48_save_path=None, att_phone39_save_path=None):
     """Read phone transcript.
     Args:
         label_paths (list): list of paths to label files
-        label_type (string): phone39 or phone48 or phone61
         run_root_path (string): path to make.sh
-        model (string): ctc or attention
         save_map_file (bool, optional): if True, save the mapping file
-        save_path (string, optional): path to save labels. If None, don't save labels
-        stdout_transcript (bool, optional): if True, print transcripts to standard output
+        ctc_phone61_save_path (string, optional): path to save labels for the
+            CTC models (phone61). If None, don't save labels
+        ctc_phone48_save_path (string, optional): path to save labels for the
+            CTC models (phone48). If None, don't save labels
+        ctc_phone39_save_path (string, optional): path to save labels for the.
+            CTC models (phone39). If None, don't save labels
+        att_phone61_save_path (string, optional): path to save labels for the
+            Attention-based models (phone61). If None, don't save labels
+        att_phone48_save_path (string, optional): path to save labels for the
+            Attention-based models (phone48). If None, don't save labels
+        att_phone39_save_path (string, optional): path to save labels for the.
+            Attention-based models (phone39). If None, don't save labels
     """
-    if label_type not in ['phone39', 'phone48', 'phone61']:
-        raise TypeError('data_type is "phone39" or "phone48" or "phone61".')
-    if model not in ['ctc', 'attention']:
-        raise TypeError('model must be ctc or attention.')
-
-    # Make the mapping file
+    # Make the mapping file (from phone to index)
     phone2phone_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
-    phone2idx_map_file_path = mkdir_join(
-        run_root_path, 'labels', 'mapping_files', model, label_type + '.txt')
-    phone_set = set([])
+    phone61_set, phone48_set, phone39_set = set([]), set([]), set([])
     with open(phone2phone_map_file_path, 'r') as f:
         for line in f:
             line = line.strip().split()
             if line[1] != 'nan':
-                if label_type == 'phone61':
-                    phone_set.add(line[0])
-                elif label_type == 'phone48':
-                    phone_set.add(line[1])
-                elif label_type == 'phone39':
-                    phone_set.add(line[2])
+                phone61_set.add(line[0])
+                phone48_set.add(line[1])
+                phone39_set.add(line[2])
             else:
                 # Ignore "q" if phone39 or phone48
-                if label_type == 'phone61':
-                    phone_set.add(line[0])
+                phone61_set.add(line[0])
+
+    phone61_to_idx_map_file_path = mkdir_join(
+        run_root_path, 'labels', 'mapping_files', 'phone61.txt')
+    phone48_to_idx_map_file_path = mkdir_join(
+        run_root_path, 'labels', 'mapping_files', 'phone48.txt')
+    phone39_to_idx_map_file_path = mkdir_join(
+        run_root_path, 'labels', 'mapping_files', 'phone39.txt')
 
     # Save mapping file
     if save_map_file:
-        with open(phone2idx_map_file_path, 'w') as f:
-            if model == 'ctc':
-                for index, phone in enumerate(sorted(list(phone_set))):
-                    f.write('%s  %s\n' % (phone, str(index)))
-            elif model == 'attention':
-                for index, phone in enumerate(['<', '>'] + sorted(list(phone_set))):
-                    f.write('%s  %s\n' % (phone, str(index)))
+        with open(phone61_to_idx_map_file_path, 'w') as f:
+            for i, phone in enumerate(sorted(list(phone61_set)) + [SOS, EOS]):
+                f.write('%s  %s\n' % (phone, str(i)))
+        with open(phone48_to_idx_map_file_path, 'w') as f:
+            for i, phone in enumerate(sorted(list(phone48_set)) + [SOS, EOS]):
+                f.write('%s  %s\n' % (phone, str(i)))
+        with open(phone39_to_idx_map_file_path, 'w') as f:
+            for i, phone in enumerate(sorted(list(phone39_set)) + [SOS, EOS]):
+                f.write('%s  %s\n' % (phone, str(i)))
 
-    phone2idx = Phone2idx(map_file_path=phone2idx_map_file_path)
+    phone61_to_idx = Phone2idx(map_file_path=phone61_to_idx_map_file_path)
+    phone48_to_idx = Phone2idx(map_file_path=phone48_to_idx_map_file_path)
+    phone39_to_idx = Phone2idx(map_file_path=phone39_to_idx_map_file_path)
 
     print('===> Reading & Saving target labels...')
-    label_num_dict = {}
     for label_path in tqdm(label_paths):
         speaker = label_path.split('/')[-2]
         utt_index = basename(label_path).split('.')[0]
 
-        phone_list = []
+        phone61_list = []
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().split(' ')
                 # start_frame = line[0]
                 # end_frame = line[1]
-                phone_list.append(line[2])
+                phone61_list.append(line[2])
 
         # Map from 61 phones to the corresponding phones
-        phone_list = map_phone2phone(phone_list, label_type,
-                                     phone2phone_map_file_path)
+        phone48_list = map_phone2phone(phone61_list, 'phone48',
+                                       phone2phone_map_file_path)
+        phone39_list = map_phone2phone(phone61_list, 'phone39',
+                                       phone2phone_map_file_path)
+
+        # for debug
+        # print(' '.join(phone61_list))
+        # print(' '.join(phone48_list))
+        # print(' '.join(phone39_list))
+        # print('-----')
 
         # Convert from phone to index
-        if model == 'attention':
-            phone_list = ['<'] + phone_list + ['>']  # add <SOS> & <EOS>
+        ctc_phone61_index_list = phone61_to_idx(phone61_list)
+        ctc_phone48_index_list = phone48_to_idx(phone48_list)
+        ctc_phone39_index_list = phone39_to_idx(phone39_list)
+        att_phone61_index_list = phone61_to_idx(
+            [SOS] + phone61_list + [EOS])
+        att_phone48_index_list = phone48_to_idx(
+            [SOS] + phone48_list + [EOS])
+        att_phone39_index_list = phone39_to_idx(
+            [SOS] + phone39_list + [EOS])
 
-        if stdout_transcript:
-            print(' '.join(phone_list))
+        # Save phone labels as npy file
+        save_file_name = speaker + '_' + utt_index + '.npy'
+        if ctc_phone61_save_path is not None:
+            np.save(mkdir_join(ctc_phone61_save_path,
+                               save_file_name), ctc_phone61_index_list)
+        if att_phone61_save_path is not None:
+            np.save(mkdir_join(att_phone61_save_path,
+                               save_file_name), att_phone61_index_list)
 
-        if save_path is not None:
-            index_list = phone2idx(phone_list)
+        if ctc_phone48_save_path is not None:
+            np.save(mkdir_join(ctc_phone48_save_path,
+                               save_file_name), ctc_phone48_index_list)
+        if att_phone48_save_path is not None:
+            np.save(mkdir_join(att_phone48_save_path, save_file_name),
+                    att_phone48_index_list)
 
-            # Save phone labels as npy file
-            np.save(mkdir_join(save_path, speaker + '_' +
-                               utt_index + '.npy'), index_list)
-
-            # Count label number
-            label_num_dict[speaker + '_' + utt_index] = len(index_list)
-
-    if save_path is not None:
-        # Save the label number dictionary
-        with open(join(save_path, 'label_num.pickle'), 'wb') as f:
-            pickle.dump(label_num_dict, f)
+        if ctc_phone39_save_path is not None:
+            np.save(mkdir_join(ctc_phone39_save_path,
+                               save_file_name), ctc_phone39_index_list)
+        if att_phone39_save_path is not None:
+            np.save(mkdir_join(att_phone39_save_path,
+                               save_file_name), att_phone39_index_list)

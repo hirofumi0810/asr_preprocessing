@@ -8,12 +8,13 @@ echo ===========================================================================
 TIMIT_PATH='/n/sd8/inaguma/corpus/timit/original'
 DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/timit/dataset'
 HTK_SAVE_PATH='/n/sd8/inaguma/corpus/timit/htk'
-HTK_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
+HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
 
 ### Select one tool to extract features (HTK is the fastest)
 TOOL='htk'
 # TOOL='python_speech_features'
 # TOOL='librosa'
+# TOOL='kaldi'  # under implementation
 
 ### Configuration (Set by yourself)
 FEATURE_TYPE='logmelfbank'  # or mfcc
@@ -33,6 +34,7 @@ NORMALIZE='speaker'
 # ↓↓↓ Don't change from here ↓↓↓
 ########################################
 set -eu
+RUN_ROOT_PATH=`pwd`
 
 if [ ! -e $TIMIT_PATH ]; then
   echo "TIMIT directory was not found."
@@ -45,8 +47,10 @@ if [ ! -e $HTK_SAVE_PATH ] && [ $TOOL = 'htk' ]; then
   mkdir $HTK_SAVE_PATH
 fi
 
-RUN_ROOT_PATH=`pwd`
-
+declare -A file_number
+file_number["train"]=3696
+file_number["dev"]=400
+file_number["test"]=192
 
 
 if [ $TOOL = 'htk' ]; then
@@ -77,15 +81,23 @@ if [ $TOOL = 'htk' ]; then
     --config_path $CONFIG_PATH
 
   # Convert from wav to htk files
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev.scp
-  $HTK_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test.scp
+  for data_type in train dev test ; do
+
+    htk_paths=$(find $HTK_SAVE_PATH/$data_type/ -iname '*.htk')
+    htk_file_num=$(find $HTK_SAVE_PATH/$data_type/ -iname '*.htk' | wc -l)
+
+    if [ $htk_file_num -ne ${file_number[$data_type]} ]; then
+      # Make parallel
+      $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2htk_$data_type.scp
+    fi
+  done
 fi
 
 
 echo ============================================================================
 echo "                                  Main                                    "
 echo ============================================================================
+
 python main.py \
   --data_path $TIMIT_PATH \
   --dataset_save_path $DATASET_SAVE_PATH \

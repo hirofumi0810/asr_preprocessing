@@ -100,6 +100,9 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                                          window=config['window'],
                                          slide=config['slide'])
 
+        # for debug
+        # print(input_data_utt.shape)
+
         if gender == 'm':
             input_data_list_male.append(input_data_utt)
             wav_paths_male.append(audio_path)
