@@ -5,6 +5,7 @@ __pychache__
 *.pyc
 *.scp
 .nfs*
+trans*.txt
 mapping_files
 make_mine.sh
 
@@ -21,7 +22,7 @@ make_wav.py
 split.py
 
 # librispeech
-word2num*.txt
+word*.txt
 
 svc
 erato

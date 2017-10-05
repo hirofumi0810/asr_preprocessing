@@ -42,7 +42,7 @@ def read_phone(label_paths, run_root_path, save_map_file=False,
             Attention-based models (phone39). If None, don't save labels
     """
     # Make the mapping file (from phone to index)
-    phone2phone_map_file_path = join(run_root_path, 'labels/phone2phone.txt')
+    phone2phone_map_file_path = join(run_root_path, 'config/phone2phone.txt')
     phone61_set, phone48_set, phone39_set = set([]), set([]), set([])
     with open(phone2phone_map_file_path, 'r') as f:
         for line in f:

@@ -62,7 +62,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
             raise ValueError(
                 'Set global mean & std computed over the training set.')
     if normalize not in ['global', 'speaker', 'utterance']:
-        raise ValueError('normalize is "utterance" or "speaker" or "global".')
+        raise ValueError(
+            'normalize must be "utterance" or "speaker" or "global".')
 
     # Read each audio file
     print('===> Reading audio files...')
