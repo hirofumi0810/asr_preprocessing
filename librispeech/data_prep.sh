@@ -5,16 +5,16 @@ echo "                              Librispeech                                 
 echo ============================================================================
 
 ### Set paths
-DATA_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/data'
+DOWNLOAD_DATA_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/data'
 DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/dataset'
-WAV_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/wav'
 HTK_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/htk'
 HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
 
-### Select one tool to extract features (HTK is the fastest)
+### Select one tool to extract features (default is HTK)
 TOOL='htk'
 # TOOL='python_speech_features'
 # TOOL='librosa'
+# TOOL='kaldi'  # under implementation
 
 ### Configuration (Set by yourself)
 FEATURE_TYPE='logmelfbank'  # or mfcc
@@ -29,53 +29,40 @@ DELTADELTA=1
 NORMALIZE='speaker'
 # NORMALIZE='utterance'
 
+### data size to create
+# 100h (train-clean-100)
+small=true
+
+# 460h (train-clean-100 + train-clean-360)
+medium=true
+
+# 960h (train-clean-100 + train-clean-360  +train-other-500)
+large=true
+
 
 ########################################
 # ↓↓↓ Don't change from here ↓↓↓
 ########################################
 set -eu
 
-if [ ! -e $DATA_SAVE_PATH ]; then
-  mkdir $DATA_SAVE_PATH
+if [ ! -e $DOWNLOAD_DATA_SAVE_PATH ]; then
+  mkdir $DOWNLOAD_DATA_SAVE_PATH
 fi
 if [ ! -e $DATASET_SAVE_PATH ]; then
   mkdir $DATASET_SAVE_PATH
-fi
-if [ ! -e $WAV_SAVE_PATH ]; then
-  mkdir $WAV_SAVE_PATH
 fi
 if [ ! -e $HTK_SAVE_PATH ] && [ $TOOL = 'htk' ]; then
   mkdir $HTK_SAVE_PATH
 fi
 
-RUN_ROOT_PATH=`pwd`
-
 
 echo ============================================================================
 echo "                           Download tha data                              "
 echo ============================================================================
-for part in train-clean-100 \
-            train-clean-360 \
-            train-other-500 \
-            dev-clean \
-            dev-other \
-            test-clean \
-            test-other; do
-  if [ -d $DATA_SAVE_PATH/$part ]; then
-    echo file exists: $part
-  else
-    if [ ! -e $DATA_SAVE_PATH/$part.tar.gz ]; then
-      wget http://www.openslr.org/resources/12/$part.tar.gz -P $DATA_SAVE_PATH
-    fi
-    tar xvfz $DATA_SAVE_PATH/$part.tar.gz -C $DATA_SAVE_PATH
-    rm $DATA_SAVE_PATH/$part.tar.gzwget http://www.openslr.org/resources/12/$part.tar.gz -P $DATA_SAVE_PATH
-  fi
-done
 
-# Move directories
-if [ -d $DATA_SAVE_PATH/LibriSpeech ]; then
-  mv $DATA_SAVE_PATH/LibriSpeech/* $DATA_SAVE_PATH
-  rm -rf $DATA_SAVE_PATH/LibriSpeech
+if ! which wget >&/dev/null; then
+  echo "This script requires you to first install wget";
+  exit 1;
 fi
 
 # Download the LM resources
@@ -83,68 +70,111 @@ for part in 3-gram \
             3-gram.pruned.1e-7 \
             3-gram.pruned.3e-7 \
             4-gram; do
-  if [ -e $DATA_SAVE_PATH/$part.arpa ]; then
+  if [ -e $DOWNLOAD_DATA_SAVE_PATH/$part.arpa ]; then
     echo file exists: $part
   else
-    wget http://www.openslr.org/resources/11/$part.arpa.gz -P $DATA_SAVE_PATH
-    gunzip $DATA_SAVE_PATH/$part.arpa.gz
+    if [ ! -e $DOWNLOAD_DATA_SAVE_PATH/$part.arpa.gz ]; then
+      wget http://www.openslr.org/resources/11/$part.arpa.gz -P $DOWNLOAD_DATA_SAVE_PATH
+    fi
+    gunzip $DOWNLOAD_DATA_SAVE_PATH/$part.arpa.gz
   fi
 done
-if [ ! -e $DATA_SAVE_PATH/librispeech-lm-corpus ]; then
-  wget http://www.openslr.org/resources/11/librispeech-lm-corpus.tgz -P $DATA_SAVE_PATH
-  tar xzvf $DATA_SAVE_PATH/librispeech-lm-corpus.tgz -C $DATA_SAVE_PATH
-  rm $DATA_SAVE_PATH/librispeech-lm-corpus.tgz
+if [ ! -e $DOWNLOAD_DATA_SAVE_PATH/librispeech-lm-corpus ]; then
+  if [ ! -e $DOWNLOAD_DATA_SAVE_PATH/librispeech-lm-corpus.tgz ]; then
+    wget http://www.openslr.org/resources/11/librispeech-lm-corpus.tgz -P $DOWNLOAD_DATA_SAVE_PATH
+  fi
+  tar xzvf $DOWNLOAD_DATA_SAVE_PATH/librispeech-lm-corpus.tgz -C $DOWNLOAD_DATA_SAVE_PATH
+  rm $DOWNLOAD_DATA_SAVE_PATH/librispeech-lm-corpus.tgz
 fi
-if [ ! -e $DATA_SAVE_PATH/librispeech-lm-norm.txt ]; then
-  wget http://www.openslr.org/resources/11/librispeech-lm-norm.txt.gz -P $DATA_SAVE_PATH
-  gunzip $DATA_SAVE_PATH/librispeech-lm-norm.txt.gz
+if [ ! -e $DOWNLOAD_DATA_SAVE_PATH/librispeech-lm-norm.txt ]; then
+  if [ ! -e $DOWNLOAD_DATA_SAVE_PATH/librispeech-lm-norm.txt.gz ]; then
+    wget http://www.openslr.org/resources/11/librispeech-lm-norm.txt.gz -P $DOWNLOAD_DATA_SAVE_PATH
+  fi
+  gunzip $DOWNLOAD_DATA_SAVE_PATH/librispeech-lm-norm.txt.gz
 fi
 for part in g2p-model-5 \
             librispeech-lexicon.txt \
             librispeech-vocab.txt; do
-  if [ -e $DATA_SAVE_PATH/$part ]; then
+  if [ -e $DOWNLOAD_DATA_SAVE_PATH/$part ]; then
     echo file exists: $part
   else
-    wget http://www.openslr.org/resources/11/$part -P $DATA_SAVE_PATH
+    wget http://www.openslr.org/resources/11/$part -P $DOWNLOAD_DATA_SAVE_PATH
   fi
 done
 
+# Download the AM resources
+declare -a am_resources=("train-clean-100" "dev-clean" "dev-other" "test-clean" "test-other")
+
+if [ $large ]; then
+  am_resources+=("train-clean-360" "train-other-500")
+elif [ $medium ]; then
+  am_resources+=("train-clean-360")
+fi
+
+for part in ${am_resources[@]}; do
+  if [ -d $DOWNLOAD_DATA_SAVE_PATH/$part ]; then
+    echo file exists: $part
+  else
+    if [ ! -e $DOWNLOAD_DATA_SAVE_PATH/$part.tar.gz ]; then
+      wget http://www.openslr.org/resources/12/$part.tar.gz -P $DOWNLOAD_DATA_SAVE_PATH
+    fi
+    tar xvfz $DOWNLOAD_DATA_SAVE_PATH/$part.tar.gz -C $DOWNLOAD_DATA_SAVE_PATH
+    rm $DOWNLOAD_DATA_SAVE_PATH/$part.tar.gz
+  fi
+done
+
+# Move directories
+if [ -d $DOWNLOAD_DATA_SAVE_PATH/LibriSpeech ]; then
+  mv $DOWNLOAD_DATA_SAVE_PATH/LibriSpeech/* $DOWNLOAD_DATA_SAVE_PATH
+  rm -rf $DOWNLOAD_DATA_SAVE_PATH/LibriSpeech
+fi
+
 # Remove the rest of files
-for path in $DATA_SAVE_PATH/*.gz; do
+for path in $DOWNLOAD_DATA_SAVE_PATH/*.gz; do
   if [ -e $path ]; then
     rm $path
   fi
 done
-for path in $DATA_SAVE_PATH/*.tgz; do
+for path in $DOWNLOAD_DATA_SAVE_PATH/*.tgz; do
   if [ -e $path ]; then
     rm $path
   fi
 done
-for path in $DATA_SAVE_PATH/*.1; do
+for path in $DOWNLOAD_DATA_SAVE_PATH/*.1; do
   if [ -e $path ]; then
     rm $path
   fi
 done
+
+declare -A file_number
+file_number["train-clean-100"]=28539
+file_number["train-clean-360"]=104014
+file_number["train-other-500"]=148688
+file_number["dev-clean"]=2703
+file_number["dev-other"]=2864
+file_number["test-clean"]=2620
+file_number["test-other"]=2939
 
 
 echo ============================================================================
 echo "                        Convert from flac to wav                          "
 echo ============================================================================
-flac_paths=$(find $DATA_SAVE_PATH -type f)
-for flac_path in $flac_paths ; do
-  dir_path=$(dirname $flac_path)
-  file_name=$(basename $flac_path)
-  base=${file_name%.*}
-  ext=${file_name##*.}
-  wav_path=$dir_path"/"$base".wav"
-  if [ $ext = "flac" ]; then
-    echo "Converting from"$flac_path" to "$wav_path
-    sox $flac_path -t wav $wav_path
-    rm -f $flac_path
-  else
-    echo "Already converted: "$wav_path
-  fi
-done
+
+# flac_paths=$(find $DOWNLOAD_DATA_SAVE_PATH -iname '*.flac')
+# for flac_path in $flac_paths ; do
+#   dir_path=$(dirname $flac_path)
+#   file_name=$(basename $flac_path)
+#   base=${file_name%.*}
+#   ext=${file_name##*.}
+#   wav_path=$dir_path"/"$base".wav"
+#   if [ $ext = "flac" ]; then
+#     echo "Converting from"$flac_path" to "$wav_path
+#     sox $flac_path -t wav $wav_path
+#     rm -f $flac_path
+#   else
+#     echo "Already converted: "$wav_path
+#   fi
+# done
 
 
 if [ $TOOL = 'htk' ]; then
@@ -152,18 +182,19 @@ if [ $TOOL = 'htk' ]; then
   echo "                   Feature extraction by HTK toolkit                      "
   echo ============================================================================
 
+  mkdir -p $HTK_SAVE_PATH
+
   # Set the path to HTK (optional, set only when using HTK toolkit)
   if [ $FEATURE_TYPE = 'logmelfbank' ]; then
-    CONFIG_PATH="./config/fbank.config"
+    CONFIG_SAVE_PATH="./config/fbank.config"
   else
-    CONFIG_PATH="./config/mfcc.config"
+    CONFIG_SAVE_PATH="./config/mfcc.config"
   fi
 
   # Make a config file to covert from wav to htk file
   python make_config.py \
-    --data_path $DATA_SAVE_PATH  \
+    --data_path $DOWNLOAD_DATA_SAVE_PATH  \
     --htk_save_path $HTK_SAVE_PATH \
-    --run_root_path $RUN_ROOT_PATH \
     --feature_type $FEATURE_TYPE \
     --channels $CHANNELS \
     --sampling_rate $SAMPLING_RATE \
@@ -172,26 +203,34 @@ if [ $TOOL = 'htk' ]; then
     --energy $ENERGY \
     --delta $DELTA \
     --deltadelta $DELTADELTA \
-    --config_path $CONFIG_PATH
+    --config_save_path $CONFIG_SAVE_PATH \
+    --medium $medium \
+    --large $large
 
   # Convert from wav to htk files
-  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean100.scp
-  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_clean360.scp
-  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_train_other500.scp
-  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_clean.scp
-  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_dev_other.scp
-  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_clean.scp
-  $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2fbank_test_other.scp
+  for part in ${am_resources[@]}; do
+    mkdir -p $HTK_SAVE_PATH/$part
+
+    htk_paths=$(find $HTK_SAVE_PATH/$part/ -iname '*.htk')
+    htk_file_num=$(find $HTK_SAVE_PATH/$part/ -iname '*.htk' | wc -l)
+
+    if [ $htk_file_num -ne ${file_number[$part]} ]; then
+      # Make parallel
+      $HCOPY_PATH -T 1 -C $CONFIG_SAVE_PATH -S config/wav2htk_$part.scp &
+    fi
+  done
 fi
 
+
+exit 1
 
 echo ============================================================================
 echo "                                  Main                                    "
 echo ============================================================================
+
 python main.py \
-  --data_path $DATA_SAVE_PATH \
+  --data_path $DOWNLOAD_DATA_SAVE_PATH \
   --dataset_save_path $DATASET_SAVE_PATH \
-  --run_root_path $RUN_ROOT_PATH \
   --tool $TOOL \
   --htk_save_path $HTK_SAVE_PATH \
   --feature_type $FEATURE_TYPE \
@@ -202,7 +241,9 @@ python main.py \
   --energy $ENERGY \
   --delta $DELTA \
   --deltadelta $DELTADELTA \
-  --normalize $NORMALIZE
+  --normalize $NORMALIZE \
+  --medium $medium \
+  --large $large
 
 
 echo 'Successfully completed!!!'

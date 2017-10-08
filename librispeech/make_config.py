@@ -7,19 +7,17 @@ from __future__ import print_function
 
 import sys
 from os.path import join, basename
+from glob import glob
 import argparse
 
 sys.path.append('../')
-from librispeech.prepare_path import Prepare
 from utils.util import mkdir_join, mkdir
 from utils.inputs.htk import save
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str,
-                    help='path to  Librispeech dataset')
+                    help='path to Librispeech dataset')
 parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
-parser.add_argument('--run_root_path', type=str,
-                    help='path to run this script')
 
 parser.add_argument('--feature_type', type=str, default='logmelfbank',
                     help='the type of features, logmelfbank or mfcc')
@@ -37,21 +35,24 @@ parser.add_argument('--delta', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
-parser.add_argument('--config_path', type=str,
+parser.add_argument('--config_save_path', type=str,
                     help='path to save the config file')
+parser.add_argument('--medium', type=str,
+                    help='If True, create medium-size dataset.')
+parser.add_argument('--large', type=str,
+                    help='If True, create large-size dataset.')
 
 
 def main():
 
     args = parser.parse_args()
     htk_save_path = mkdir(args.htk_save_path)
-    prep = Prepare(args.data_path, args.run_root_path)
 
     # HTK settings
     save(audio_file_type='wav',
          feature_type=args.feature_type,
          channels=args.channels,
-         config_path=args.config_path,
+         config_save_path=args.config_save_path,
          sampling_rate=args.sampling_rate,
          window=args.window,
          slide=args.slide,
@@ -60,17 +61,24 @@ def main():
          deltadelta=bool(args.deltadelta))
     # NOTE: 120-dim features are extracted by default
 
-    for data_type in ['train_clean100', 'train_clean360', 'train_other500',
-                      'dev_clean', 'dev_other', 'test_clean', 'test_other']:
+    parts = ['train-clean-100', 'dev-clean', 'dev-other',
+             'test-clean', 'test-other']
 
-        wav_paths = prep.wav(data_type=data_type)
-        with open(join(args.run_root_path, 'config/wav2fbank_' + data_type + '.scp'), 'w') as f:
+    if bool(args.large):
+        parts += ['train-clean-360', 'train-other-500']
+    elif bool(args.medium):
+        parts += ['train-clean-360']
+
+    for part in parts:
+        # part/speaker/book/*.wav
+        wav_paths = [p for p in glob(join(args.data_path, part, '*/*/*.wav'))]
+        with open('./config/wav2htk_' + part + '.scp', 'w') as f:
             for wav_path in wav_paths:
                 # ex.) wav_path: speaker/book/speaker-book-utt_index.wav
                 speaker, book, utt_index = basename(
                     wav_path).split('.')[0].split('-')
                 save_path = mkdir_join(
-                    htk_save_path, data_type, speaker, book, basename(wav_path).split('.')[0] + '.htk')
+                    htk_save_path, part, speaker, book, basename(wav_path).split('.')[0] + '.htk')
                 f.write(wav_path + '  ' + save_path + '\n')
                 # ex.) htk_path: speaker/book/speaker-book-utt_index.htk
 

@@ -5,55 +5,47 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, abspath
 import sys
 import unittest
-from glob import glob
 
 sys.path.append('../../')
-from librispeech.prepare_path import Prepare
-from librispeech.inputs.input_data import read_audio
+from librispeech.path import Path
+from librispeech.input_data import read_audio
 from utils.measure_time_func import measure_time
 
-prep = Prepare(
+path = Path(
     data_path='/n/sd8/inaguma/corpus/librispeech/data',
-    run_root_path=abspath('../'))
+    htk_save_path='/n/sd8/inaguma/corpus/librispeech/htk')
 
-htk_save_path = '/n/sd8/inaguma/corpus/librispeech/htk'
 htk_paths = {
-    'train': [path for path in sorted(glob(
-        join(htk_save_path, 'train_clean100/*/*/*.htk')))],
-    'dev_clean': [path for path in sorted(glob(
-        join(htk_save_path, 'dev_clean/*/*/*.htk')))],
-    'dev_other': [path for path in sorted(glob(
-        join(htk_save_path, 'dev_other/*/*/*.htk')))],
-    'test_clean': [path for path in sorted(glob(
-        join(htk_save_path, 'test_clean/*/*/*.htk')))],
-    'test_other': [path for path in sorted(glob(
-        join(htk_save_path, 'test_other/*/*/*.htk')))],
+    'train100h': path.htk(data_type='train100h'),
+    'dev_clean': path.htk(data_type='dev_clean'),
+    'dev_other': path.htk(data_type='dev_other'),
+    'test_clean': path.htk(data_type='test_clean'),
+    'test_other': path.htk(data_type='test_other')
 }
 
 wav_paths = {
-    'train': prep.wav(data_type='train'),
-    'dev_clean': prep.wav(data_type='dev_clean'),
-    'dev_other': prep.wav(data_type='_otherdev'),
-    'test_clean': prep.wav(data_type='test_clean'),
-    'test_other': prep.wav(data_type='test_other')
+    'train100h': path.wav(data_type='train100h'),
+    'dev_clean': path.wav(data_type='dev_clean'),
+    'dev_other': path.wav(data_type='dev_other'),
+    'test_clean': path.wav(data_type='test_clean'),
+    'test_other': path.wav(data_type='test_other')
 }
 
 CONFIG = {
     'feature_type': 'logmelfbank',
     'channels': 40,
-    'sampling_rate': 8000,
+    'sampling_rate': 16000,
     'window': 0.025,
     'slide': 0.01,
-    'energy': True,
+    'energy': False,
     'delta': True,
     'deltadelta': True
 }
 
 
-class TestInputSpeakerNorm(unittest.TestCase):
+class TestInput(unittest.TestCase):
 
     def test(self):
 
@@ -82,14 +74,14 @@ class TestInputSpeakerNorm(unittest.TestCase):
 
         audio_paths = htk_paths if tool == 'htk' else wav_paths
 
-        print('---------- train ----------')
+        print('---------- train100h ----------')
         train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
-            audio_paths=audio_paths['train'],
+            audio_paths=audio_paths['train100h'],
             tool=tool,
             config=CONFIG,
             normalize=normalize,
             is_training=True,
-            speaker_gender_dict=prep.speaker_gender_dict)
+            speaker_gender_dict=path.speaker_gender_dict)
 
         for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
 
@@ -99,7 +91,7 @@ class TestInputSpeakerNorm(unittest.TestCase):
                        config=CONFIG,
                        normalize=normalize,
                        is_training=False,
-                       speaker_gender_dict=prep.speaker_gender_dict,
+                       speaker_gender_dict=path.speaker_gender_dict,
                        train_global_mean_male=train_global_mean_male,
                        train_global_mean_female=train_global_mean_female,
                        train_global_std_male=train_global_std_male,
