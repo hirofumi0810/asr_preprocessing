@@ -23,6 +23,9 @@ split.py
 
 # librispeech
 word*.txt
+librispeech/phone*
+librispeech/*/*phone*
 
+# private corpus
 svc
 erato

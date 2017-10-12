@@ -81,7 +81,7 @@ if [ $TOOL = 'htk' ]; then
 
     if [ $htk_file_num -ne ${file_number[$data_type]} ]; then
       # Make parallel
-      $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2htk_$data_type.scp
+      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.config -S ./config/wav2htk_$data_type.scp &
     fi
   done
 else

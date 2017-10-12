@@ -16,7 +16,7 @@ class Path(object):
     """Prepare for making dataset.
     Args:
         data_path (string): path to Librispeech corpus
-        htk_save_path (string): path to htk files
+        htk_save_path (string, optional): path to htk files
     """
 
     def __init__(self, data_path, htk_save_path=None):

@@ -17,7 +17,7 @@ TOOL='htk'
 # TOOL='kaldi'  # under implementation
 
 ### Configuration (Set by yourself)
-FEATURE_TYPE='logmelfbank'  # or mfcc
+FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
 CHANNELS=40
 SAMPLING_RATE=16000
 WINDOW=0.025
@@ -34,10 +34,12 @@ NORMALIZE='speaker'
 small=true
 
 # 460h (train-clean-100 + train-clean-360)
-medium=true
+# medium=true
+medium=false
 
 # 960h (train-clean-100 + train-clean-360  +train-other-500)
-large=true
+# large=true
+large=false
 
 
 ########################################
@@ -184,13 +186,6 @@ if [ $TOOL = 'htk' ]; then
 
   mkdir -p $HTK_SAVE_PATH
 
-  # Set the path to HTK (optional, set only when using HTK toolkit)
-  if [ $FEATURE_TYPE = 'logmelfbank' ]; then
-    CONFIG_SAVE_PATH="./config/fbank.config"
-  else
-    CONFIG_SAVE_PATH="./config/mfcc.config"
-  fi
-
   # Make a config file to covert from wav to htk file
   python make_config.py \
     --data_path $DOWNLOAD_DATA_SAVE_PATH  \
@@ -203,7 +198,7 @@ if [ $TOOL = 'htk' ]; then
     --energy $ENERGY \
     --delta $DELTA \
     --deltadelta $DELTADELTA \
-    --config_save_path $CONFIG_SAVE_PATH \
+    --config_save_path ./config/$FEATURE_TYPE.config \
     --medium $medium \
     --large $large
 
@@ -216,13 +211,16 @@ if [ $TOOL = 'htk' ]; then
 
     if [ $htk_file_num -ne ${file_number[$part]} ]; then
       # Make parallel
-      $HCOPY_PATH -T 1 -C $CONFIG_SAVE_PATH -S config/wav2htk_$part.scp &
+      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.config -S ./config/wav2htk_$part.scp &
     fi
   done
+else
+  if ! which sox >&/dev/null; then
+    echo "This script requires you to first install sox";
+    exit 1;
+  fi
 fi
 
-
-exit 1
 
 echo ============================================================================
 echo "                                  Main                                    "

@@ -88,24 +88,26 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 input_data_utt = read_htk_utt(audio_path)
 
             elif tool == 'python_speech_features':
-                input_data_utt = w2f_psf(audio_path,
-                                         feature_type=config['feature_type'],
-                                         feature_dim=config['channels'],
-                                         use_energy=config['energy'],
-                                         use_delta1=config['delta'],
-                                         use_delta2=config['deltadelta'],
-                                         window=config['window'],
-                                         slide=config['slide'])
+                input_data_utt = w2f_psf(
+                    audio_path,
+                    feature_type=config['feature_type'],
+                    feature_dim=config['channels'],
+                    use_energy=config['energy'],
+                    use_delta1=config['delta'],
+                    use_delta2=config['deltadelta'],
+                    window=config['window'],
+                    slide=config['slide'])
 
             elif tool == 'librosa':
-                input_data_utt = w2f_librosa(audio_path,
-                                             feature_type=config['feature_type'],
-                                             feature_dim=config['channels'],
-                                             use_energy=config['energy'],
-                                             use_delta1=config['delta'],
-                                             use_delta2=config['deltadelta'],
-                                             window=config['window'],
-                                             slide=config['slide'])
+                input_data_utt = w2f_librosa(
+                    audio_path,
+                    feature_type=config['feature_type'],
+                    feature_dim=config['channels'],
+                    use_energy=config['energy'],
+                    use_delta1=config['delta'],
+                    use_delta2=config['deltadelta'],
+                    window=config['window'],
+                    slide=config['slide'])
 
             input_data_utt_sum = np.sum(input_data_utt, axis=0)
 

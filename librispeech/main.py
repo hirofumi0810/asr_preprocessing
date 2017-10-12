@@ -51,7 +51,8 @@ parser.add_argument('--large', type=str,
                     help='If True, create large-size dataset.')
 
 args = parser.parse_args()
-path = Path(args.data_path)
+path = Path(data_path=args.data_path,
+            htk_save_path=args.htk_save_path)
 
 CONFIG = {
     'feature_type': args.feature_type,
@@ -95,7 +96,8 @@ def make_input(train_data_size):
         # NOTE: ex.) save_path:
         # librispeech/inputs/train_data_size/train/speaker/***.npy
 
-        for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
+        for data_type in ['dev_clean', 'dev_other',
+                          'test_clean', 'test_other']:
             print('---------- %s ----------' % data_type)
 
             if args.tool == 'htk':
@@ -137,30 +139,37 @@ def make_label(train_data_size, frequency_threshold):
     else:
         print('---------- train ----------')
         label_paths = path.trans(data_type=train_data_size)
-        read_trans(label_paths=label_paths,
-                   is_training=True,
-                   train_data_size=train_data_size,
-                   save_map_file=True,
-                   config_path=abspath('./config_path'),
-                   frequency_threshold=frequency_threshold,
-                   save_path=mkdir_join(label_save_path, train_data_size, 'train'))
+        read_trans(
+            label_paths=label_paths,
+            train_data_size=train_data_size,
+            map_file_save_path=abspath('./config_path/mapping_files'),
+            is_training=True,
+            frequency_threshold=frequency_threshold,
+            save_map_file=True,
+            save_path=mkdir_join(label_save_path, train_data_size, 'train'))
         # NOTE: ex.) save_path:
-        # librispeech/labels/train_data_size/train/model/label_type/speaker/***.npy
+        # librispeech/labels/train_data_size/train/label_type/speaker/***.npy
 
         for data_type in ['dev_clean', 'dev_other']:
             print('---------- %s ----------' % data_type)
-            read_trans(label_paths=path.trans(data_type=data_type),
-                       train_data_size=train_data_size,
-                       save_path=mkdir_join(label_save_path, train_data_size, data_type))
+            read_trans(
+                label_paths=path.trans(data_type=data_type),
+                train_data_size=train_data_size,
+                map_file_save_path=abspath('./config_path/mapping_files'),
+                frequency_threshold=frequency_threshold,
+                save_path=mkdir_join(label_save_path, train_data_size, data_type))
             # NOTE: ex.) save_path:
-            # librispeech/labels/train_data_size/dev_*/model/label_type/speaker/***.npy
+            # librispeech/labels/train_data_size/dev_*/label_type/speaker/***.npy
 
         for data_type in ['test_clean', 'test_other']:
             print('---------- %s ----------' % data_type)
-            read_trans(label_paths=path.trans(data_type=data_type),
-                       is_test=True,
-                       train_data_size=train_data_size,
-                       save_path=mkdir_join(label_save_path, data_type))
+            read_trans(
+                label_paths=path.trans(data_type=data_type),
+                train_data_size=train_data_size,
+                map_file_save_path=abspath('./config_path/mapping_files'),
+                is_test=True,
+                frequency_threshold=frequency_threshold,
+                save_path=mkdir_join(label_save_path, data_type))
             # NOTE: ex.) save_path:
             # librispeech/labels/test_*/speaker/***.npy
 

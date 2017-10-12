@@ -22,20 +22,24 @@ from utils.util import mkdir_join
 #
 
 # [character]
-# 26 alphabets(a-z), space(_), apostorophe('), (<SOS>, <EOS>)
-# = 26 + 2 (+2) = 28 (30) labels
+# 26 alphabets(a-z), space(_), apostorophe('), <SOS>, <EOS>
+# = 30 labels
 
 # [character_capital_divide]
 # - train100h
-#
+# 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
+# 19 special double-letters, apostorophe('), <SOS>, <EOS>
+# 74 labels
 
 # - train460h
-#
+# 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
+# 24 special double-letters, apostorophe('), <SOS>, <EOS>
+# = 79 labels
 
 # - train960h
 # 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
-# 24 special double-letters, apostorophe('), (<SOS>, <EOS>)
-# = 26 * 2 + 24 + 1 (+2) = 77 (79) labels
+# 24 special double-letters, apostorophe('), <SOS>, <EOS>
+# = 79 labels
 
 # [word, threshold == 10]
 # - train100h
@@ -64,26 +68,23 @@ EOS = '>'
 OOV = 'OOV'
 
 
-def read_trans(label_paths, train_data_size,
+def read_trans(label_paths, train_data_size, map_file_save_path,
                is_training=False, is_test=False, frequency_threshold=5,
-               save_map_file=False, config_path=None, save_path=None):
+               save_map_file=False, save_path=None):
     """Read transcript.
     Args:
         label_paths (list): list of paths to label files
         train_data_size (string): train100h or train460h or train960h
+        map_file_save_path (string): path to mapping files
         is_training (bool, optional): Set True if save as the training set
         is_test (bool, optional): Set True if save as the test set
         frequency_threshold (int, optional): the vocabulary is restricted to
             words which appear more than 'frequency_threshold' in the training
             set
         save_map_file (bool, optional): if True, save the mapping file
-        config_path (string, optional): path to config directory
         save_path (string, optional): path to save labels.
             If None, don't save labels.
     """
-    if config_path is None and save_map_file:
-        raise ValueError('Set config_path.')
-
     print('===> Reading target labels...')
     speaker_dict = {}
     char_set, char_capital_set = set([]), set([])
@@ -140,12 +141,12 @@ def read_trans(label_paths, train_data_size,
                 # print('-----')
 
     char_map_file_path = mkdir_join(
-        config_path, 'mapping_files', 'character.txt')
+        map_file_save_path, 'character.txt')
     char_capital_map_file_path = mkdir_join(
-        config_path, 'mapping_files',
+        map_file_save_path,
         'character_capital_divide_' + train_data_size + '.txt')
     word_map_file_path = mkdir_join(
-        config_path, 'mapping_files', 'word_' + train_data_size + '_freq' +
+        map_file_save_path, 'word_' + train_data_size + '_freq' +
         str(frequency_threshold) + '.txt')
 
     if is_training:
@@ -172,19 +173,19 @@ def read_trans(label_paths, train_data_size,
 
     if save_map_file:
         # character-level
-        with open(char_map_file_path, 'w') as f:
-            char_list = [SPACE] + \
-                sorted(list(char_set)) + [APOSTROPHE, SOS, EOS]
-            for i, char in enumerate(char_list):
-                f.write('%s  %s\n' % (char, str(i)))
-
-        # character-level (capital-divided)
         if not isfile(char_map_file_path):
-            with open(char_capital_map_file_path, 'w') as f:
-                char_list = sorted(list(char_capital_set)) + \
-                    [APOSTROPHE, SOS, EOS]
+            with open(char_map_file_path, 'w') as f:
+                char_list = [SPACE] + \
+                    sorted(list(char_set)) + [APOSTROPHE, SOS, EOS]
                 for i, char in enumerate(char_list):
                     f.write('%s  %s\n' % (char, str(i)))
+
+        # character-level (capital-divided)
+        with open(char_capital_map_file_path, 'w') as f:
+            char_list = sorted(list(char_capital_set)) + \
+                [APOSTROPHE, SOS, EOS]
+            for i, char in enumerate(char_list):
+                f.write('%s  %s\n' % (char, str(i)))
 
         # word-level
         vocab_list = sorted(list(vocab_set)) + [OOV, SOS, EOS]
@@ -204,45 +205,33 @@ def read_trans(label_paths, train_data_size,
         char2idx_capital = Char2idx(map_file_path=char_capital_map_file_path)
         word2idx = Word2idx(map_file_path=word_map_file_path)
 
-        # Save target labels
-        print('===> Saving target labels...')
-        for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_name, [transcript, transcript_capital] in utterance_dict.items():
-                save_file_name = utt_name + '.npy'
+        if save_path is not None:
+            # Save target labels
+            print('===> Saving target labels...')
+            for speaker, utterance_dict in tqdm(speaker_dict.items()):
+                for utt_name, [transcript, transcript_capital] in utterance_dict.items():
+                    save_file_name = utt_name + '.npy'
 
-                if is_test:
-                    # Save target labels as string
-                    np.save(mkdir_join(save_path, speaker, utt_name + '.npy'),
-                            transcript)
+                    if is_test:
+                        # Save target labels as string
+                        np.save(mkdir_join(save_path, speaker, save_file_name),
+                                transcript)
+                    else:
+                        # Convert to OOV
+                        word_list = [
+                            word if word in vocab_set else OOV for word in transcript.split(SPACE)]
 
-                else:
-                    # Convert to OOV
-                    word_list = [
-                        word if word in vocab_set else OOV for word in transcript.split(SPACE)]
+                        # Convert to index
+                        char_index_list = char2idx(
+                            transcript, double_letter=False)
+                        char_capital_index_list = char2idx_capital(
+                            transcript_capital, double_letter=True)
+                        word_index_list = word2idx(word_list)
 
-                    # Convert to index
-                    ctc_char_index_list = char2idx(
-                        transcript, double_letter=False)
-                    att_char_index_list = char2idx(
-                        SOS + transcript + EOS, double_letter=False)
-                    ctc_char_capital_index_list = char2idx_capital(
-                        transcript_capital, double_letter=True)
-                    att_char_capital_index_list = char2idx_capital(
-                        SOS + transcript_capital + EOS, double_letter=True)
-                    ctc_word_index_list = word2idx(word_list)
-                    att_word_index_list = word2idx([SOS] + word_list + [EOS])
-
-                    if save_path is not None:
                         # Save target labels as index
-                        np.save(mkdir_join(save_path, 'ctc', 'character', speaker, save_file_name),
-                                ctc_char_index_list)
-                        np.save(mkdir_join(save_path, 'attention', 'character', speaker, save_file_name),
-                                att_char_index_list)
-                        np.save(mkdir_join(save_path, 'ctc', 'character_capital_divide', speaker, save_file_name),
-                                ctc_char_capital_index_list)
-                        np.save(mkdir_join(save_path, 'attention', 'character_capital_divide', speaker, save_file_name),
-                                att_char_capital_index_list)
-                        np.save(mkdir_join(save_path, 'ctc', 'word_freq' + str(frequency_threshold), speaker, utt_name + '.npy'),
-                                ctc_word_index_list)
-                        np.save(mkdir_join(save_path, 'attention',  'word_freq' + str(frequency_threshold), speaker, utt_name + '.npy'),
-                                att_word_index_list)
+                        np.save(mkdir_join(save_path, 'character', speaker, save_file_name),
+                                char_index_list)
+                        np.save(mkdir_join(save_path, 'character_capital_divide', speaker, save_file_name),
+                                char_capital_index_list)
+                        np.save(mkdir_join(save_path, 'word_freq' + str(frequency_threshold), speaker, save_file_name),
+                                word_index_list)

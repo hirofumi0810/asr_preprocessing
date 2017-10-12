@@ -66,8 +66,7 @@ CONFIG = {
 
 def make_input():
 
-    input_save_path = mkdir_join(
-        args.dataset_save_path, 'inputs', args.tool, args.normalize)
+    input_save_path = mkdir_join(args.dataset_save_path, 'inputs')
 
     print('=> Processing input data...')
     if isfile(join(input_save_path, 'complete.txt')):
@@ -106,6 +105,7 @@ def make_input():
                        train_global_std_male=train_global_std_male,
                        train_global_mean_female=train_global_mean_female,
                        train_global_std_female=train_global_std_female)
+            # NOTE: ex.) save_path: timit/inputs/data_type/***.npy
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(input_save_path, 'complete.txt'), 'w') as f:
