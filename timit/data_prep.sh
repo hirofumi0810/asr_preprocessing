@@ -5,7 +5,7 @@ echo "                                  TIMIT                                   
 echo ============================================================================
 
 ### Set paths
-TIMIT_PATH='/n/sd8/inaguma/corpus/timit/original'
+TIMIT_PATH='/n/sd8/inaguma/corpus/timit/data'
 DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/timit/dataset'
 HTK_SAVE_PATH='/n/sd8/inaguma/corpus/timit/htk'
 HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
@@ -17,7 +17,7 @@ TOOL='htk'
 # TOOL='kaldi'  # under implementation
 
 ### Configuration (Set by yourself)
-FEATURE_TYPE='logmelfbank'  # or mfcc
+FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
 CHANNELS=40
 SAMPLING_RATE=16000
 WINDOW=0.025
@@ -58,18 +58,11 @@ if [ $TOOL = 'htk' ]; then
   echo "                   Feature extraction by HTK toolkit                      "
   echo ============================================================================
 
-  # Set the path to HTK (optional, set only when using HTK toolkit)
-  if [ $FEATURE_TYPE = 'logmelfbank' ]; then
-    CONFIG_PATH="./config/fbank.config"
-  else
-    CONFIG_PATH="./config/mfcc.config"
-  fi
-
   # Make a config file to covert from wav to htk file
   python make_config.py \
     --data_path $TIMIT_PATH \
+    --config_path $RUN_ROOT_PATH/config \
     --htk_save_path $HTK_SAVE_PATH \
-    --run_root_path $RUN_ROOT_PATH \
     --feature_type $FEATURE_TYPE \
     --channels $CHANNELS \
     --sampling_rate $SAMPLING_RATE \
@@ -78,7 +71,7 @@ if [ $TOOL = 'htk' ]; then
     --energy $ENERGY \
     --delta $DELTA \
     --deltadelta $DELTADELTA \
-    --config_path $CONFIG_PATH
+    --config_save_path ./config/$FEATURE_TYPE.config
 
   # Convert from wav to htk files
   for data_type in train dev test ; do
@@ -91,6 +84,11 @@ if [ $TOOL = 'htk' ]; then
       $HCOPY_PATH -T 1 -C $CONFIG_PATH -S config/wav2htk_$data_type.scp
     fi
   done
+else
+  if ! which sox >&/dev/null; then
+    echo "This script requires you to first install sox";
+    exit 1;
+  fi
 fi
 
 
@@ -101,7 +99,7 @@ echo ===========================================================================
 python main.py \
   --data_path $TIMIT_PATH \
   --dataset_save_path $DATASET_SAVE_PATH \
-  --run_root_path $RUN_ROOT_PATH \
+  --config_path $RUN_ROOT_PATH/config \
   --tool $TOOL \
   --htk_save_path $HTK_SAVE_PATH \
   --feature_type $FEATURE_TYPE \

@@ -15,20 +15,20 @@ class Path(object):
     """Prepare for making dataset.
     Args:
         data_path (string): path to TIMIT corpus
-        run_root_path (string): path to ./make.sh
+        config_path (string): path to config dir
+        htk_save_path (string, optional): path to htk files
     """
 
-    def __init__(self, data_path, run_root_path, htk_save_path=None):
+    def __init__(self, data_path, config_path, htk_save_path=None):
 
         self.data_path = data_path
+        self.config_path = config_path
+
         self.htk_save_path = htk_save_path
 
         # Paths to TIMIT data
         self.train_data_path = join(data_path, 'train')
         self.test_data_path = join(data_path, 'test')
-
-        # Absolute path to this directory
-        self.run_root_path = run_root_path
 
         self.__make()
 
@@ -50,8 +50,7 @@ class Path(object):
             if data_type != 'train':
                 # Load speaker list
                 test_speakers = []
-                with open(join(self.run_root_path,
-                               'config/' + data_type + '_speaker_list.txt'), 'r') as f:
+                with open(join(self.config_path, data_type + '_speaker_list.txt'), 'r') as f:
                     for line in f:
                         line = line.strip()
                         test_speakers.append(line)
@@ -129,8 +128,8 @@ class Path(object):
 
 if __name__ == '__main__':
 
-    path = Path(data_path='/n/sd8/inaguma/corpus/timit/original',
-                run_root_path='./',
+    path = Path(data_path='/n/sd8/inaguma/corpus/timit/data',
+                config_path='./config',
                 htk_save_path='/n/sd8/inaguma/corpus/timit/htk')
 
     for data_type in ['train', 'dev', 'test']:

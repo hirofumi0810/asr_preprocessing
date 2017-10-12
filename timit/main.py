@@ -13,17 +13,17 @@ import argparse
 
 sys.path.append('../')
 from timit.path import Path
-from timit.labels.character import read_char
-from timit.labels.phone import read_phone
-from timit.inputs.input_data import read_audio
+from timit.transcript_character import read_char
+from timit.transcript_phone import read_phone
+from timit.input_data import read_audio
 from utils.util import mkdir_join
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
 parser.add_argument('--dataset_save_path', type=str,
                     help='path to save dataset')
-parser.add_argument('--run_root_path', type=str,
-                    help='path to run this script')
+parser.add_argument('--config_path', type=str,
+                    help='path to config directory')
 
 parser.add_argument('--tool', type=str,
                     help='the tool to extract features, htk or python_speech_features or htk')
@@ -50,7 +50,7 @@ parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
 
 args = parser.parse_args()
-path = Path(args.data_path, args.run_root_path, args.htk_save_path)
+path = Path(args.data_path, args.config_path, args.htk_save_path)
 
 CONFIG = {
     'feature_type': args.feature_type,
@@ -122,43 +122,31 @@ def make_label():
     else:
         for data_type in ['train', 'dev', 'test']:
             save_map_file = True if data_type == 'train' else False
+            is_test = True if data_type == 'test' else False
 
-            # Read target labels and save labels as npy files
             print('==================================================')
-            print('  label_type: character')
+            print('  label_type: character, character_capital_divide')
             print('  data_type: %s' % data_type)
             print('==================================================')
             read_char(label_paths=path.trans(data_type=data_type),
-                      run_root_path=abspath('./'),
+                      map_file_save_path=abspath('./config/mapping_files'),
+                      is_test=is_test,
                       save_map_file=save_map_file,
-                      ctc_char_save_path=mkdir_join(
-                          label_save_path, 'ctc', 'character', data_type),
-                      ctc_char_capital_save_path=mkdir_join(
-                          label_save_path, 'ctc', 'character_capital_divide', data_type),
-                      att_char_save_path=mkdir_join(
-                          label_save_path, 'attention', 'character', data_type),
-                      att_char_capital_save_path=mkdir_join(
-                          label_save_path, 'attention', 'character_capital_divide', data_type))
+                      save_path=mkdir_join(label_save_path, data_type))
+            # NOTE: ex.) save_path:
+            # timit/labels/data_type/character*/***.npy
 
             print('==================================================')
             print('  label_type: phone')
             print('  data_type: %s' % data_type)
             print('==================================================')
             read_phone(label_paths=path.phone(data_type=data_type),
-                       run_root_path=abspath('./'),
+                       map_file_save_path=abspath('./config/mapping_files'),
+                       is_test=is_test,
                        save_map_file=save_map_file,
-                       ctc_phone61_save_path=mkdir_join(
-                           label_save_path, 'ctc', 'phone61', data_type),
-                       ctc_phone48_save_path=mkdir_join(
-                           label_save_path, 'ctc', 'phone48', data_type),
-                       ctc_phone39_save_path=mkdir_join(
-                           label_save_path, 'ctc', 'phone39', data_type),
-                       att_phone61_save_path=mkdir_join(
-                           label_save_path, 'attention', 'phone61', data_type),
-                       att_phone48_save_path=mkdir_join(
-                           label_save_path, 'attention', 'phone48', data_type),
-                       att_phone39_save_path=mkdir_join(
-                           label_save_path, 'attention', 'phone39', data_type))
+                       save_path=mkdir_join(label_save_path, data_type))
+            # NOTE: ex.) save_path:
+            # timit/labels/data_type/phone**/***.npy
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:

@@ -8,8 +8,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from os.path import basename, join
 import sys
-from os.path import join, basename
 import argparse
 
 sys.path.append('../')
@@ -20,8 +20,7 @@ from utils.inputs.htk import save
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
 parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
-parser.add_argument('--run_root_path', type=str,
-                    help='path to run this script')
+parser.add_argument('--config_path', type=str, help='path to config directory')
 
 parser.add_argument('--feature_type', type=str, default='logmelfbank',
                     help='the type of features, logmelfbank or mfcc')
@@ -39,7 +38,7 @@ parser.add_argument('--delta', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
-parser.add_argument('--config_path', type=str,
+parser.add_argument('--config_save_path', type=str,
                     help='path to save the config file')
 
 
@@ -47,13 +46,13 @@ def main():
 
     args = parser.parse_args()
     htk_save_path = mkdir(args.htk_save_path)
-    path = Path(args.data_path, args.run_root_path)
+    path = Path(args.data_path, args.config_path)
 
     # HTK settings
     save(audio_file_type='nist',
          feature_type=args.feature_type,
          channels=args.channels,
-         config_save_path=args.config_path,
+         config_save_path=args.config_save_path,
          sampling_rate=args.sampling_rate,
          window=args.window,
          slide=args.slide,

@@ -17,31 +17,15 @@ from utils.util import mkdir_join
 
 # NOTE:
 ############################################################
-# CTC model
-
-# - character
-# 26 alphabets(a-z),
-# space(_), apostorophe('),
-# = 26 + 2 = 28 labels
-
-# - character_capital_divide
-# 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
-# 19 special double-letters, apostorophe(')
-# = 26 * 2 + 19 + 1 = 72 labels
-############################################################
-
-############################################################
-# Attention-based model
-
-# - character
+# - [character]
 # 26 alphabets(a-z), <SOS>, <EOS>
 # space(_), apostorophe(')
-# = 26 + 2 + 2 = 30 labels
+# = 30 labels
 
-# - character_capital_divide
-# 26 lower alphabets(a-z), 26 upper alphabets(A-Z)  <SOS>, <EOS>
+# - [character_capital_divide]
+# 26 lower alphabets(a-z), 26 upper alphabets(A-Z),  <SOS>, <EOS>
 # 19 special double-letters, apostorophe(')
-# = 26 * 2 + 2 + 19 + 1 = 74 labels
+# = 74 labels
 ############################################################
 
 DOUBLE_LETTERS = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh', 'ii', 'jj',
@@ -53,24 +37,16 @@ SOS = '<'
 EOS = '>'
 
 
-def read_char(label_paths, run_root_path, save_map_file=False,
-              ctc_char_save_path=None, att_char_save_path=None,
-              ctc_char_capital_save_path=None, att_char_capital_save_path=None):
+def read_char(label_paths, map_file_save_path, is_test=False,
+              save_map_file=False, save_path=None):
     """Read text transcript.
     Args:
         label_paths (list): list of paths to label files
-        run_root_path (string): absolute path of make.sh
+        map_file_save_path (string): path to mapping files
+        is_test (bool, optional): Set True if save as the test set
         save_map_file (string): if True, save the mapping file
-        ctc_char_save_path (string, optional): path to save character-level
-            labels for the CTC models. If None, don't save labels.
-        ctc_char_capital_save_path (string, optional): path to save
-            capital-divided character-level labels for the CTC models.
+        save_path (string, optional): path to save labels.
             If None, don't save labels.
-        att_char_save_path (string, optional): path to save character-level
-            labels for the Attention-based models. If None, don't save labels.
-        att_char_capital_save_path (string, optional): path to save
-            capital-divided character-level labels for the Attention-based
-            models. If None, don't save labels.
     """
     print('===> Reading target labels...')
     text_dict = {}
@@ -126,10 +102,9 @@ def read_char(label_paths, run_root_path, save_map_file=False,
         # print(transcript_capital)
 
     # Make mapping file (from character to index)
-    char_map_file_path = mkdir_join(
-        run_root_path, 'labels', 'mapping_files', 'character.txt')
+    char_map_file_path = mkdir_join(map_file_save_path, 'character.txt')
     char_capital_map_file_path = mkdir_join(
-        run_root_path, 'labels', 'mapping_files', 'character_capital_divide.txt')
+        map_file_save_path, 'character_capital_divide.txt')
 
     # Reserve some indices
     char_set.discard(SPACE)
@@ -154,42 +129,29 @@ def read_char(label_paths, run_root_path, save_map_file=False,
     char2idx = Char2idx(map_file_path=char_map_file_path)
     char2idx_capital = Char2idx(map_file_path=char_capital_map_file_path)
 
-    # Save target labels
-    print('===> Saving target labels...')
-    for label_path, [transcript, transcript_capital] in tqdm(text_dict.items()):
-        speaker = label_path.split('/')[-2]
-        utt_index = basename(label_path).split('.')[0]
-        save_file_name = speaker + '_' + utt_index + '.npy'
+    if save_path is not None:
+        # Save target labels
+        print('===> Saving target labels...')
+        for label_path, [transcript, transcript_capital] in tqdm(text_dict.items()):
+            speaker = label_path.split('/')[-2]
+            utt_index = basename(label_path).split('.')[0]
+            save_file_name = speaker + '_' + utt_index + '.npy'
 
-        if ctc_char_save_path is not None:
-            # Convert from character to index
-            index_list = char2idx(transcript, double_letter=False)
+            if is_test:
+                # Save target labels as string
+                np.save(mkdir_join(save_path, 'character',
+                                   save_file_name), transcript)
+                np.save(mkdir_join(save_path, 'character_capital_divide',
+                                   save_file_name), transcript)
+            else:
+                # Convert from character to index
+                char_index_list = char2idx(
+                    transcript, double_letter=False)
+                char_capital_index_list = char2idx_capital(
+                    transcript_capital, double_letter=True)
 
-            # Save as npy file
-            np.save(mkdir_join(ctc_char_save_path, save_file_name), index_list)
-
-        if att_char_save_path is not None:
-            # Convert from character to index
-            index_list = char2idx(
-                SOS + transcript + EOS, double_letter=False)
-
-            # Save as npy file
-            np.save(mkdir_join(att_char_save_path, save_file_name), index_list)
-
-        if ctc_char_capital_save_path is not None:
-            # Convert from character to index
-            index_list = char2idx_capital(
-                transcript_capital, double_letter=True)
-
-            # Save as npy file
-            np.save(mkdir_join(ctc_char_capital_save_path,
-                               save_file_name), index_list)
-
-        if att_char_capital_save_path is not None:
-            # Convert from character to index
-            index_list = char2idx_capital(
-                SOS + transcript_capital + EOS, double_letter=True)
-
-            # Save as npy file
-            np.save(mkdir_join(att_char_capital_save_path,
-                               save_file_name), index_list)
+                # Save target labels as index
+                np.save(mkdir_join(save_path, 'character',
+                                   save_file_name), char_index_list)
+                np.save(mkdir_join(save_path, 'character_capital_divide',
+                                   save_file_name), char_capital_index_list)

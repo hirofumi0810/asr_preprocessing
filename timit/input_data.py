@@ -24,7 +24,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                train_global_mean_male=None, train_global_std_male=None,
                train_global_mean_female=None, train_global_std_female=None,
                dtype=np.float64):
-    """Read WAV or HTK files.
+    """Read audio files.
     Args:
         audio_paths (list): paths to WAV files
         tool (string): the tool to extract features,

@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""Test for input data (TIMIT corpus)."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -10,11 +12,11 @@ import unittest
 
 sys.path.append('../../')
 from timit.path import Path
-from timit.inputs.input_data import read_audio
+from timit.input_data import read_audio
 from utils.measure_time_func import measure_time
 
-path = Path(data_path='/n/sd8/inaguma/corpus/timit/original',
-            run_root_path='../',
+path = Path(data_path='/n/sd8/inaguma/corpus/timit/data',
+            config_path='../config',
             htk_save_path='/n/sd8/inaguma/corpus/timit/htk')
 
 htk_paths = {
@@ -41,28 +43,25 @@ CONFIG = {
 }
 
 
-class TestInputNorm(unittest.TestCase):
+class TestInput(unittest.TestCase):
 
     def test(self):
 
-        self.check_feature_extraction(tool='htk', normalize='global')
-        self.check_feature_extraction(tool='htk', normalize='speaker')
-        self.check_feature_extraction(tool='htk', normalize='utterance')
+        # self.check(tool='htk', normalize='global')
+        # self.check(tool='htk', normalize='speaker')
+        # self.check(tool='htk', normalize='utterance')
 
         # NOTE: these are very slow
-        self.check_feature_extraction(
-            tool='python_speech_features', normalize='global')
-        self.check_feature_extraction(
-            tool='python_speech_features', normalize='speaker')
-        self.check_feature_extraction(
-            tool='python_speech_features', normalize='utterance')
+        self.check(tool='python_speech_features', normalize='global')
+        self.check(tool='python_speech_features', normalize='speaker')
+        self.check(tool='python_speech_features', normalize='utterance')
 
-        self.check_feature_extraction(tool='librosa', normalize='global')
-        self.check_feature_extraction(tool='librosa', normalize='speaker')
-        self.check_feature_extraction(tool='librosa', normalize='utterance')
+        self.check(tool='librosa', normalize='global')
+        self.check(tool='librosa', normalize='speaker')
+        self.check(tool='librosa', normalize='utterance')
 
     @measure_time
-    def check_feature_extraction(self, tool, normalize):
+    def check(self, tool, normalize):
 
         print('==================================================')
         print('  tool: %s' % tool)

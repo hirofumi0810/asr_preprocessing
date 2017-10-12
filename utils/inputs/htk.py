@@ -30,14 +30,14 @@ def save(audio_file_type, feature_type, channels, config_save_path,
             f.write('SOURCERATE = 1250\n')
 
         # Target features
-        if feature_type == 'logmelfbank':
-            feature_type = 'FBANK'
+        if feature_type == 'fbank':
+            feature_type = 'FBANK'  # log mel-filter bank channel outputs
         elif feature_type == 'mfcc':
-            feature_type = 'MFCC'
+            feature_type = 'MFCC'  # mel-frequency cepstral coefficients
         # elif feature_type == 'linearmelfbank':
-        #     feature_type = 'MELSPEC'
+        # feature_type = 'MELSPEC'  # linear mel-filter bank channel outputs
         else:
-            raise ValueError('feature_type must be logmelfbank or mfcc.')
+            raise ValueError('feature_type must be fbank or mfcc.')
 
         if energy:
             feature_type += '_E'
