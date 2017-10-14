@@ -201,37 +201,41 @@ def read_trans(label_paths, train_data_size, map_file_save_path,
         print('OOV rate %f %%' %
               ((total_oov_word_count / total_word_count) * 100))
 
-        char2idx = Char2idx(map_file_path=char_map_file_path)
-        char2idx_capital = Char2idx(map_file_path=char_capital_map_file_path)
-        word2idx = Word2idx(map_file_path=word_map_file_path)
+    char2idx = Char2idx(map_file_path=char_map_file_path)
+    char2idx_capital = Char2idx(map_file_path=char_capital_map_file_path)
+    word2idx = Word2idx(map_file_path=word_map_file_path)
 
-        if save_path is not None:
-            # Save target labels
-            print('===> Saving target labels...')
-            for speaker, utterance_dict in tqdm(speaker_dict.items()):
-                for utt_name, [transcript, transcript_capital] in utterance_dict.items():
-                    save_file_name = utt_name + '.npy'
+    if save_path is not None:
+        # Save target labels
+        print('===> Saving target labels...')
+        for speaker, utterance_dict in tqdm(speaker_dict.items()):
+            for utt_name, [transcript, transcript_capital] in utterance_dict.items():
+                save_file_name = utt_name + '.npy'
 
-                    if is_test:
-                        # Save target labels as string
-                        np.save(mkdir_join(save_path, speaker, save_file_name),
-                                transcript)
-                    else:
-                        # Convert to OOV
-                        word_list = [
-                            word if word in vocab_set else OOV for word in transcript.split(SPACE)]
+                if is_test:
+                    # Save target labels as string
+                    np.save(mkdir_join(save_path, 'character',
+                                       speaker, save_file_name), transcript)
+                    np.save(mkdir_join(save_path, 'character_capital_divide',
+                                       speaker, save_file_name), transcript)
+                    np.save(mkdir_join(save_path, 'word_freq' + str(frequency_threshold),
+                                       speaker, save_file_name), transcript)
+                else:
+                    # Convert to OOV
+                    word_list = [
+                        word if word in vocab_set else OOV for word in transcript.split(SPACE)]
 
-                        # Convert to index
-                        char_index_list = char2idx(
-                            transcript, double_letter=False)
-                        char_capital_index_list = char2idx_capital(
-                            transcript_capital, double_letter=True)
-                        word_index_list = word2idx(word_list)
+                    # Convert to index
+                    char_index_list = char2idx(
+                        transcript, double_letter=False)
+                    char_capital_index_list = char2idx_capital(
+                        transcript_capital, double_letter=True)
+                    word_index_list = word2idx(word_list)
 
-                        # Save target labels as index
-                        np.save(mkdir_join(save_path, 'character', speaker, save_file_name),
-                                char_index_list)
-                        np.save(mkdir_join(save_path, 'character_capital_divide', speaker, save_file_name),
-                                char_capital_index_list)
-                        np.save(mkdir_join(save_path, 'word_freq' + str(frequency_threshold), speaker, save_file_name),
-                                word_index_list)
+                    # Save target labels as index
+                    np.save(mkdir_join(save_path, 'character', speaker, save_file_name),
+                            char_index_list)
+                    np.save(mkdir_join(save_path, 'character_capital_divide', speaker, save_file_name),
+                            char_capital_index_list)
+                    np.save(mkdir_join(save_path, 'word_freq' + str(frequency_threshold), speaker, save_file_name),
+                            word_index_list)

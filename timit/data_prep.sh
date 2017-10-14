@@ -70,8 +70,7 @@ if [ $TOOL = 'htk' ]; then
     --slide $SLIDE \
     --energy $ENERGY \
     --delta $DELTA \
-    --deltadelta $DELTADELTA \
-    --config_save_path ./config/$FEATURE_TYPE.config
+    --deltadelta $DELTADELTA
 
   # Convert from wav to htk files
   for data_type in train dev test ; do

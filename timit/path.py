@@ -23,7 +23,6 @@ class Path(object):
 
         self.data_path = data_path
         self.config_path = config_path
-
         self.htk_save_path = htk_save_path
 
         # Paths to TIMIT data
@@ -95,7 +94,7 @@ class Path(object):
         if self.htk_save_path is None:
             raise ValueError('Set path to htk files.')
 
-        # ex.) htk/data_type/speaker/*.htk
+        # NOTE: ex.) timit/htk/data_type/speaker/*.htk
         return [p for p in glob(join(self.htk_save_path, data_type, '*/*.htk'))]
 
     def trans(self, data_type):

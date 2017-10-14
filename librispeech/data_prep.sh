@@ -30,16 +30,12 @@ NORMALIZE='speaker'
 # NORMALIZE='utterance'
 
 ### data size to create
-# 100h (train-clean-100)
-small=true
-
+# NOTE: 100h (train-clean-100) will be created by default
 # 460h (train-clean-100 + train-clean-360)
-# medium=true
-medium=false
+medium=true
 
 # 960h (train-clean-100 + train-clean-360  +train-other-500)
-# large=true
-large=false
+large=true
 
 
 ########################################
@@ -162,21 +158,21 @@ echo ===========================================================================
 echo "                        Convert from flac to wav                          "
 echo ============================================================================
 
-# flac_paths=$(find $DOWNLOAD_DATA_SAVE_PATH -iname '*.flac')
-# for flac_path in $flac_paths ; do
-#   dir_path=$(dirname $flac_path)
-#   file_name=$(basename $flac_path)
-#   base=${file_name%.*}
-#   ext=${file_name##*.}
-#   wav_path=$dir_path"/"$base".wav"
-#   if [ $ext = "flac" ]; then
-#     echo "Converting from"$flac_path" to "$wav_path
-#     sox $flac_path -t wav $wav_path
-#     rm -f $flac_path
-#   else
-#     echo "Already converted: "$wav_path
-#   fi
-# done
+flac_paths=$(find $DOWNLOAD_DATA_SAVE_PATH -iname '*.flac')
+for flac_path in $flac_paths ; do
+  dir_path=$(dirname $flac_path)
+  file_name=$(basename $flac_path)
+  base=${file_name%.*}
+  ext=${file_name##*.}
+  wav_path=$dir_path"/"$base".wav"
+  if [ $ext = "flac" ]; then
+    echo "Converting from"$flac_path" to "$wav_path
+    sox $flac_path -t wav $wav_path
+    rm -f $flac_path
+  else
+    echo "Already converted: "$wav_path
+  fi
+done
 
 
 if [ $TOOL = 'htk' ]; then
@@ -198,7 +194,6 @@ if [ $TOOL = 'htk' ]; then
     --energy $ENERGY \
     --delta $DELTA \
     --deltadelta $DELTADELTA \
-    --config_save_path ./config/$FEATURE_TYPE.config \
     --medium $medium \
     --large $large
 

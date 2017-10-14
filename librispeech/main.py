@@ -131,7 +131,8 @@ def make_label(train_data_size, frequency_threshold):
     print('  frequency_threshold: %s' % frequency_threshold)
     print('==================================================')
 
-    label_save_path = mkdir_join(args.dataset_save_path, 'labels')
+    label_save_path = mkdir_join(
+        args.dataset_save_path, 'labels', train_data_size)
 
     print('=> Processing transcripts...')
     if isfile(join(label_save_path, 'complete.txt')):
@@ -142,11 +143,11 @@ def make_label(train_data_size, frequency_threshold):
         read_trans(
             label_paths=label_paths,
             train_data_size=train_data_size,
-            map_file_save_path=abspath('./config_path/mapping_files'),
+            map_file_save_path=abspath('./config/mapping_files'),
             is_training=True,
             frequency_threshold=frequency_threshold,
             save_map_file=True,
-            save_path=mkdir_join(label_save_path, train_data_size, 'train'))
+            save_path=mkdir_join(label_save_path, 'train'))
         # NOTE: ex.) save_path:
         # librispeech/labels/train_data_size/train/label_type/speaker/***.npy
 
@@ -155,9 +156,9 @@ def make_label(train_data_size, frequency_threshold):
             read_trans(
                 label_paths=path.trans(data_type=data_type),
                 train_data_size=train_data_size,
-                map_file_save_path=abspath('./config_path/mapping_files'),
+                map_file_save_path=abspath('./config/mapping_files'),
                 frequency_threshold=frequency_threshold,
-                save_path=mkdir_join(label_save_path, train_data_size, data_type))
+                save_path=mkdir_join(label_save_path, data_type))
             # NOTE: ex.) save_path:
             # librispeech/labels/train_data_size/dev_*/label_type/speaker/***.npy
 
@@ -166,12 +167,12 @@ def make_label(train_data_size, frequency_threshold):
             read_trans(
                 label_paths=path.trans(data_type=data_type),
                 train_data_size=train_data_size,
-                map_file_save_path=abspath('./config_path/mapping_files'),
+                map_file_save_path=abspath('./config/mapping_files'),
                 is_test=True,
                 frequency_threshold=frequency_threshold,
                 save_path=mkdir_join(label_save_path, data_type))
             # NOTE: ex.) save_path:
-            # librispeech/labels/test_*/speaker/***.npy
+            # librispeech/labels/train_data_size/test_*/speaker/***.npy
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:
@@ -183,7 +184,7 @@ if __name__ == '__main__':
     train_data_sizes = ['train100h']
     if bool(args.medium):
         train_data_sizes += ['train460h']
-    elif bool(args.large):
+    if bool(args.large):
         train_data_sizes += ['train960h']
 
     for train_data_size in train_data_sizes:
