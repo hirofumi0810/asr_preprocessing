@@ -12,20 +12,17 @@ from __future__ import print_function
 from os.path import join, isfile
 import sys
 import argparse
-from glob import glob
 
 sys.path.append('../')
-from csj.prepare_path import Prepare
-from csj.inputs.input_data import read_audio
-from csj.labels.target import read_sdb
+from csj.path import Path
+from csj.input_data import read_audio
+from csj.labels.transcript import read_sdb
 from utils.util import mkdir_join
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to CSJ dataset')
 parser.add_argument('--dataset_save_path', type=str,
                     help='path to save dataset')
-parser.add_argument('--run_root_path', type=str,
-                    help='path to run this script')
 parser.add_argument('--tool', type=str,
                     help='the tool to extract features, htk or python_speech_features or htk')
 parser.add_argument('--htk_save_path', type=str, default='',
@@ -49,9 +46,13 @@ parser.add_argument('--delta', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
+parser.add_argument('--fullset', type=str,
+                    help='If True, create full-size dataset.')
 
 args = parser.parse_args()
-prep = Prepare(args.data_path, args.run_root_path)
+path = Path(data_path=args.data_path,
+            config_path='./config',
+            htk_save_path=args.htk_save_path)
 
 CONFIG = {
     'feature_type': args.feature_type,
@@ -65,88 +66,53 @@ CONFIG = {
 }
 
 
-def main(model, train_data_size, divide_by_space):
+def main(train_data_size):
 
     print('==================================================')
-    print('  model: %s' % model)
     print('  train_data_size: %s' % train_data_size)
-    print('  divide_by_space: %s' % str(divide_by_space))
     print('==================================================')
 
     input_save_path = mkdir_join(
         args.dataset_save_path, 'inputs', train_data_size)
     label_save_path = mkdir_join(
-        args.dataset_save_path, 'labels', model, train_data_size)
+        args.dataset_save_path, 'labels', train_data_size)
 
-    ####################
-    # labels
-    ####################
     print('=> Processing transcripts...')
-    if not divide_by_space and isfile(join(label_save_path, 'complete.txt')) and isfile(join(input_save_path, 'complete.txt')):
-        print('Already exists.')
-    elif divide_by_space and isfile(join(label_save_path, 'complete_wakachi.txt')) and isfile(join(input_save_path, 'complete.txt')):
+    if isfile(join(label_save_path, 'complete.txt')) and isfile(join(input_save_path, 'complete.txt')):
         print('Already exists.')
     else:
-        if not divide_by_space and isfile(join(label_save_path, 'complete.txt')):
-            kanji_label_save_path = None
-            kana_label_save_path = None
-            phone_label_save_path = None
-            # NOTE: do not save
-        elif divide_by_space and isfile(join(label_save_path, 'complete_wakachi.txt')):
-            kanji_label_save_path = None
-            kana_label_save_path = None
-            phone_label_save_path = None
-            # NOTE: do not save
-        elif divide_by_space:
-            kanji_label_save_path = mkdir_join(
-                label_save_path, 'kanji_wakachi')
-            kana_label_save_path = mkdir_join(label_save_path, 'kana_wakachi')
-            phone_label_save_path = mkdir_join(
-                label_save_path, 'phone_wakachi')
-        else:
-            kanji_label_save_path = mkdir_join(label_save_path, 'kanji')
-            kana_label_save_path = mkdir_join(label_save_path, 'kana')
-            phone_label_save_path = mkdir_join(label_save_path, 'phone')
-
+        ####################
+        # labels
+        ####################
         speaker_dict_dict = {}  # dict of speaker_dict
 
         print('---------- train ----------')
-        # Read target labels and save labels as npy files
         speaker_dict_dict['train'] = read_sdb(
-            label_paths=prep.trans(data_type=train_data_size),
-            run_root_path=args.run_root_path,
-            model=model,
+            label_paths=path.trans(data_type=train_data_size),
             train_data_size=train_data_size,
+            map_file_save_path='./config/mapping_files',
+            is_training=True,
             save_map_file=True,
-            kanji_save_path=mkdir_join(kanji_label_save_path, 'train'),
-            kana_save_path=mkdir_join(kana_label_save_path, 'train'),
-            phone_save_path=mkdir_join(phone_label_save_path, 'train'),
-            divide_by_space=divide_by_space)
+            save_path=mkdir_join(label_save_path, 'train'))
+        # NOTE: ex.) save_path:
+        # csj/labels/train_data_size/train/label_type/speaker/***.npy
 
         for data_type in ['dev', 'eval1', 'eval2', 'eval3']:
-
             print('---------- %s ----------' % data_type)
             is_test = False if data_type == 'dev' else True
 
-            # Read target labels and save labels as npy files
             speaker_dict_dict[data_type] = read_sdb(
-                label_paths=prep.trans(data_type=data_type),
-                run_root_path=args.run_root_path,
-                model=model,
+                label_paths=path.trans(data_type=data_type),
                 train_data_size=train_data_size,
+                map_file_save_path='./config/mapping_files',
                 is_test=is_test,
-                kanji_save_path=mkdir_join(kanji_label_save_path, data_type),
-                kana_save_path=mkdir_join(kana_label_save_path, data_type),
-                phone_save_path=mkdir_join(phone_label_save_path, data_type),
-                divide_by_space=divide_by_space)
+                save_path=mkdir_join(label_save_path, data_type))
+            # NOTE: ex.) save_path:
+            # csj/labels/train_data_size/data_type/label_type/speaker/***.npy
 
         # Make a confirmation file to prove that dataset was saved correctly
-        if divide_by_space:
-            with open(join(label_save_path, 'complete_wakachi.txt'), 'w') as f:
-                f.write('')
-        else:
-            with open(join(label_save_path, 'complete.txt'), 'w') as f:
-                f.write('')
+        with open(join(label_save_path, 'complete.txt'), 'w') as f:
+            f.write('')
 
         ####################
         # inputs
@@ -158,13 +124,10 @@ def main(model, train_data_size, divide_by_space):
         else:
             print('---------- train ----------')
             if args.tool == 'htk':
-                audio_paths = [path for path in sorted(
-                    glob(join(args.htk_save_path, train_data_size + '/*.htk')))]
-                # NOTE: these are htk file paths
+                audio_paths = path.htk(data_type=train_data_size)
             else:
-                audio_paths = prep.wav(data_type=train_data_size)
+                audio_paths = path.wav(data_type=train_data_size)
 
-            # Read htk or wav files, and save input data and frame num dict
             train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
                 audio_paths=audio_paths,
                 speaker_dict=speaker_dict_dict['train'],
@@ -173,17 +136,16 @@ def main(model, train_data_size, divide_by_space):
                 normalize=args.normalize,
                 is_training=True,
                 save_path=mkdir_join(input_save_path, 'train'))
+            # NOTE: ex.) save_path:
+            # csj/inputs/train_data_size/train/speaker/***.npy
 
             for data_type in ['dev', 'eval1', 'eval2',  'eval3']:
                 print('---------- %s ----------' % data_type)
                 if args.tool == 'htk':
-                    audio_paths = [path for path in sorted(
-                        glob(join(args.htk_save_path, data_type + '/*.htk')))]
-                    # NOTE: these are htk file paths
+                    audio_paths = path.htk(data_type=data_type)
                 else:
-                    audio_paths = prep.wav(data_type=data_type)
+                    audio_paths = path.wav(data_type=data_type)
 
-                # Read htk or wav files, and save input data and frame num dict
                 read_audio(audio_paths=audio_paths,
                            speaker_dict=speaker_dict_dict[data_type],
                            tool=args.tool,
@@ -195,6 +157,8 @@ def main(model, train_data_size, divide_by_space):
                            train_global_std_male=train_global_std_male,
                            train_global_mean_female=train_global_mean_female,
                            train_global_std_female=train_global_std_female)
+                # NOTE: ex.) save_path:
+                # csj/inputs/train_data_size/data_type/speaker/***.npy
 
             # Make a confirmation file to prove that dataset was saved
             # correctly
@@ -204,8 +168,9 @@ def main(model, train_data_size, divide_by_space):
 
 if __name__ == '__main__':
 
-    for model in ['ctc', 'attention']:
-        for train_data_size in ['train_fullset', 'train_subset']:
-            for divide_by_space in [False, True]:
-                main(model, train_data_size, divide_by_space)
-        # TODO: remove this loop
+    train_data_sizes = ['train_subset']
+    if bool(args.fullset):
+        train_data_sizes += ['train_fullset']
+
+    for train_data_size in train_data_sizes:
+        main(train_data_size)

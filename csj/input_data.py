@@ -14,6 +14,9 @@ from tqdm import tqdm
 
 from utils.util import mkdir_join
 from utils.inputs.segmentation import segment_htk
+from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
+from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
+# TODO: add segmentation ver.
 
 
 def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
@@ -70,8 +73,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
     total_frame_num_dict = {}
     speaker_mean_dict = {}
 
-    # NOTE: speaker norm は講演ごとの正規化とする
-    # 講演間の話者関係がわからないから
+    # NOTE: 講演ごとに異なるsoeakerとする
 
     # Loop 1: Computing global mean and statistics
     if is_training:
@@ -80,14 +82,21 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
             speaker = basename(audio_path).split('.')[0]
 
             # Divide each audio file into utterances
-            _, input_data_utt_sum, speaker_mean, _, total_frame_num_speaker = segment_htk(
-                audio_path,
-                speaker,
-                speaker_dict[speaker],
-                is_training=True,
-                sil_duration=0,
-                tool=tool,
-                config=config)
+            if tool == 'htk':
+                _, input_data_utt_sum, speaker_mean, _, total_frame_num_speaker = segment_htk(
+                    audio_path,
+                    speaker,
+                    speaker_dict[speaker],
+                    is_training=True,
+                    sil_duration=0,
+                    tool=tool,
+                    config=config)
+            elif tool == 'python_speech_features':
+                raise NotImplementedError
+            elif tool == 'librosa':
+                raise NotImplementedError
+            else:
+                raise TypeError
 
             if i == 0:
                 # Initialize global statistics
@@ -114,7 +123,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
             if normalize == 'speaker':
                 speaker_mean_dict[speaker] = speaker_mean
                 total_frame_num_dict[speaker] = total_frame_num_speaker
-                # NOTE: すでに話者平均は計算できている
+                # NOTE: speaker mean is already computed
 
         print('===> Computing global mean & stddev...')
         # Compute global mean per gender
