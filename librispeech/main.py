@@ -99,7 +99,6 @@ def make_input(train_data_size):
         for data_type in ['dev_clean', 'dev_other',
                           'test_clean', 'test_other']:
             print('---------- %s ----------' % data_type)
-
             if args.tool == 'htk':
                 audio_paths = path.htk(data_type=data_type)
             else:
@@ -143,7 +142,8 @@ def make_label(train_data_size, frequency_threshold):
         read_trans(
             label_paths=label_paths,
             train_data_size=train_data_size,
-            map_file_save_path=abspath('./config/mapping_files'),
+            map_file_save_path=join(
+                abspath('./config'), 'mapping_files'),
             is_training=True,
             frequency_threshold=frequency_threshold,
             save_map_file=True,
@@ -156,7 +156,8 @@ def make_label(train_data_size, frequency_threshold):
             read_trans(
                 label_paths=path.trans(data_type=data_type),
                 train_data_size=train_data_size,
-                map_file_save_path=abspath('./config/mapping_files'),
+                map_file_save_path=join(
+                    abspath('./config'), 'mapping_files'),
                 frequency_threshold=frequency_threshold,
                 save_path=mkdir_join(label_save_path, data_type))
             # NOTE: ex.) save_path:
@@ -167,7 +168,8 @@ def make_label(train_data_size, frequency_threshold):
             read_trans(
                 label_paths=path.trans(data_type=data_type),
                 train_data_size=train_data_size,
-                map_file_save_path=abspath('./config/mapping_files'),
+                map_file_save_path=join(
+                    abspath('./config'), 'mapping_files'),
                 is_test=True,
                 frequency_threshold=frequency_threshold,
                 save_path=mkdir_join(label_save_path, data_type))

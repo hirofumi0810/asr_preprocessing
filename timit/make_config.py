@@ -3,7 +3,6 @@
 
 """Make configuration file for HTK toolkit (TIMIT corpus)."""
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -44,7 +43,8 @@ def main():
 
     args = parser.parse_args()
     htk_save_path = mkdir(args.htk_save_path)
-    path = Path(args.data_path, args.config_path)
+    path = Path(data_path=args.data_path,
+                config_path=args.config_path)
 
     # HTK settings
     save(audio_file_type='nist',

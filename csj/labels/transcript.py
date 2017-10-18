@@ -297,7 +297,6 @@ def read_sdb(label_paths, train_data_size, map_file_save_path,
 
                 # kanji & kanji
                 if is_test:
-                    pass
                     # Save target labels as string
                     np.save(mkdir_join(save_path, 'kanji', speaker, save_file_name),
                             trans_kanji)
@@ -311,6 +310,7 @@ def read_sdb(label_paths, train_data_size, map_file_save_path,
                 else:
                     # Convert to index
                     kanji_index_list = kanji2idx(trans_kanji)
+                    print(trans_kana)
                     kana_index_list = kana2idx(trans_kana)
                     kanji_divide_index_list = kanji2idx_divide(
                         trans_kanji_divide)

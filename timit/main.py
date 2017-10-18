@@ -129,7 +129,8 @@ def make_label():
             print('  data_type: %s' % data_type)
             print('==================================================')
             read_char(label_paths=path.trans(data_type=data_type),
-                      map_file_save_path=abspath('./config/mapping_files'),
+                      map_file_save_path=join(
+                          abspath('./config'), 'mapping_files'),
                       is_test=is_test,
                       save_map_file=save_map_file,
                       save_path=mkdir_join(label_save_path, data_type))
@@ -141,7 +142,8 @@ def make_label():
             print('  data_type: %s' % data_type)
             print('==================================================')
             read_phone(label_paths=path.phone(data_type=data_type),
-                       map_file_save_path=abspath('./config/mapping_files'),
+                       map_file_save_path=join(
+                           abspath('./config'), 'mapping_files'),
                        is_test=is_test,
                        save_map_file=save_map_file,
                        save_path=mkdir_join(label_save_path, data_type))

@@ -9,7 +9,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, isfile
+from os.path import join, isfile, abspath
 import sys
 import argparse
 
@@ -90,7 +90,8 @@ def main(train_data_size):
         speaker_dict_dict['train'] = read_sdb(
             label_paths=path.trans(data_type=train_data_size),
             train_data_size=train_data_size,
-            map_file_save_path='./config/mapping_files',
+            map_file_save_path=join(
+                abspath('./config'), 'mapping_files'),
             is_training=True,
             save_map_file=True,
             save_path=mkdir_join(label_save_path, 'train'))
@@ -104,7 +105,8 @@ def main(train_data_size):
             speaker_dict_dict[data_type] = read_sdb(
                 label_paths=path.trans(data_type=data_type),
                 train_data_size=train_data_size,
-                map_file_save_path='./config/mapping_files',
+                map_file_save_path=join(
+                    abspath('./config'), 'mapping_files'),
                 is_test=is_test,
                 save_path=mkdir_join(label_save_path, data_type))
             # NOTE: ex.) save_path:

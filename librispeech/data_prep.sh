@@ -206,7 +206,7 @@ if [ $TOOL = 'htk' ]; then
 
     if [ $htk_file_num -ne ${file_number[$part]} ]; then
       # Make parallel
-      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.config -S ./config/wav2htk_$part.scp &
+      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_$part.scp &
     fi
   done
 else

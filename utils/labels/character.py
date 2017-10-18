@@ -72,7 +72,7 @@ class Kana2idx(object):
                 line = line.strip().split()
                 self.map_dict[line[0]] = int(line[1])
 
-    def __call__(self, str_char, map_file_path):
+    def __call__(self, str_char):
         """Convert from kana character to index.
         Args:
             str_char (string): string of kana characters
@@ -87,16 +87,15 @@ class Kana2idx(object):
             if i != len(kana_list) - 1:
                 if kana_list[i] + kana_list[i + 1] in self.map_dict.keys():
                     index_list.append(
-                        int(self.map_dict[kana_list[i] + kana_list[i + 1]]))
-                    i += 1
+                        self.map_dict[kana_list[i] + kana_list[i + 1]])
                 elif kana_list[i] in self.map_dict.keys():
-                    index_list.append(int(self.map_dict[kana_list[i]]))
+                    index_list.append(self.map_dict[kana_list[i]])
                 else:
                     raise ValueError(
                         'There are no kana character such as %s' % kana_list[i])
             else:
                 if kana_list[i] in self.map_dict.keys():
-                    index_list.append(int(self.map_dict[kana_list[i]]))
+                    index_list.append(self.map_dict[kana_list[i]])
                 else:
                     raise ValueError(
                         'There are no kana character such as %s' % kana_list[i])
