@@ -25,7 +25,3 @@ split.py
 word*.txt
 librispeech/phone*
 librispeech/*/*phone*
-
-# private corpus
-svc
-erato

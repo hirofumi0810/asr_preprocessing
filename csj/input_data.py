@@ -73,7 +73,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
     total_frame_num_dict = {}
     speaker_mean_dict = {}
 
-    # NOTE: 講演ごとに異なるsoeakerとする
+    # NOTE: 講演ごとに異なるspeakerとする
 
     # Loop 1: Computing global mean and statistics
     if is_training:

@@ -70,7 +70,7 @@ def main():
         wav_paths = path.wav(data_type=data_type)
         save_path = mkdir_join(htk_save_path, data_type)
 
-        with open('./config/wav2fbank_' + data_type + '.scp', 'w') as f:
+        with open('./config/wav2htk_' + data_type + '.scp', 'w') as f:
             for wav_path in wav_paths:
                 speaker_name = basename(wav_path).split('.')[0]
                 save_path_tmp = join(save_path, speaker_name + '.htk')

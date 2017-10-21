@@ -24,22 +24,24 @@ from csj.labels.regular_expression import remove_laughing
 from csj.labels.regular_expression import remove_Otag
 from csj.labels.regular_expression import remove_Mtag
 
+NOISE = 'NZ'
+
 
 def fix_transcript(kana_seq):
     if 'R' in kana_seq or '×' in kana_seq:
         return ''
 
     # Replace to Noise
-    kana_seq = re.sub(r'<雑音>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<笑>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<息>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<咳>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<泣>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<拍手>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<フロア発話>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<フロア笑>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<ベル>', 'NZ', kana_seq)
-    kana_seq = re.sub(r'<デモ>', 'NZ', kana_seq)
+    kana_seq = re.sub(r'<雑音>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<笑>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<息>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<咳>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<泣>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<拍手>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<フロア発話>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<フロア笑>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<ベル>', NOISE, kana_seq)
+    kana_seq = re.sub(r'<デモ>', NOISE, kana_seq)
 
     # Remove
     kana_seq = re.sub(r'<朗読間違い>', '', kana_seq)

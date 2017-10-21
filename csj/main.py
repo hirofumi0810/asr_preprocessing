@@ -25,7 +25,7 @@ parser.add_argument('--dataset_save_path', type=str,
                     help='path to save dataset')
 parser.add_argument('--tool', type=str,
                     help='the tool to extract features, htk or python_speech_features or htk')
-parser.add_argument('--htk_save_path', type=str, default='',
+parser.add_argument('--htk_save_path', type=str, default=None,
                     help='path to save features, this is needed only when you use HTK.')
 parser.add_argument('--normalize', type=str, default='speaker',
                     help='global or speaker or utterance')

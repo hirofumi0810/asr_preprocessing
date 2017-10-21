@@ -6,9 +6,13 @@ class Char2idx(object):
     """Convert from character to index.
     Args:
         map_file_path (string): path to the mapping file
+        double_letter (bool, optional): if True, group repeated letters
     """
 
-    def __init__(self, map_file_path):
+    def __init__(self, map_file_path, double_letter=False):
+
+        self.double_letter = double_letter
+
         # Read the mapping file
         self.map_dict = {}
         with open(map_file_path, 'r') as f:
@@ -16,18 +20,17 @@ class Char2idx(object):
                 line = line.strip().split()
                 self.map_dict[line[0]] = int(line[1])
 
-    def __call__(self, str_char, double_letter=False):
+    def __call__(self, str_char):
         """
         Args:
             str_char (string): string of characters
-            double_letter (bool, optional): if True, group repeated letters
         Returns:
             char_list (list): character indices
         """
         char_list = list(str_char)
 
         # Convert from character to index
-        if double_letter:
+        if self.double_letter:
             skip_flag = False
             for i in range(len(char_list) - 1):
                 if skip_flag:
@@ -56,51 +59,6 @@ class Char2idx(object):
                 char_list[i] = self.map_dict[char_list[i]]
 
         return char_list
-
-
-class Kana2idx(object):
-    """Convert from kana character to index.
-    Args:
-        map_file_path (string): path to the mapping file
-    """
-
-    def __init__(self, map_file_path):
-        # Read the mapping file
-        self.map_dict = {}
-        with open(map_file_path, 'r') as f:
-            for line in f:
-                line = line.strip().split()
-                self.map_dict[line[0]] = int(line[1])
-
-    def __call__(self, str_char):
-        """Convert from kana character to index.
-        Args:
-            str_char (string): string of kana characters
-        Returns:
-            index_list (list): kana character indices
-        """
-        kana_list = list(str_char)
-        index_list = []
-
-        for i in range(len(kana_list)):
-            # Check whether next kana character is a double consonant
-            if i != len(kana_list) - 1:
-                if kana_list[i] + kana_list[i + 1] in self.map_dict.keys():
-                    index_list.append(
-                        self.map_dict[kana_list[i] + kana_list[i + 1]])
-                elif kana_list[i] in self.map_dict.keys():
-                    index_list.append(self.map_dict[kana_list[i]])
-                else:
-                    raise ValueError(
-                        'There are no kana character such as %s' % kana_list[i])
-            else:
-                if kana_list[i] in self.map_dict.keys():
-                    index_list.append(self.map_dict[kana_list[i]])
-                else:
-                    raise ValueError(
-                        'There are no kana character such as %s' % kana_list[i])
-
-        return index_list
 
 
 class Idx2char(object):

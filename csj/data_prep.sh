@@ -22,7 +22,7 @@ CHANNELS=40
 SAMPLING_RATE=16000
 WINDOW=0.025
 SLIDE=0.01
-ENERGY=0
+ENERGY=1
 DELTA=1
 DELTADELTA=1
 # NORMALIZE='global'
@@ -93,8 +93,7 @@ if [ $TOOL = 'htk' ]; then
     htk_file_num=$(find $HTK_SAVE_PATH/$data_type/ -iname '*.htk' | wc -l)
 
     if [ $htk_file_num -ne ${file_number[$data_type]} ]; then
-      # Make parallel
-      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_$data_type.scp &
+      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_$data_type.scp 
     fi
   done
 else
@@ -104,6 +103,7 @@ else
   fi
 fi
 
+exit 1
 
 echo ============================================================================
 echo "                                  Main                                    "

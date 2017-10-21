@@ -15,7 +15,7 @@ from tqdm import tqdm
 import jaconv
 
 from utils.util import mkdir_join
-from utils.labels.character import Kana2idx
+from utils.labels.character import Char2idx
 from utils.labels.phone import Phone2idx
 from csj.labels.fix_trans import fix_transcript
 from csj.labels.fix_trans import is_hiragana, is_katakana
@@ -23,7 +23,7 @@ from csj.labels.fix_trans import is_hiragana, is_katakana
 # NOTE:
 ############################################################
 # [phone]
-# = 36 + noise(NZ) + space(_) = 38 labels
+# = 36 + noise(NZ), space(_), <SOS>, <EOS> = 40 labels
 
 # [kana]
 # = 145 kana, noise(NZ), <SOS>, <EOS> = 148 labels
@@ -145,7 +145,7 @@ def read_sdb(label_paths, train_data_size, map_file_save_path,
                     trans_kana_divide = fix_transcript(trans_kana_divide)
                     trans_kanji_divide = fix_transcript(trans_kanji_divide)
 
-                    # Remove double underbar
+                    # Remove double space
                     while '  ' in trans_kana:
                         trans_kana = re.sub(r'[\s]+', ' ', trans_kana)
                     while '  ' in trans_kanji:
@@ -248,7 +248,6 @@ def read_sdb(label_paths, train_data_size, map_file_save_path,
         for kana in kana_list:
             kanji_set.add(kana)
             kanji_set.add(jaconv.kata2hira(kana))
-
         with open(kanji_map_file_path, 'w') as f:
             kanji_list = sorted(list(kanji_set)) + [NOISE, SOS, EOS]
             for i, kanji in enumerate(kanji_list):
@@ -280,11 +279,15 @@ def read_sdb(label_paths, train_data_size, map_file_save_path,
             for i, phone in enumerate(phone_divide_list):
                 f.write('%s  %s\n' % (phone, str(i)))
 
-    kanji2idx = Kana2idx(map_file_path=kanji_map_file_path)
-    kana2idx = Kana2idx(map_file_path=kana_map_file_path)
+    kanji2idx = Char2idx(map_file_path=kanji_map_file_path,
+                         double_letter=True)
+    kana2idx = Char2idx(map_file_path=kana_map_file_path,
+                        double_letter=True)
     phone2idx = Phone2idx(map_file_path=phone_map_file_path)
-    kanji2idx_divide = Kana2idx(map_file_path=kanji_divide_map_file_path)
-    kana2idx_divide = Kana2idx(map_file_path=kana_divide_map_file_path)
+    kanji2idx_divide = Char2idx(map_file_path=kanji_divide_map_file_path,
+                                double_letter=True)
+    kana2idx_divide = Char2idx(map_file_path=kana_divide_map_file_path,
+                               double_letter=True)
     phone2idx_divide = Phone2idx(map_file_path=phone_divide_map_file_path)
 
     if save_path is not None:
@@ -310,7 +313,6 @@ def read_sdb(label_paths, train_data_size, map_file_save_path,
                 else:
                     # Convert to index
                     kanji_index_list = kanji2idx(trans_kanji)
-                    print(trans_kana)
                     kana_index_list = kana2idx(trans_kana)
                     kanji_divide_index_list = kanji2idx_divide(
                         trans_kanji_divide)
