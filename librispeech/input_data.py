@@ -130,7 +130,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 train_global_mean_female += input_data_utt_sum
                 total_frame_num_female += input_data_utt.shape[0]
             else:
-                raise ValueError
+                raise ValueError('gender is M or F.')
 
             # For computing speaker mean
             if normalize == 'speaker':
@@ -194,7 +194,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                     train_global_std_female += np.sum(
                         np.abs(input_data_utt - train_global_mean_female) ** 2, axis=0)
                 else:
-                    raise ValueError
+                    raise ValueError('gender is M or F.')
 
                 if normalize == 'speaker':
                     # For computing speaker stddev
@@ -277,7 +277,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                     input_data_utt -= train_global_mean_female
                     input_data_utt /= train_global_std_female
                 else:
-                    raise ValueError
+                    raise ValueError('gender is M or F.')
 
             if save_path is not None:
                 # Save input features

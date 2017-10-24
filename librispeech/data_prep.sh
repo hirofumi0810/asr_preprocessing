@@ -205,8 +205,7 @@ if [ $TOOL = 'htk' ]; then
     htk_file_num=$(find $HTK_SAVE_PATH/$part/ -iname '*.htk' | wc -l)
 
     if [ $htk_file_num -ne ${file_number[$part]} ]; then
-      # Make parallel
-      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_$part.scp &
+      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_$part.scp
     fi
   done
 else
