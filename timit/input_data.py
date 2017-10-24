@@ -18,15 +18,13 @@ from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_p
 from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
 
 
-# TODO: compute male & female statisics
-
 def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None,
                train_global_mean_male=None, train_global_std_male=None,
                train_global_mean_female=None, train_global_std_female=None,
                dtype=np.float64):
     """Read audio files.
     Args:
-        audio_paths (list): paths to WAV files
+        audio_paths (list): paths to audio files
         tool (string): the tool to extract features,
             htk or librosa or python_speech_features
         config (dict): a configuration for feature extraction
@@ -67,7 +65,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
 
     # Read each audio file
     print('===> Reading audio files...')
-    wav_paths_male, wav_paths_female = [], []
+    audio_paths_male, audio_paths_female = [], []
     input_data_list_male, input_data_list_female = [], []
     total_frame_num_male, total_frame_num_female = 0, 0
     total_frame_num_dict = {}
@@ -106,12 +104,12 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
 
         if gender == 'm':
             input_data_list_male.append(input_data_utt)
-            wav_paths_male.append(audio_path)
+            audio_paths_male.append(audio_path)
         elif gender == 'f':
             input_data_list_female.append(input_data_utt)
-            wav_paths_female.append(audio_path)
+            audio_paths_female.append(audio_path)
         else:
-            raise ValueError
+            raise ValueError('gender is m or f.')
 
         if is_training:
             speaker = audio_path.split('/')[-2]
@@ -123,7 +121,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
             elif gender == 'f':
                 total_frame_num_female += frame_num_utt
             else:
-                raise ValueError
+                raise ValueError('gender is m or f.')
 
             if normalize == 'speaker':
                 # Initialization
@@ -136,8 +134,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
 
                 total_frame_num_dict[speaker] += frame_num_utt
                 speaker_mean_dict[speaker] += np.sum(input_data_utt, axis=0)
-    # NOTE: load all data in advance because TIMIT is a small dataset.
-    # TODO: make this pararell
+    # NOTE: Load all data in advance because TIMIT is a small dataset.
+    # TODO: Make this pararell
 
     if is_training:
         # Compute speaker mean
@@ -153,7 +151,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         train_data_female = np.empty((total_frame_num_female, feat_dim))
         # male
         for input_data_utt, audio_path in zip(tqdm(input_data_list_male),
-                                              wav_paths_male):
+                                              audio_paths_male):
             speaker = audio_path.split('/')[-2]
             frame_num_utt = input_data_utt.shape[0]
             train_data_male[frame_offset:frame_offset +
@@ -167,7 +165,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         # female
         frame_offset = 0
         for input_data_utt, audio_path in zip(tqdm(input_data_list_female),
-                                              wav_paths_female):
+                                              audio_paths_female):
             speaker = audio_path.split('/')[-2]
             frame_num_utt = input_data_utt.shape[0]
             train_data_female[frame_offset:frame_offset +
@@ -206,7 +204,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         print('===> Saving input features...')
         frame_num_dict = {}
         for input_data_utt, audio_path in zip(tqdm(input_data_list_male + input_data_list_female),
-                                              wav_paths_male + wav_paths_female):
+                                              audio_paths_male + audio_paths_female):
             speaker = audio_path.split('/')[-2]
             utt_index = basename(audio_path).split('.')[0]
             gender = speaker[0]
@@ -228,7 +226,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                     input_data_utt -= train_global_mean_female
                     input_data_utt /= train_global_std_female
                 else:
-                    raise ValueError
+                    raise ValueError('gender is m or f.')
 
             np.save(mkdir_join(save_path, speaker + '_' +
                                utt_index + '.npy'), input_data_utt)

@@ -27,7 +27,7 @@ parser.add_argument('--config_path', type=str,
 
 parser.add_argument('--tool', type=str,
                     help='the tool to extract features, htk or python_speech_features or htk')
-parser.add_argument('--htk_save_path', type=str, default='',
+parser.add_argument('--htk_save_path', type=str, default=None,
                     help='path to save features, this is needed only when you use HTK.')
 parser.add_argument('--normalize', type=str, default='speaker',
                     help='global or speaker or utterance')
@@ -50,7 +50,9 @@ parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
 
 args = parser.parse_args()
-path = Path(args.data_path, args.config_path, args.htk_save_path)
+path = Path(data_path=args.data_path,
+            config_path=args.config_path,
+            htk_save_path=args.htk_save_path)
 
 CONFIG = {
     'feature_type': args.feature_type,
@@ -86,6 +88,7 @@ def make_input():
             normalize=args.normalize,
             is_training=True,
             save_path=mkdir_join(input_save_path, 'train'))
+        # NOTE: ex.) save_path: timit/inputs/train/***.npy
 
         for data_type in ['dev', 'test']:
             print('---------- %s ----------' % data_type)
@@ -129,7 +132,7 @@ def make_label():
             print('  data_type: %s' % data_type)
             print('==================================================')
             read_char(label_paths=path.trans(data_type=data_type),
-                      map_file_save_path=join(
+                      map_file_save_path=mkdir_join(
                           abspath('./config'), 'mapping_files'),
                       is_test=is_test,
                       save_map_file=save_map_file,
@@ -142,7 +145,7 @@ def make_label():
             print('  data_type: %s' % data_type)
             print('==================================================')
             read_phone(label_paths=path.phone(data_type=data_type),
-                       map_file_save_path=join(
+                       map_file_save_path=mkdir_join(
                            abspath('./config'), 'mapping_files'),
                        is_test=is_test,
                        save_map_file=save_map_file,

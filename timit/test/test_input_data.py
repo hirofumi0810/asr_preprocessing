@@ -37,7 +37,7 @@ CONFIG = {
     'sampling_rate': 8000,
     'window': 0.025,
     'slide': 0.01,
-    'energy': True,
+    'energy': False,
     'delta': True,
     'deltadelta': True
 }
@@ -47,9 +47,9 @@ class TestInput(unittest.TestCase):
 
     def test(self):
 
-        # self.check(tool='htk', normalize='global')
-        # self.check(tool='htk', normalize='speaker')
-        # self.check(tool='htk', normalize='utterance')
+        self.check(tool='htk', normalize='global')
+        self.check(tool='htk', normalize='speaker')
+        self.check(tool='htk', normalize='utterance')
 
         # NOTE: these are very slow
         self.check(tool='python_speech_features', normalize='global')
