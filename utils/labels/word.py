@@ -1,20 +1,26 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 
 class Word2idx(object):
     """Convert from word to index.
     Args:
-        map_file_path (string): path to the mapping file
+        vocab_file_path (string): path to the vocablary file
     """
 
-    def __init__(self, map_file_path):
-        # Read the mapping file
+    def __init__(self, vocab_file_path):
+        # Read the vocablary file
         self.map_dict = {}
-        with open(map_file_path, 'r') as f:
+        vocab_count = 0
+        with open(vocab_file_path, 'r') as f:
             for line in f:
-                line = line.strip().split('  ')
-                self.map_dict[str(line[0])] = int(line[1])
+                word = line.strip()
+                self.map_dict[word] = vocab_count
+                vocab_count += 1
 
     def __call__(self, word_list):
         """Convert from word to index.
@@ -25,11 +31,10 @@ class Word2idx(object):
         """
         # Convert from word to index
         index_list = []
-        for i in range(len(word_list)):
-            if word_list[i] in self.map_dict.keys():
-                index_list.append(self.map_dict[word_list[i]])
+        for word in word_list:
+            if word in self.map_dict.keys():
+                index_list.append(self.map_dict[word])
             else:
-                # Pad by <UNK> (the last index)
-                index_list.append(len(self.map_dict.keys()))
-            # TODO: add unk index clearly
+                # Replace with <UNK>
+                index_list.append(self.map_dict['OOV'])
         return index_list

@@ -1,24 +1,33 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 
 class Char2idx(object):
     """Convert from character to index.
     Args:
-        map_file_path (string): path to the mapping file
+        vocab_file_path (string): path to the vocablary file
         double_letter (bool, optional): if True, group repeated letters
+        remove_list (list, optional): characters to neglect
     """
 
-    def __init__(self, map_file_path, double_letter=False):
+    def __init__(self, vocab_file_path, double_letter=False, remove_list=[]):
 
         self.double_letter = double_letter
 
-        # Read the mapping file
+        # Read the vocablary file
         self.map_dict = {}
-        with open(map_file_path, 'r') as f:
+        vocab_count = 0
+        with open(vocab_file_path, 'r') as f:
             for line in f:
-                line = line.strip().split()
-                self.map_dict[line[0]] = int(line[1])
+                char = line.strip()
+                if char in remove_list:
+                    continue
+                self.map_dict[char] = vocab_count
+                vocab_count += 1
 
     def __call__(self, str_char):
         """
@@ -64,16 +73,18 @@ class Char2idx(object):
 class Idx2char(object):
     """Convert from index to character.
     Args:
-        map_file_path (string): path to the mapping file
+        vocab_file_path (string): path to the vocablary file
     """
 
-    def __init__(self, map_file_path):
-        # Read the mapping file
+    def __init__(self, vocab_file_path):
+        # Read the vocablary file
         self.map_dict = {}
-        with open(map_file_path, 'r') as f:
+        vocab_count = 0
+        with open(vocab_file_path, 'r') as f:
             for line in f:
-                line = line.strip().split()
-                self.map_dict[int(line[1])] = line[0]
+                char = line.strip()
+                self.map_dict[vocab_count] = char
+                vocab_count += 1
 
     def __call__(self, index_list):
         """Convert from index to character.

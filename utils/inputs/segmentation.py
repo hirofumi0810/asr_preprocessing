@@ -5,18 +5,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-"""Segment a htk file into each utterance."""
+"""Segment an audio file into each utterance."""
 
 import numpy as np
-from struct import unpack
 
+from utils.inputs.htk import read as read_htk
 from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
 from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
 
 
-def segment_htk(audio_path, speaker, utterance_dict, is_training,
-                sil_duration=0., tool='htk', config=None, mean=None,
-                dtype=np.float64):
+def segment(audio_path, speaker, utterance_dict, is_training,
+            sil_duration=0., tool='htk', config=None, mean=None,
+            dtype=np.float64):
     """Segment each HTK or WAV file into utterances. Normalization will not be
        conducted here.
     Args:
@@ -47,24 +47,26 @@ def segment_htk(audio_path, speaker, utterance_dict, is_training,
     if tool == 'htk':
         input_data = read_htk(audio_path)
     elif tool == 'python_speech_features':
-        input_data = w2f_psf(audio_path,
-                             feature_type=config['feature_type'],
-                             feature_dim=config['channels'],
-                             use_energy=config['energy'],
-                             use_delta1=config['delta'],
-                             use_delta2=config['deltadelta'],
-                             window=config['window'],
-                             slide=config['slide'])
+        input_data = w2f_psf(
+            audio_path,
+            feature_type=config['feature_type'],
+            feature_dim=config['channels'],
+            use_energy=config['energy'],
+            use_delta1=config['delta'],
+            use_delta2=config['deltadelta'],
+            window=config['window'],
+            slide=config['slide'])
 
     elif tool == 'librosa':
-        input_data = w2f_librosa(audio_path,
-                                 feature_type=config['feature_type'],
-                                 feature_dim=config['channels'],
-                                 use_energy=config['energy'],
-                                 use_delta1=config['delta'],
-                                 use_delta2=config['deltadelta'],
-                                 window=config['window'],
-                                 slide=config['slide'])
+        input_data = w2f_librosa(
+            audio_path,
+            feature_type=config['feature_type'],
+            feature_dim=config['channels'],
+            use_energy=config['energy'],
+            use_delta1=config['delta'],
+            use_delta2=config['deltadelta'],
+            window=config['window'],
+            slide=config['slide'])
 
     feature_dim = input_data.shape[1]
 
@@ -166,28 +168,3 @@ def segment_htk(audio_path, speaker, utterance_dict, is_training,
         mean, stddev = None, None
 
     return input_data_dict, input_data_utt_sum, mean, stddev, total_frame_num_file
-
-
-def read_htk(audio_path):
-    """Read each HTK file.
-    Args:
-        audio_path (string): path to a HTK file
-    Returns:
-        input_data (np.ndarray): A tensor of size (frame_num, feature_dim)
-    """
-    with open(audio_path, "rb") as fh:
-        spam = fh.read(12)
-        frame_num, sampPeriod, sampSize, parmKind = unpack(">IIHH", spam)
-        # print(frame_num)  # frame num
-        # print(sampPeriod)  # 10ms
-        # print(sampSize)  # feature dim * 4 (byte)
-        # print(parmKind)
-        veclen = int(sampSize / 4)
-        fh.seek(12, 0)
-        input_data = np.fromfile(fh, 'f')
-        # input_data = input_data.reshape(int(len(input_data) / veclen),
-        # veclen)
-        input_data = input_data.reshape(-1, veclen)
-        input_data.byteswap(True)
-
-    return input_data

@@ -31,7 +31,7 @@ parser.add_argument('--window', type=float, default=0.025,
                     help='window width to extract features')
 parser.add_argument('--slide', type=float, default=0.01,
                     help='extract features per \'slide\'')
-parser.add_argument('--energy', type=int, default=0,
+parser.add_argument('--energy', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--delta', type=int, default=1,
                     help='if 1, add the energy feature')
@@ -57,7 +57,7 @@ def main():
          energy=bool(args.energy),
          delta=bool(args.delta),
          deltadelta=bool(args.deltadelta))
-    # NOTE: 120-dim features are extracted by default
+    # NOTE: 123-dim features are extracted by default
 
     for data_type in ['train', 'dev', 'test']:
 

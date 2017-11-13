@@ -6,6 +6,33 @@ from __future__ import division
 from __future__ import print_function
 
 from os.path import join
+from struct import unpack
+import numpy as np
+
+
+def read(audio_path):
+    """Read each HTK file.
+    Args:
+        audio_path (string): path to a HTK file
+    Returns:
+        input_data (np.ndarray): A tensor of size (frame_num, feature_dim)
+    """
+    with open(audio_path, "rb") as fh:
+        spam = fh.read(12)
+        frame_num, sampPeriod, sampSize, parmKind = unpack(">IIHH", spam)
+        # print(frame_num)  # frame num
+        # print(sampPeriod)  # 10ms
+        # print(sampSize)  # feature dim * 4 (byte)
+        # print(parmKind)
+        veclen = int(sampSize / 4)
+        fh.seek(12, 0)
+        input_data = np.fromfile(fh, 'f')
+        # input_data = input_data.reshape(int(len(input_data) / veclen),
+        # veclen)
+        input_data = input_data.reshape(-1, veclen)
+        input_data.byteswap(True)
+
+    return input_data
 
 
 def save(audio_file_type, feature_type, channels, config_save_path,

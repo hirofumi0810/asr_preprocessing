@@ -13,15 +13,15 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.util import mkdir_join
-from utils.inputs.segmentation import read_htk as read_htk_utt
+from utils.inputs.htk import read as read_htk_utt
 from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
 from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
 
 
 def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None,
-               train_global_mean_male=None, train_global_std_male=None,
-               train_global_mean_female=None, train_global_std_female=None,
-               dtype=np.float64):
+               global_mean_male=None, global_std_male=None,
+               global_mean_female=None, global_std_female=None,
+               dtype=np.float32):
     """Read audio files.
     Args:
         audio_paths (list): paths to audio files
@@ -34,29 +34,29 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
             speaker => normalize input features by mean & std per speaker
             utterance => normalize input features by mean & std per utterancet
                          data by mean & std per utterance
-        is_training (bool, optional): training or not
+        is_training (bool, optional):  Set True when proccessing the training set
         save_path (string): path to save npy files
-        train_global_mean_male (np.ndarray, optional): global mean of male over
+        global_mean_male (np.ndarray, optional): global mean of male over
             the training set
-        train_global_std_male (np.ndarray, optional): global standard deviation
+        global_std_male (np.ndarray, optional): global standard deviation
             of male over the training set
-        train_global_mean_female (np.ndarray, optional): global mean of female
+        global_mean_female (np.ndarray, optional): global mean of female
             over the training set
-        train_global_std_female (np.ndarray, optional): global standard
+        global_std_female (np.ndarray, optional): global standard
             deviation of female over the training set
-        dtype (optional):
+        dtype (optional): the type of data, default is np.float32
     Returns:
-        train_global_mean_male (np.ndarray): global mean of male over the
+        global_mean_male (np.ndarray): global mean of male over the
             training set
-        train_global_std_male (np.ndarray): global standard deviation of male
+        global_std_male (np.ndarray): global standard deviation of male
             over the training set
-        train_global_mean_female (np.ndarray): global mean of female over the
+        global_mean_female (np.ndarray): global mean of female over the
             training set
-        train_global_std_female (np.ndarray): global standard deviation of
+        global_std_female (np.ndarray): global standard deviation of
             female over the training set
     """
     if not is_training:
-        if train_global_mean_male is None or train_global_std_male is None:
+        if global_mean_male is None or global_std_male is None:
             raise ValueError(
                 'Set global mean & std computed over the training set.')
     if normalize not in ['global', 'speaker', 'utterance']:
@@ -80,24 +80,26 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
             # NOTE: audio_path is a htk file path in this case
 
         elif tool == 'python_speech_features':
-            input_data_utt = w2f_psf(audio_path,
-                                     feature_type=config['feature_type'],
-                                     feature_dim=config['channels'],
-                                     use_energy=config['energy'],
-                                     use_delta1=config['delta'],
-                                     use_delta2=config['deltadelta'],
-                                     window=config['window'],
-                                     slide=config['slide'])
+            input_data_utt = w2f_psf(
+                audio_path,
+                feature_type=config['feature_type'],
+                feature_dim=config['channels'],
+                use_energy=config['energy'],
+                use_delta1=config['delta'],
+                use_delta2=config['deltadelta'],
+                window=config['window'],
+                slide=config['slide'])
 
         elif tool == 'librosa':
-            input_data_utt = w2f_librosa(audio_path,
-                                         feature_type=config['feature_type'],
-                                         feature_dim=config['channels'],
-                                         use_energy=config['energy'],
-                                         use_delta1=config['delta'],
-                                         use_delta2=config['deltadelta'],
-                                         window=config['window'],
-                                         slide=config['slide'])
+            input_data_utt = w2f_librosa(
+                audio_path,
+                feature_type=config['feature_type'],
+                feature_dim=config['channels'],
+                use_energy=config['energy'],
+                use_delta1=config['delta'],
+                use_delta2=config['deltadelta'],
+                window=config['window'],
+                slide=config['slide'])
 
         # for debug
         # print(input_data_utt.shape)
@@ -183,21 +185,21 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                 speaker_std_dict[speaker] = np.sqrt(
                     speaker_std_dict[speaker] / (total_frame_num_dict[speaker] - 1))
 
-        train_global_mean_male = np.mean(train_data_male, axis=0)
-        train_global_std_male = np.std(train_data_male, axis=0)
-        train_global_mean_female = np.mean(train_data_female, axis=0)
-        train_global_std_female = np.std(train_data_female, axis=0)
+        global_mean_male = np.mean(train_data_male, axis=0)
+        global_std_male = np.std(train_data_male, axis=0)
+        global_mean_female = np.mean(train_data_female, axis=0)
+        global_std_female = np.std(train_data_female, axis=0)
 
         if save_path is not None:
             # Save global mean & std
-            np.save(join(save_path, 'train_global_mean_male.npy'),
-                    train_global_mean_male)
-            np.save(join(save_path, 'train_global_std_male.npy'),
-                    train_global_std_male)
-            np.save(join(save_path, 'train_global_mean_female.npy'),
-                    train_global_mean_female)
-            np.save(join(save_path, 'train_global_std_female.npy'),
-                    train_global_std_female)
+            np.save(join(save_path, 'global_mean_male.npy'),
+                    global_mean_male)
+            np.save(join(save_path, 'global_std_male.npy'),
+                    global_std_male)
+            np.save(join(save_path, 'global_mean_female.npy'),
+                    global_mean_female)
+            np.save(join(save_path, 'global_std_female.npy'),
+                    global_std_female)
 
     if save_path is not None:
         # Save input features as npy files
@@ -220,11 +222,11 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                 input_data_utt /= std_utt
             else:
                 if gender == 'm':
-                    input_data_utt -= train_global_mean_male
-                    input_data_utt /= train_global_std_male
+                    input_data_utt -= global_mean_male
+                    input_data_utt /= global_std_male
                 elif gender == 'f':
-                    input_data_utt -= train_global_mean_female
-                    input_data_utt /= train_global_std_female
+                    input_data_utt -= global_mean_female
+                    input_data_utt /= global_std_female
                 else:
                     raise ValueError('gender is m or f.')
 
@@ -236,5 +238,5 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
             pickle.dump(frame_num_dict, f)
 
-    return (train_global_mean_male, train_global_std_male,
-            train_global_mean_female, train_global_std_female)
+    return (global_mean_male, global_std_male,
+            global_mean_female, global_std_female)

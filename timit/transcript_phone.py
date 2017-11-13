@@ -15,23 +15,21 @@ from utils.labels.phone import Phone2idx
 from utils.util import mkdir_join
 from timit.util import map_phone2phone
 
-SOS = '<'
-EOS = '>'
 
-
-def read_phone(label_paths, map_file_save_path, is_test=False,
-               save_map_file=False, save_path=None):
+def read_phone(label_paths, vocab_file_save_path, is_test=False,
+               save_vocab_file=False, save_path=None):
     """Read phone transcript.
     Args:
         label_paths (list): list of paths to label files
-        map_file_save_path (string): path to mapping files
-        is_test (bool, optional): Set True if save as the test set
-        save_map_file (bool, optional): if True, save the mapping file
+        vocab_file_save_path (string): path to vocabulary files
+        is_test (bool, optional): Set True when proccessing the test set
+        save_vocab_file (bool, optional): if True, save vocabulary files
         save_path (string, optional): path to save labels.
             If None, don't save labels.
     """
     # Make the mapping file (from phone to index)
-    phone2phone_map_file_path = join(map_file_save_path, 'phone2phone.txt')
+    phone2phone_map_file_path = join(
+        vocab_file_save_path, '../phone2phone.txt')
     phone61_set, phone48_set, phone39_set = set([]), set([]), set([])
     with open(phone2phone_map_file_path, 'r') as f:
         for line in f:
@@ -45,27 +43,31 @@ def read_phone(label_paths, map_file_save_path, is_test=False,
                 phone61_set.add(line[0])
 
     phone61_to_idx_map_file_path = mkdir_join(
-        map_file_save_path, 'phone61.txt')
+        vocab_file_save_path, 'phone61.txt')
     phone48_to_idx_map_file_path = mkdir_join(
-        map_file_save_path, 'phone48.txt')
+        vocab_file_save_path, 'phone48.txt')
     phone39_to_idx_map_file_path = mkdir_join(
-        map_file_save_path, 'phone39.txt')
+        vocab_file_save_path, 'phone39.txt')
 
     # Save mapping file
-    if save_map_file:
+    if save_vocab_file:
         with open(phone61_to_idx_map_file_path, 'w') as f:
-            for i, phone in enumerate(sorted(list(phone61_set)) + [SOS, EOS]):
-                f.write('%s  %s\n' % (phone, str(i)))
+            for phone in sorted(list(phone61_set)):
+                f.write('%s\n' % phone)
         with open(phone48_to_idx_map_file_path, 'w') as f:
-            for i, phone in enumerate(sorted(list(phone48_set)) + [SOS, EOS]):
-                f.write('%s  %s\n' % (phone, str(i)))
+            for phone in sorted(list(phone48_set)):
+                f.write('%s\n' % phone)
         with open(phone39_to_idx_map_file_path, 'w') as f:
-            for i, phone in enumerate(sorted(list(phone39_set)) + [SOS, EOS]):
-                f.write('%s  %s\n' % (phone, str(i)))
+            for phone in sorted(list(phone39_set)):
+                f.write('%s\n' % phone)
 
-    phone61_to_idx = Phone2idx(map_file_path=phone61_to_idx_map_file_path)
-    phone48_to_idx = Phone2idx(map_file_path=phone48_to_idx_map_file_path)
-    phone39_to_idx = Phone2idx(map_file_path=phone39_to_idx_map_file_path)
+    if not is_test:
+        phone61_to_idx = Phone2idx(
+            vocab_file_path=phone61_to_idx_map_file_path)
+        phone48_to_idx = Phone2idx(
+            vocab_file_path=phone48_to_idx_map_file_path)
+        phone39_to_idx = Phone2idx(
+            vocab_file_path=phone39_to_idx_map_file_path)
 
     print('===> Reading & Saving target labels...')
     for label_path in tqdm(label_paths):
@@ -96,27 +98,18 @@ def read_phone(label_paths, map_file_save_path, is_test=False,
             save_file_name = speaker + '_' + utt_index + '.npy'
 
             if is_test:
-                transcript_phone61 = ' '.join(phone61_list)
-                transcript_phone48 = ' '.join(phone48_list)
-                transcript_phone39 = ' '.join(phone39_list)
-
                 # Save target labels as string
-                np.save(mkdir_join(save_path, 'phone61',
-                                   save_file_name), transcript_phone61)
-                np.save(mkdir_join(save_path, 'phone48',
-                                   save_file_name), transcript_phone48)
-                np.save(mkdir_join(save_path, 'phone39',
-                                   save_file_name), transcript_phone39)
+                np.save(mkdir_join(save_path, 'phone61', save_file_name),
+                        ' '.join(phone61_list))
+                np.save(mkdir_join(save_path, 'phone48', save_file_name),
+                        ' '.join(phone48_list))
+                np.save(mkdir_join(save_path, 'phone39', save_file_name),
+                        ' '.join(phone39_list))
             else:
-                # Convert from phone to index
-                phone61_index_list = phone61_to_idx(phone61_list)
-                phone48_index_list = phone48_to_idx(phone48_list)
-                phone39_index_list = phone39_to_idx(phone39_list)
-
                 # Save target labels as index
-                np.save(mkdir_join(save_path, 'phone61',
-                                   save_file_name), phone61_index_list)
-                np.save(mkdir_join(save_path, 'phone48',
-                                   save_file_name), phone48_index_list)
-                np.save(mkdir_join(save_path, 'phone39',
-                                   save_file_name), phone39_index_list)
+                np.save(mkdir_join(save_path, 'phone61', save_file_name),
+                        phone61_to_idx(phone61_list))
+                np.save(mkdir_join(save_path, 'phone48', save_file_name),
+                        phone48_to_idx(phone48_list))
+                np.save(mkdir_join(save_path, 'phone39', save_file_name),
+                        phone39_to_idx(phone39_list))

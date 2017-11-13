@@ -17,13 +17,13 @@ from utils.util import mkdir_join
 
 # NOTE:
 ############################################################
-# - [character]
-# 26 alphabets(a-z), <SOS>, <EOS>
+# [character]
+# 26 alphabets(a-z)
 # space(_), apostorophe(')
 # = 30 labels
 
-# - [character_capital_divide]
-# 26 lower alphabets(a-z), 26 upper alphabets(A-Z),  <SOS>, <EOS>
+# [character_capital_divide]
+# 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
 # 19 special double-letters, apostorophe(')
 # = 74 labels
 ############################################################
@@ -33,18 +33,16 @@ DOUBLE_LETTERS = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh', 'ii', 'jj',
                   'uu', 'vv', 'ww', 'xx', 'yy', 'zz']
 SPACE = '_'
 APOSTROPHE = '\''
-SOS = '<'
-EOS = '>'
 
 
-def read_char(label_paths, map_file_save_path, is_test=False,
-              save_map_file=False, save_path=None):
+def read_char(label_paths, vocab_file_save_path, is_test=False,
+              save_vocab_file=False, save_path=None):
     """Read text transcript.
     Args:
         label_paths (list): list of paths to label files
-        map_file_save_path (string): path to mapping files
-        is_test (bool, optional): Set True if save as the test set
-        save_map_file (string): if True, save the mapping file
+        vocab_file_save_path (string): path to vocabulary files
+        is_test (bool, optional): Set True when proccessing the test set
+        save_vocab_file (string): if True, save vocabulary files
         save_path (string, optional): path to save labels.
             If None, don't save labels.
     """
@@ -101,33 +99,37 @@ def read_char(label_paths, map_file_save_path, is_test=False,
         # print(transcript)
         # print(transcript_capital)
 
-    # Make mapping file (from character to index)
-    char_map_file_path = mkdir_join(map_file_save_path, 'character.txt')
-    char_capital_map_file_path = mkdir_join(
-        map_file_save_path, 'character_capital_divide.txt')
+    # Make vocabulary files
+    char_vocab_file_path = mkdir_join(vocab_file_save_path, 'character.txt')
+    char_capital_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'character_capital_divide.txt')
 
     # Reserve some indices
     char_set.discard(SPACE)
     char_set.discard(APOSTROPHE)
     char_capital_set.discard(APOSTROPHE)
 
-    if save_map_file:
-        with open(char_map_file_path, 'w') as f:
-            char_list = [SPACE] + \
-                sorted(list(char_set)) + [APOSTROPHE, SOS, EOS]
+    # for debug
+    # print(sorted(list(char_set)))
+    # print(sorted(list(char_capital_set)))
 
-            for i, char in enumerate(char_list):
-                f.write('%s  %s\n' % (char, str(i)))
+    if save_vocab_file:
+        # character-level
+        with open(char_vocab_file_path, 'w') as f:
+            char_list = sorted(list(char_set)) + [SPACE, APOSTROPHE]
+            for char in char_list:
+                f.write('%s\n' % char)
 
-        with open(char_capital_map_file_path, 'w') as f:
-            char_capital_list = sorted(
-                list(char_capital_set)) + [APOSTROPHE, SOS, EOS]
+        # character-level (capital-divided)
+        with open(char_capital_vocab_file_path, 'w') as f:
+            char_capital_list = sorted(list(char_capital_set)) + [APOSTROPHE]
+            for char in char_capital_list:
+                f.write('%s\n' % char)
 
-            for i, char in enumerate(char_capital_list):
-                f.write('%s  %s\n' % (char, str(i)))
-
-    char2idx = Char2idx(map_file_path=char_map_file_path)
-    char2idx_capital = Char2idx(map_file_path=char_capital_map_file_path)
+    if not is_test:
+        char2idx = Char2idx(vocab_file_path=char_vocab_file_path)
+        char2idx_capital = Char2idx(vocab_file_path=char_capital_vocab_file_path,
+                                    double_letter=True)
 
     if save_path is not None:
         # Save target labels
@@ -144,14 +146,9 @@ def read_char(label_paths, map_file_save_path, is_test=False,
                 np.save(mkdir_join(save_path, 'character_capital_divide',
                                    save_file_name), transcript)
             else:
-                # Convert from character to index
-                char_index_list = char2idx(
-                    transcript, double_letter=False)
-                char_capital_index_list = char2idx_capital(
-                    transcript_capital, double_letter=True)
-
                 # Save target labels as index
-                np.save(mkdir_join(save_path, 'character',
-                                   save_file_name), char_index_list)
+                np.save(mkdir_join(save_path, 'character', save_file_name),
+                        char2idx(transcript))
                 np.save(mkdir_join(save_path, 'character_capital_divide',
-                                   save_file_name), char_capital_index_list)
+                                   save_file_name),
+                        char2idx_capital(transcript_capital))

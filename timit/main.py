@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join, isfile, abspath
+from os.path import join, isfile
 import sys
 import argparse
 
@@ -42,7 +42,7 @@ parser.add_argument('--window', type=float, default=0.025,
                     help='window width to extract features')
 parser.add_argument('--slide', type=float, default=0.01,
                     help='extract features per \'slide\'')
-parser.add_argument('--energy', type=int, default=0,
+parser.add_argument('--energy', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--delta', type=int, default=1,
                     help='if 1, add the energy feature')
@@ -81,14 +81,14 @@ def make_input():
             audio_paths = path.wav(data_type='train')
 
         # Read htk or wav files, and save input data and frame num dict
-        train_global_mean_male, train_global_std_male, train_global_mean_female, train_global_std_female = read_audio(
+        global_mean_male, global_std_male, global_mean_female, global_std_female = read_audio(
             audio_paths=audio_paths,
             tool=args.tool,
             config=CONFIG,
             normalize=args.normalize,
             is_training=True,
             save_path=mkdir_join(input_save_path, 'train'))
-        # NOTE: ex.) save_path: timit/inputs/train/***.npy
+        # NOTE: ex.) save_path: timit/inputs/train/*.npy
 
         for data_type in ['dev', 'test']:
             print('---------- %s ----------' % data_type)
@@ -98,17 +98,18 @@ def make_input():
                 audio_paths = path.wav(data_type=data_type)
 
             # Read htk or wav files, and save input data and frame num dict
-            read_audio(audio_paths=audio_paths,
-                       tool=args.tool,
-                       config=CONFIG,
-                       normalize=args.normalize,
-                       is_training=False,
-                       save_path=mkdir_join(input_save_path, data_type),
-                       train_global_mean_male=train_global_mean_male,
-                       train_global_std_male=train_global_std_male,
-                       train_global_mean_female=train_global_mean_female,
-                       train_global_std_female=train_global_std_female)
-            # NOTE: ex.) save_path: timit/inputs/data_type/***.npy
+            read_audio(
+                audio_paths=audio_paths,
+                tool=args.tool,
+                config=CONFIG,
+                normalize=args.normalize,
+                is_training=False,
+                save_path=mkdir_join(input_save_path, data_type),
+                global_mean_male=global_mean_male,
+                global_std_male=global_std_male,
+                global_mean_female=global_mean_female,
+                global_std_female=global_std_female)
+            # NOTE: ex.) save_path: timit/inputs/data_type/*.npy
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(input_save_path, 'complete.txt'), 'w') as f:
@@ -124,34 +125,36 @@ def make_label():
         print('Already exists.\n')
     else:
         for data_type in ['train', 'dev', 'test']:
-            save_map_file = True if data_type == 'train' else False
+            save_vocab_file = True if data_type == 'train' else False
             is_test = True if data_type == 'test' else False
 
-            print('==================================================')
+            print('=' * 30)
             print('  label_type: character, character_capital_divide')
             print('  data_type: %s' % data_type)
-            print('==================================================')
-            read_char(label_paths=path.trans(data_type=data_type),
-                      map_file_save_path=mkdir_join(
-                          abspath('./config'), 'mapping_files'),
-                      is_test=is_test,
-                      save_map_file=save_map_file,
-                      save_path=mkdir_join(label_save_path, data_type))
-            # NOTE: ex.) save_path:
-            # timit/labels/data_type/character*/***.npy
+            print('=' * 30)
 
-            print('==================================================')
+            read_char(
+                label_paths=path.trans(data_type=data_type),
+                vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
+                is_test=is_test,
+                save_vocab_file=save_vocab_file,
+                save_path=mkdir_join(label_save_path, data_type))
+            # NOTE: ex.) save_path:
+            # timit/labels/data_type/character*/*.npy
+
+            print('=' * 30)
             print('  label_type: phone')
             print('  data_type: %s' % data_type)
-            print('==================================================')
-            read_phone(label_paths=path.phone(data_type=data_type),
-                       map_file_save_path=mkdir_join(
-                           abspath('./config'), 'mapping_files'),
-                       is_test=is_test,
-                       save_map_file=save_map_file,
-                       save_path=mkdir_join(label_save_path, data_type))
+            print('=' * 30)
+
+            read_phone(
+                label_paths=path.phone(data_type=data_type),
+                vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
+                is_test=is_test,
+                save_vocab_file=save_vocab_file,
+                save_path=mkdir_join(label_save_path, data_type))
             # NOTE: ex.) save_path:
-            # timit/labels/data_type/phone**/***.npy
+            # timit/labels/data_type/phone**/*.npy
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(label_save_path, 'complete.txt'), 'w') as f:

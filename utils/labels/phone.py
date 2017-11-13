@@ -1,20 +1,29 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 
 class Phone2idx(object):
     """Convert from phone to index.
     Args:
-        map_file_path (string): path to the mapping file
+        vocab_file_path (string): path to the vocablary file
+        remove_list (list, optional): phones to neglect
     """
 
-    def __init__(self, map_file_path):
-        # Read the mapping file
+    def __init__(self, vocab_file_path, remove_list=[]):
+        # Read the vocablary file
         self.map_dict = {}
-        with open(map_file_path, 'r') as f:
+        vocab_count = 0
+        with open(vocab_file_path, 'r') as f:
             for line in f:
-                line = line.strip().split('  ')
-                self.map_dict[str(line[0])] = int(line[1])
+                phone = line.strip()
+                if phone in remove_list:
+                    continue
+                self.map_dict[phone] = vocab_count
+                vocab_count += 1
 
     def __call__(self, phone_list):
         """
@@ -33,16 +42,18 @@ class Phone2idx(object):
 class Idx2phone(object):
     """Convert from index to phone.
     Args:
-        map_file_path (string): path to the mapping file
+        vocab_file_path (string): path to the vocablary file
     """
 
-    def __init__(self, map_file_path):
-        # Read the mapping file
+    def __init__(self, vocab_file_path):
+        # Read the vocablary file
         self.map_dict = {}
-        with open(map_file_path, 'r') as f:
+        vocab_count = 0
+        with open(vocab_file_path, 'r') as f:
             for line in f:
-                line = line.strip().split()
-                self.map_dict[int(line[1])] = line[0]
+                phone = line.strip()
+                self.map_dict[vocab_count] = phone
+                vocab_count += 1
 
     def __call__(self, index_list):
         """Convert from index to phone.
