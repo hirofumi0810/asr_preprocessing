@@ -74,33 +74,28 @@ class TestInput(unittest.TestCase):
         audio_paths = htk_paths if tool == 'htk' else wav_paths
 
         print('---------- train100h ----------')
-        # train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
-        #     audio_paths=audio_paths['train100h'],
-        #     tool=tool,
-        #     config=CONFIG,
-        #     normalize=normalize,
-        #     is_training=True,
-        #     speaker_gender_dict=path.speaker_gender_dict)
+        global_mean_male, global_mean_female, global_std_male, global_std_female = read_audio(
+            audio_paths=audio_paths['train100h'],
+            tool=tool,
+            config=CONFIG,
+            normalize=normalize,
+            is_training=True,
+            speaker_gender_dict=path.speaker_gender_dict)
 
-        train_global_mean_male = 1
-        train_global_mean_female = 1
-        train_global_std_male = 1
-        train_global_std_female = 1
-
-        for data_type in ['dev_clean', 'dev_other',
-                          'test_clean', 'test_other']:
+        for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
 
             print('---------- %s ----------' % data_type)
-            read_audio(audio_paths=audio_paths[data_type],
-                       tool=tool,
-                       config=CONFIG,
-                       normalize=normalize,
-                       is_training=False,
-                       speaker_gender_dict=path.speaker_gender_dict,
-                       train_global_mean_male=train_global_mean_male,
-                       train_global_mean_female=train_global_mean_female,
-                       train_global_std_male=train_global_std_male,
-                       train_global_std_female=train_global_std_female)
+            read_audio(
+                audio_paths=audio_paths[data_type],
+                tool=tool,
+                config=CONFIG,
+                normalize=normalize,
+                is_training=False,
+                speaker_gender_dict=path.speaker_gender_dict,
+                global_mean_male=global_mean_male,
+                global_mean_female=global_mean_female,
+                global_std_male=global_std_male,
+                global_std_female=global_std_female)
 
 
 if __name__ == '__main__':
