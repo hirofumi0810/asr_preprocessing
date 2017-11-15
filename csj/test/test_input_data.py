@@ -81,12 +81,13 @@ class TestInput(unittest.TestCase):
         audio_paths = htk_paths if tool == 'htk' else wav_paths
 
         print('---------- train ----------')
-        speaker_dict = read_sdb(label_paths=label_paths['train'],
-                                train_data_size='train_subset',
-                                map_file_save_path='../config/mapping_files',
-                                is_training=True,
-                                save_map_file=True)
-        train_global_mean_male, train_global_mean_female, train_global_std_male, train_global_std_female = read_audio(
+        speaker_dict = read_sdb(
+            label_paths=label_paths['train'],
+            data_size='subset',
+            vocab_file_save_path='../config/mapping_files',
+            is_training=True,
+            save_vocab_file=True)
+        global_mean_male, global_mean_female, global_std_male, global_std_female = read_audio(
             audio_paths=audio_paths['train'],
             speaker_dict=speaker_dict,
             tool=tool,
@@ -98,19 +99,20 @@ class TestInput(unittest.TestCase):
             print('---------- %s ----------' % data_type)
             speaker_dict = read_sdb(
                 label_paths=label_paths[data_type],
-                train_data_size='train_subset',
-                map_file_save_path='../config/mapping_files',
+                data_size='subset',
+                vocab_file_save_path='../config/mapping_files',
                 is_test=True)
-            read_audio(audio_paths=audio_paths[data_type],
-                       speaker_dict=speaker_dict,
-                       tool=tool,
-                       config=CONFIG,
-                       normalize=normalize,
-                       is_training=False,
-                       train_global_mean_male=train_global_mean_male,
-                       train_global_mean_female=train_global_mean_female,
-                       train_global_std_male=train_global_std_male,
-                       train_global_std_female=train_global_std_female)
+            read_audio(
+                audio_paths=audio_paths[data_type],
+                speaker_dict=speaker_dict,
+                tool=tool,
+                config=CONFIG,
+                normalize=normalize,
+                is_training=False,
+                global_mean_male=global_mean_male,
+                global_mean_female=global_mean_female,
+                global_std_male=global_std_male,
+                global_std_female=global_std_female)
 
 
 if __name__ == '__main__':

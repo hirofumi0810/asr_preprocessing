@@ -29,14 +29,12 @@ DELTADELTA=1
 NORMALIZE='speaker'
 # NORMALIZE='utterance'
 
-### data size to create
-# subset (240h)
+### Data size
+# subset (about 240h)
 subset=true
-# subset=false
 
-# fullset (586h)
+# fullset (about 586h)
 fullset=true
-# fullset=false
 
 
 ########################################
@@ -59,10 +57,11 @@ fi
 declare -A file_number
 file_number["train_subset"]=986
 file_number["train_fullset"]=3212
-file_number["dev"]=19
+file_number["dev"]=39
 file_number["eval1"]=10
 file_number["eval2"]=10
 file_number["eval3"]=10
+file_number["dialog"]=162
 
 
 if [ $TOOL = 'htk' ]; then
@@ -84,6 +83,7 @@ if [ $TOOL = 'htk' ]; then
       --energy $ENERGY \
       --delta $DELTA \
       --deltadelta $DELTADELTA \
+      --subset $subset \
       --fullset $fullset
 
   # Convert from wav to htk files
@@ -93,7 +93,7 @@ if [ $TOOL = 'htk' ]; then
     htk_file_num=$(find $HTK_SAVE_PATH/$data_type/ -iname '*.htk' | wc -l)
 
     if [ $htk_file_num -ne ${file_number[$data_type]} ]; then
-      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_$data_type.scp 
+      $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_$data_type.scp
     fi
   done
 else
@@ -103,7 +103,6 @@ else
   fi
 fi
 
-exit 1
 
 echo ============================================================================
 echo "                                  Main                                    "
@@ -123,6 +122,7 @@ python main.py \
     --delta $DELTA \
     --deltadelta $DELTADELTA \
     --normalize $NORMALIZE \
+    --subset $subset \
     --fullset $fullset
 
 

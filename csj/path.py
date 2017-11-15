@@ -55,6 +55,8 @@ class Path(object):
             for line in f:
                 speaker = line.strip()
                 excluded_speakers.append(speaker)
+        # NOTE: Reference:
+        # https://github.com/kaldi-asr/kaldi/blob/master/egs/csj/s5/local/csj_make_trans/csj_autorun.sh
 
         ####################
         # wav
@@ -62,11 +64,11 @@ class Path(object):
         self.wav_paths = {
             'train_subset': [],  # 967 A + 19 M files
             'train_fullset': [],  # 3212 (A + S + M + R) files
-            'dev': [],   # 19 files
+            'dev': [],  # the first 39 files of train_subset
             'eval1': [],  # 10 files
             'eval2': [],  # 10 files
             'eval3': [],  # 10 files
-            'dialog': []
+            'dialog': []  # ?? files
         }
 
         # Core
@@ -81,13 +83,16 @@ class Path(object):
             elif speaker.split('-')[0] in excluded_speakers:
                 continue
             elif speaker[0] == 'D':
-                if speaker not in excluded_speakers and '-R' in speaker and 'D03' in speaker:
+                # 学会講演インタビュー，模擬講演インタビュー，課題指向対話，自由対話
+                # if speaker not in excluded_speakers and '-R' in speaker and
+                # 'D03' in speaker:
+                if speaker not in excluded_speakers:
                     self.wav_paths['dialog'].append(wav_path)
-                continue
             elif speaker[0] == 'A':
                 self.wav_paths['train_subset'].append(wav_path)
                 self.wav_paths['train_fullset'].append(wav_path)
             else:
+                # S or R
                 self.wav_paths['train_fullset'].append(wav_path)
 
         # Noncore
@@ -104,9 +109,8 @@ class Path(object):
             elif speaker[0] in ['A', 'M']:
                 self.wav_paths['train_subset'].append(wav_path)
                 self.wav_paths['train_fullset'].append(wav_path)
-                if speaker[0] == 'M':
-                    self.wav_paths['dev'].append(wav_path)
             else:
+                # S
                 self.wav_paths['train_fullset'].append(wav_path)
 
         # Noncore dialog
@@ -115,10 +119,14 @@ class Path(object):
             if speaker.split('-')[0] in excluded_speakers:
                 continue
             elif speaker[0] == 'D':
-                if speaker not in excluded_speakers and '-R' in speaker and 'D03' in speaker:
+                # 学会講演インタビュー，模擬講演インタビュー，課題指向対話，自由対話
+                # if speaker not in excluded_speakers and '-R' in speaker and
+                # 'D03' in speaker:
+                if speaker not in excluded_speakers:
                     self.wav_paths['dialog'].append(wav_path)
                 continue
             else:
+                # R
                 self.wav_paths['train_fullset'].append(wav_path)
 
         ##################################
@@ -134,7 +142,7 @@ class Path(object):
             'dialog': []
         }
 
-        # train subset (about 240h)
+        # Train subset (about 240h)
         for i, wav_path in enumerate(self.wav_paths['train_subset']):
             speaker = basename(wav_path).split('.')[0]
             self.wav_paths['train_subset'][i] = wav_path
@@ -145,7 +153,7 @@ class Path(object):
                 self.trans_paths['train_subset'].append(
                     wav_path.replace('.wav', '.sdb'))
 
-        # train fullset (about 586h)
+        # Train fullset (about 586h)
         for i, wav_path in enumerate(self.wav_paths['train_fullset']):
             speaker = basename(wav_path).split('.')[0]
             self.wav_paths['train_fullset'][i] = wav_path
@@ -157,11 +165,15 @@ class Path(object):
                     wav_path.replace('.wav', '.sdb'))
 
         # Dev
+        self.wav_paths['dev'] = sorted(self.wav_paths['train_subset'])[:39]
         for i, wav_path in enumerate(self.wav_paths['dev']):
             self.wav_paths['dev'][i] = wav_path
             self.trans_paths['dev'].append(wav_path.replace('.wav', '.sdb'))
+        # NOTE: dev set is the first 4k sentences from training data
+        # (39 speakers) as in
+        # https://github.com/kaldi-asr/kaldi/blob/master/egs/csj/s5/run.sh
 
-        # eval1, eval2, evak3
+        # eval1, eval2, eval3
         for data_type in ['eval1', 'eval2', 'eval3']:
             for i, wav_path in enumerate(self.wav_paths[data_type]):
                 speaker = basename(wav_path).split('.')[0]

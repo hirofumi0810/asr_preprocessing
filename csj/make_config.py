@@ -36,6 +36,8 @@ parser.add_argument('--delta', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
+parser.add_argument('--subset', type=str,
+                    help='If True, create small dataset.')
 parser.add_argument('--fullset', type=str,
                     help='If True, create full-size dataset (about 586h).')
 
@@ -58,15 +60,16 @@ def main():
          energy=bool(args.energy),
          delta=bool(args.delta),
          deltadelta=bool(args.deltadelta))
-    # NOTE: 120-dim features are extracted by default
+    # NOTE: 123-dim features are extracted by default
 
-    data_types = ['train_subset', 'dev', 'eval1', 'eval2', 'eval3']
+    data_types = ['dev', 'eval1', 'eval2', 'eval3']
 
+    if bool(args.subset):
+        data_types += ['train_subset']
     if bool(args.fullset):
         data_types += ['train_fullset']
 
     for data_type in data_types:
-
         wav_paths = path.wav(data_type=data_type)
         save_path = mkdir_join(htk_save_path, data_type)
 
