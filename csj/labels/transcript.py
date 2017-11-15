@@ -163,6 +163,10 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
                                 trans_kana = trans_kana[:-1]
                                 trans_kanji = trans_kanji[:-1]
 
+                        # for exception
+                        if trans_kana[0:2] == 'Z_':
+                            trans_kana = trans_kana[2:]
+
                         # Skip long utterances (longer than 20s)
                         duration = (end_frame_pre - start_frame_pre) / 100
                         if duration < 20:
@@ -185,10 +189,9 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
                                 word_count_dict[word] += 1
 
                             # for debug
-                            if trans_kana[0] == 'Z':
-                                print(trans_kanji)
-                                print(trans_kana)
-                                print('-----')
+                            # print(trans_kanji)
+                            # print(trans_kana)
+                            # print('-----')
 
                     # Initialization
                     trans_kana = yomi + ' '
@@ -412,7 +415,7 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
                     np.save(mkdir_join(save_path, 'word_freq15', speaker, save_file_name),
                             trans_kanji)
                 else:
-                    print(trans_kana.replace(SPACE, ''))
+                    word_list = trans_kanji.split(SPACE)
 
                     # Save target labels as index
                     np.save(mkdir_join(save_path, 'kanji', speaker, save_file_name),

@@ -56,7 +56,7 @@ OOV = 'OOV'
 
 
 def read_trans(label_paths, data_size, vocab_file_save_path,
-               is_training=False, is_test=False, frequency_threshold=5,
+               is_training=False, is_test=False,
                save_vocab_file=False, save_path=None):
     """Read transcript.
     Args:
@@ -65,9 +65,6 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
         vocab_file_save_path (string): path to vocabulary files
         is_training (bool, optional): Set True when proccessing the training set
         is_test (bool, optional): Set True when proccessing the test set
-        frequency_threshold (int, optional): the vocabulary is restricted to
-            words which appear more than 'frequency_threshold' in the training
-            set
         save_vocab_file (bool, optional): if True, save vocabulary files
         save_path (string, optional): path to save labels.
             If None, don't save labels.
@@ -95,6 +92,7 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
                         word_count_dict[word] = 0
                     word_count_dict[word] += 1
 
+                # Capital-divided
                 transcript_capital = ''
                 for word in transcript.split(' '):
                     if len(word) == 1:
@@ -296,6 +294,8 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
                     np.save(mkdir_join(save_path, 'word_freq15',
                                        speaker, save_file_name), transcript)
                 else:
+                    word_list = transcript.split(SPACE)
+
                     # Save target labels as index
                     np.save(mkdir_join(save_path, 'character', speaker, save_file_name),
                             char2idx(transcript))
