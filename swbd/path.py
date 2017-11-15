@@ -33,6 +33,10 @@ class Path(object):
         self.fisher_path = fisher_path
         self.wav_save_path = wav_save_path
         self.htk_save_path = htk_save_path
+        self.pem_path = None
+        # NOTE: hub5e_00.pem file is a segmentation file
+        self.stm_path = None
+        # NOTE* stm is a transcription file of swbd and callhome
 
         # Absolute path to this directory
         self.run_root_path = run_root_path
@@ -65,17 +69,19 @@ class Path(object):
         ####################
         # train (LDC97S62)
         ####################
-        self.word_dict_path = join(self.swbd_audio_path, 'sw-ms98-dict.text')
+        if self.swbd_audio_path is not None:
+            self.word_dict_path = join(
+                self.swbd_audio_path, 'sw-ms98-dict.text')
+            for sph_path in glob(join(self.swbd_audio_path, '*/data/*.sph')):
+                self._sph_paths['swbd'].append(sph_path)
 
-        for sph_path in glob(join(self.swbd_audio_path, '*/data/*.sph')):
-            self._sph_paths['swbd'].append(sph_path)
-
-        for trans_path in glob(join(self.swbd_trans_path,
-                                    '*/*/*.text')):
-            if trans_path.split('.')[0][-4:] == 'word':
-                self._word_paths['swbd'].append(trans_path)
-            elif trans_path.split('.')[0][-5:] == 'trans':
-                self._trans_paths['swbd'].append(trans_path)
+        if self.swbd_trans_path is not None:
+            for trans_path in glob(join(self.swbd_trans_path,
+                                        '*/*/*.text')):
+                if trans_path.split('.')[0][-4:] == 'word':
+                    self._word_paths['swbd'].append(trans_path)
+                elif trans_path.split('.')[0][-5:] == 'trans':
+                    self._trans_paths['swbd'].append(trans_path)
 
         ####################
         # train (Fisher)
@@ -90,25 +96,25 @@ class Path(object):
         ########################################
         # test (eval2000)
         ########################################
-        for file_path in glob(join(self.eval2000_audio_path, 'english/*')):
-            file_name = basename(file_path)
-            if file_name == 'hub5e_00.pem':
-                self.pem_path = file_path
-                # NOTE: hub5e_00.pem file is a segmentation file
-            elif file_name[:2] == 'sw':
-                self._sph_paths['eval2000_swbd'].append(file_path)
-            elif file_name[:2] == 'en':
-                self._sph_paths['eval2000_ch'].append(file_path)
+        if self.eval2000_audio_path is not None:
+            for file_path in glob(join(self.eval2000_audio_path, 'english/*')):
+                file_name = basename(file_path)
+                if file_name[:2] == 'sw':
+                    self._sph_paths['eval2000_swbd'].append(file_path)
+                elif file_name[:2] == 'en':
+                    self._sph_paths['eval2000_ch'].append(file_path)
+                elif file_name == 'hub5e_00.pem':
+                    self.pem_path = file_path
 
-        for file_path in glob(join(self.eval2000_trans_path, 'reference/english/*')):
-            file_name = basename(file_path)
-            if file_name[:2] == 'sw':
-                self._trans_paths['eval2000_swbd'].append(file_path)
-            elif file_name[:2] == 'en':
-                self._trans_paths['eval2000_ch'].append(file_path)
-            elif file_name.split('.')[-1] == 'stm':
-                self.stm_path = file_path
-                # NOTE* stm is a transcription file of swbd and callhome
+        if self.eval2000_trans_path is not None:
+            for file_path in glob(join(self.eval2000_trans_path, 'reference/english/*')):
+                file_name = basename(file_path)
+                if file_name[:2] == 'sw':
+                    self._trans_paths['eval2000_swbd'].append(file_path)
+                elif file_name[:2] == 'en':
+                    self._trans_paths['eval2000_ch'].append(file_path)
+            self.stm_path = join(self.eval2000_trans_path,
+                                 'reference', 'hub5e00.english.000405.stm')
 
     def sph(self, corpus):
         """Get paths to sph files of training data.
@@ -178,22 +184,15 @@ class Path(object):
         else:
             raise TypeError
 
-    def trans(self, label_type, corpus):
+    def trans(self, corpus):
         """Get paths to transcription files of training data.
         Args:
-            label_type: phone or character or word
             corpus (string): swbd or fisher or eval2000_swbd or
                 eval2000_ch
         Returns:
             paths: paths to transcription files
         """
-        if corpus == 'swvd':
-            if label_type in ['character', 'phone']:
-                return sorted(self._trans_paths[corpus])
-            elif label_type == 'word':
-                return sorted(self._word_paths[corpus])
-        else:
-            return sorted(self._trans_paths[corpus])
+        return sorted(self._trans_paths[corpus])
 
 
 if __name__ == '__main__':
@@ -212,23 +211,22 @@ if __name__ == '__main__':
     print(len(path.sph(corpus='swbd')))  # 2ch
     print(len(path.wav(corpus='swbd')))
     print(len(path.htk(corpus='swbd')))
-    print(len(path.trans(label_type='word', corpus='swbd')))
-    print(len(path.trans(label_type='character', corpus='swbd')))
+    print(len(path.trans(corpus='swbd')))
 
     print('==== Fisher ====')
     print(len(path.sph(corpus='fisher')))
     print(len(path.wav(corpus='fisher')))
     print(len(path.htk(corpus='fisher')))
-    print(len(path.trans(label_type='character', corpus='fisher')))
+    print(len(path.trans(corpus='fisher')))
 
     print('==== eval2000 (SWB) ====')
     print(len(path.sph(corpus='eval2000_swbd')))
     print(len(path.wav(corpus='eval2000_swbd')))
     print(len(path.htk(corpus='eval2000_swbd')))
-    print(len(path.trans(label_type='character', corpus='eval2000_swbd')))
+    print(len(path.trans(corpus='eval2000_swbd')))
 
     print('==== eval2000 (CH) ====')
     print(len(path.sph(corpus='eval2000_ch')))
     print(len(path.wav(corpus='eval2000_ch')))
     print(len(path.htk(corpus='eval2000_ch')))
-    print(len(path.trans(label_type='character', corpus='eval2000_ch')))
+    print(len(path.trans(corpus='eval2000_ch')))

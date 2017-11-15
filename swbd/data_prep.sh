@@ -5,7 +5,7 @@ echo "                               Switchboard                                
 echo ============================================================================
 
 # Set paths
-SWBD_PATH='/n/sd8/inaguma/corpus/swbd/data/LDC97S62/'
+SWBD_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/LDC97S62/'
 EVAL2000_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002S09/'
 EVAL2000_TRANS_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002T43/'
 FISHER_PATH='/n/sd8/inaguma/corpus/swbd/data/fisher/'
@@ -26,7 +26,7 @@ CHANNELS=40
 SAMPLING_RATE=8000
 WINDOW=0.025
 SLIDE=0.01
-ENERGY=0
+ENERGY=1
 DELTA=1
 DELTADELTA=1
 # NORMALIZE='global'
@@ -39,7 +39,7 @@ NORMALIZE='speaker'
 ########################################
 set -eu
 
-if [ ! -e $SWBD_PATH ]; then
+if [ ! -e $SWBD_AUDIO_PATH ]; then
   echo "Switchboard directory was not found."
   exit 1
 fi
@@ -140,10 +140,10 @@ swbd_wav_paths=$(find $WAV_SAVE_PATH/swbd/ -iname '*.wav')
 swbd_wav_file_num=$(find $WAV_SAVE_PATH/swbd/ -iname '*.wav' | wc -l)
 
 if [ $swbd_wav_file_num -ne 4870 ] && [ $swbd_wav_file_num -ne 4876 ]; then
-  swbd_sph_paths=$(find $SWBD_PATH -iname '*.sph')
+  swbd_sph_paths=$(find $SWBD_AUDIO_PATH -iname '*.sph')
 
   # file check
-  swbd_sph_file_num=$(find $SWBD_PATH -iname '*.sph' | wc -l)
+  swbd_sph_file_num=$(find $SWBD_AUDIO_PATH -iname '*.sph' | wc -l)
   [ $swbd_sph_file_num -ne 2435 ] && [ $swbd_sph_file_num -ne 2438 ] && \
     echo Warning: expected 2435 or 2438 data data files, found $swbd_sph_file_num
 
@@ -303,26 +303,27 @@ echo ===========================================================================
 echo "                                  Main                                    "
 echo ============================================================================
 
-exit 1
 
-# python main.py \
-#   --swbd_path $SWBD_PATH \
-#   --eval2000_trans_path $EVAL2000_TRANS_PATH \
-#   --fisher_path $FISHER_PATH \
-#   --dataset_save_path $DATASET_SAVE_PATH \
-#   --run_root_path $RUN_ROOT_PATH \
-#   --tool $TOOL \
-#   --wav_save_path $WAV_SAVE_PATH \
-#   --htk_save_path $HTK_SAVE_PATH \
-#   --feature_type $FEATURE_TYPE \
-#   --channels $CHANNELS \
-#   --sampling_rate $SAMPLING_RATE \
-#   --window $WINDOW \
-#   --slide $SLIDE \
-#   --energy $ENERGY \
-#   --delta $DELTA \
-#   --deltadelta $DELTADELTA \
-#   --normalize $NORMALIZE
+python main.py \
+  --swbd_audio_path $SWBD_AUDIO_PATH \
+  --swbd_trans_path $DATASET_SAVE_PATH/swb_ms98_transcriptions \
+  --fisher_path $FISHER_PATH \
+  --eval2000_audio_path $EVAL2000_AUDIO_PATH \
+  --eval2000_trans_path $EVAL2000_TRANS_PATH \
+  --dataset_save_path $DATASET_SAVE_PATH \
+  --run_root_path $RUN_ROOT_PATH \
+  --tool $TOOL \
+  --wav_save_path $WAV_SAVE_PATH \
+  --htk_save_path $HTK_SAVE_PATH \
+  --feature_type $FEATURE_TYPE \
+  --channels $CHANNELS \
+  --sampling_rate $SAMPLING_RATE \
+  --window $WINDOW \
+  --slide $SLIDE \
+  --energy $ENERGY \
+  --delta $DELTA \
+  --deltadelta $DELTADELTA \
+  --normalize $NORMALIZE
 
 
 echo 'Successfully completed!!!'

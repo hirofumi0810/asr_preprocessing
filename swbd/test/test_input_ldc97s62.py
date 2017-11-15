@@ -12,8 +12,9 @@ from glob import glob
 
 sys.path.append('../../')
 from swbd.inputs.input_data import read_audio
-from swbd.labels.ldc97s62.character import read_char
+from swbd.labels.ldc97s62.character import read_trans
 from utils.measure_time_func import measure_time
+from utils.util import mkdir_join
 
 swbd_trans_path = '/n/sd8/inaguma/corpus/swbd/dataset/swb_ms98_transcriptions'
 htk_save_path = '/n/sd8/inaguma/corpus/swbd/htk'
@@ -24,6 +25,7 @@ label_paths = []
 for trans_path in glob(join(swbd_trans_path, '*/*/*.text')):
     if trans_path.split('.')[0][-5:] == 'trans':
         label_paths.append(trans_path)
+label_paths = sorted(label_paths)
 
 # Search paths to audio files
 wav_paths = [wav_path for wav_path in glob(join(wav_save_path, 'swbd/*.wav'))]
@@ -45,26 +47,25 @@ class TestInputLDC97S62(unittest.TestCase):
 
     def test(self):
 
-        self.speaker_dict = read_char(label_paths=label_paths,
-                                      run_root_path='../')
+        self.speaker_dict = read_trans(
+            label_paths=label_paths,
+            run_root_path='../',
+            vocab_file_save_path=mkdir_join('../config/vocab_files'))
 
-        self.check_feature_extraction(normalize='global', tool='htk')
-        self.check_feature_extraction(normalize='speaker', tool='htk')
-        self.check_feature_extraction(normalize='utterance', tool='htk')
+        self.check(normalize='global', tool='htk')
+        self.check(normalize='speaker', tool='htk')
+        self.check(normalize='utterance', tool='htk')
 
-        # self.check_feature_extraction(
-        #     normalize='global', tool='python_speech_features')
-        # self.check_feature_extraction(
-        #     normalize='speaker', tool='python_speech_features')
-        # self.check_feature_extraction(
-        #     normalize='utterance', tool='python_speech_features')
+        # self.check(normalize='global', tool='python_speech_features')
+        # self.check(normalize='speaker', tool='python_speech_features')
+        # self.check(normalize='utterance', tool='python_speech_features')
 
-        # self.check_feature_extraction(normalize='global', tool='librosa')
-        # self.check_feature_extraction(normalize='speaker', tool='librosa')
-        # self.check_feature_extraction(normalize='utterance', tool='librosa')
+        # self.check(normalize='global', tool='librosa')
+        # self.check(normalize='speaker', tool='librosa')
+        # self.check(normalize='utterance', tool='librosa')
 
     @measure_time
-    def check_feature_extraction(self, normalize, tool):
+    def check(self, normalize, tool):
 
         print('==================================================')
         print('  normalize: %s' % normalize)
@@ -73,13 +74,13 @@ class TestInputLDC97S62(unittest.TestCase):
 
         audio_paths = htk_paths if tool == 'htk' else wav_paths
 
-        train_global_mean, train_global_std = read_audio(
+        global_mean, global_std = read_audio(
             audio_paths=audio_paths,
             tool=tool,
             config=CONFIG,
             normalize=normalize,
-            is_training=True,
-            speaker_dict=self.speaker_dict)
+            speaker_dict=self.speaker_dict,
+            is_training=True)
 
 
 if __name__ == '__main__':

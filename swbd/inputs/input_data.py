@@ -9,15 +9,13 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.util import mkdir_join
-from utils.inputs.segmentation import segment_htk
-from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
-from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
+from utils.inputs.segmentation import segment
 # TODO: add segmentation ver.
 
 
 def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
-               save_path=None, train_global_mean=None, train_global_std=None,
-               dtype=np.float64):
+               save_path=None, global_mean=None, global_std=None,
+               dtype=np.float32):
     """Read HTK or WAV files.
     Args:
         audio_paths (list): paths to HTK or WAV files
@@ -37,17 +35,17 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                          data by mean & std per utterance
         is_training (bool): training or not
         save_path (string): path to save npy files
-        train_global_mean (np.ndarray, optional): global mean over the
+        global_mean (np.ndarray, optional): global mean over the training set
+        global_std (np.ndarray, optional): global standard deviation over the
             training set
-        train_global_std (np.ndarray, optional): global standard deviation
-            over the training set
+        dtype (optional): the type of data, default is np.float32
     Returns:
-        train_global_mean (np.ndarray): global mean over the training set
-        train_global_std (np.ndarray): global standard deviation over the
+        global_mean (np.ndarray): global mean over the training set
+        global_std (np.ndarray): global standard deviation over the
             training set
     """
     if not is_training:
-        if train_global_mean is None or train_global_std is None:
+        if global_mean is None or global_std is None:
             raise ValueError('Set mean & std computed in the training set.')
     if normalize not in ['global', 'speaker', 'utterance']:
         raise ValueError('normalize is "utterance" or "speaker" or "global".')
@@ -69,29 +67,22 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
             # ex.) sw_4771A => sw4771-A (eval2000)
 
             # Divide each audio file into utterances
-            if tool == 'htk':
-                _, input_data_utt_sum, speaker_mean, _, total_frame_num_speaker = segment_htk(
-                    audio_path,
-                    speaker,
-                    speaker_dict[speaker],
-                    is_training=True,
-                    sil_duration=0,
-                    tool=tool,
-                    config=config)
-            elif tool == 'python_speech_features':
-                raise NotImplementedError
-            elif tool == 'librosa':
-                raise NotImplementedError
-            else:
-                raise TypeError
+            _, input_data_utt_sum, speaker_mean, _, total_frame_num_speaker = segment(
+                audio_path,
+                speaker,
+                speaker_dict[speaker],
+                is_training=True,
+                sil_duration=0,
+                tool=tool,
+                config=config)
 
             if i == 0:
                 # Initialize global statistics
                 feature_dim = input_data_utt_sum.shape[0]
-                train_global_mean = np.zeros((feature_dim,), dtype=dtype)
-                train_global_std = np.zeros((feature_dim,), dtype=dtype)
+                global_mean = np.zeros((feature_dim,), dtype=dtype)
+                global_std = np.zeros((feature_dim,), dtype=dtype)
 
-            train_global_mean += input_data_utt_sum
+            global_mean += input_data_utt_sum
             total_frame_num += total_frame_num_speaker
 
             # For computing speaker stddev
@@ -102,7 +93,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
 
         print('===> Computing global mean & stddev...')
         # Compute global mean
-        train_global_mean /= total_frame_num
+        global_mean /= total_frame_num
 
         for audio_path in tqdm(audio_paths):
             speaker = basename(audio_path).split('.')[0]
@@ -114,7 +105,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
             # ex.) sw_4771A => sw4771A (eval2000)
 
             # Divide each audio into utterances
-            input_data_dict_speaker, _, _, _, _ = segment_htk(
+            input_data_dict_speaker, _, _, _, _ = segment(
                 audio_path,
                 speaker,
                 speaker_dict[speaker],
@@ -125,16 +116,16 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
 
             # For computing global stddev
             for input_data_utt in input_data_dict_speaker.values():
-                train_global_std += np.sum(
-                    np.abs(input_data_utt - train_global_mean) ** 2, axis=0)
+                global_std += np.sum(
+                    np.abs(input_data_utt - global_mean) ** 2, axis=0)
 
         # Compute global stddev
-        train_global_std = np.sqrt(train_global_std / (total_frame_num - 1))
+        global_std = np.sqrt(global_std / (total_frame_num - 1))
 
         if save_path is not None:
             # Save global mean & std per gender
-            np.save(join(save_path, 'train_global_mean.npy'), train_global_mean)
-            np.save(join(save_path, 'train_global_std.npy'), train_global_std)
+            np.save(join(save_path, 'global_mean.npy'), global_mean)
+            np.save(join(save_path, 'global_std.npy'), global_std)
 
     # Loop 2: Normalization and Saving
     print('===> Normalization...')
@@ -154,7 +145,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
             speaker_mean = None
 
         # Divide each audio into utterances
-        input_data_dict_speaker, _, speaker_mean, speaker_std, _ = segment_htk(
+        input_data_dict_speaker, _, speaker_mean, speaker_std, _ = segment(
             audio_path,
             speaker,
             speaker_dict[speaker],
@@ -179,8 +170,8 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
 
             else:
                 # Normalize by mean & std over the training set
-                input_data_utt -= train_global_mean
-                input_data_utt /= train_global_std
+                input_data_utt -= global_mean
+                input_data_utt /= global_std
 
             if save_path is not None:
                 # Save input features
@@ -195,4 +186,4 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
         with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
             pickle.dump(frame_num_dict, f)
 
-    return (train_global_mean, train_global_std)
+    return global_mean, global_std
