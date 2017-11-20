@@ -8,12 +8,15 @@ from __future__ import print_function
 from os.path import join, isfile
 import sys
 import argparse
+from tqdm import tqdm
+import numpy as np
+import pandas as pd
 
 sys.path.append('../')
 from swbd.path import Path
-from swbd.inputs.input_data import read_audio
+from swbd.input_data import read_audio
 from swbd.labels.ldc97s62.character import read_trans
-from swbd.labels.eval2000.swbd_ch_stm import read_stm
+from swbd.labels.eval2000.stm import read_stm
 from utils.util import mkdir_join
 
 
@@ -30,6 +33,8 @@ parser.add_argument('--eval2000_trans_path', type=str,
                     help='path to transcript files of eval2000 dataset')
 parser.add_argument('--dataset_save_path', type=str,
                     help='path to save dataset')
+parser.add_argument('--feature_save_path', type=str,
+                    help='path to save input features')
 parser.add_argument('--run_root_path', type=str,
                     help='path to run this script')
 parser.add_argument('--tool', type=str,
@@ -83,97 +88,128 @@ CONFIG = {
 
 def main(data_size):
 
-    print('=' * 30)
+    print('=' * 50)
     print('  data_size: %s' % data_size)
-    print('=' * 30)
-
-    label_save_path = mkdir_join(
-        args.dataset_save_path, 'labels', data_size)
-    # swbd/dataset/labels/data_size/model/label_type/data_type/speaker/*.npy
+    print('=' * 50)
 
     print('=> Processing transcripts...')
-    if isfile(join(label_save_path, 'complete.txt')):
+    if isfile(join(args.dataset_save_path, data_size, 'complete.txt')):
         print('Already exists.')
     else:
+        ####################
+        # labels
+        ####################
+        speaker_dict_dict = {}  # dict of speaker_dict
+
         print('---------- train ----------')
         speaker_dict_train = read_trans(
             label_paths=path.trans(corpus='swbd'),
             run_root_path='./',
-            save_path=mkdir_join(label_save_path, 'train'))
-        # NOTE: ex.) save_path:
-        # swbd/dataset/labels/data_size/train/label_type/speaker/*.npy
+            vocab_file_save_path=mkdir_join('./config/vocab_files'))
+        speaker_dict_dict['train'] = speaker_dict_train
 
         print('---------- eval2000 (swbd, ch) ----------')
-        # speaker_dict_test_swbd, speaker_dict_test_ch = read_stm(
-        #     stm_path=path.stm_path,
-        #     pem_path=path.pem_path,
-        #     run_root_path='./',
-        #     save_path=label_save_path)
+        speaker_dict_eval2000_swbd, speaker_dict_eval2000_ch = read_stm(
+            stm_path=path.stm_path,
+            pem_path=path.pem_path,
+            glm_path=path.glm_path,
+            run_root_path='./')
+        speaker_dict_dict['eval2000_swbd'] = speaker_dict_eval2000_swbd
+        speaker_dict_dict['eval2000_ch'] = speaker_dict_eval2000_ch
+
+        ####################
+        # inputs
+        ####################
+        input_save_path = mkdir_join(args.feature_save_path, data_size)
+        print('=> Processing input data...')
+        if isfile(join(input_save_path, 'complete.txt')):
+            print('Already exists.')
+        else:
+            print('---------- train ----------')
+            if args.tool == 'htk':
+                audio_paths = path.htk(corpus='swbd')
+            else:
+                audio_paths = path.wav(corpus='swbd')
+
+            global_mean, global_std = read_audio(
+                audio_paths=audio_paths,
+                tool=args.tool,
+                config=CONFIG,
+                normalize=args.normalize,
+                speaker_dict=speaker_dict_train,
+                is_training=True,
+                save_path=mkdir_join(input_save_path, 'train'))
+            # NOTE: ex.) save_path: swbd/feature/data_size/train/speaker/*.npy
+
+            print('---------- eval2000 (swbd) ----------')
+            if args.tool == 'htk':
+                audio_paths = path.htk(corpus='eval2000_swbd')
+            else:
+                audio_paths = path.wav(corpus='eval2000_swbd')
+
+            read_audio(
+                audio_paths=audio_paths,
+                tool=args.tool,
+                config=CONFIG,
+                normalize=args.normalize,
+                is_training=False,
+                save_path=mkdir_join(input_save_path, 'eval2000_swbd'),
+                global_mean=global_mean,
+                global_std=global_std)
+            # NOTE: ex.) save_path:
+            # swbd/feature/data_size/eval2000_swbd/speaker/*.npy
+
+            print('---------- eval2000 (ch) ----------')
+            if args.tool == 'htk':
+                audio_paths = path.htk(corpus='eval2000_ch')
+            else:
+                audio_paths = path.wav(corpus='eval2000_ch')
+
+            # Read htk or wav files, and save input data and frame num dict
+            read_audio(
+                audio_paths=audio_paths,
+                tool=args.tool,
+                config=CONFIG,
+                normalize=args.normalize,
+                is_training=False,
+                save_path=mkdir_join(input_save_path, 'eval2000_ch'),
+                global_mean=global_mean,
+                global_std=global_std)
+            # NOTE: ex.) save_path:
+            # swbd/feature/data_size/eval2000_ch/speaker/*.npy
+
+            # Make a confirmation file to prove that dataset was saved
+            # correctly
+            with open(join(input_save_path, 'complete.txt'), 'w') as f:
+                f.write('')
+
+        for data_type in ['train', 'dev', 'eval2000_swbd', 'eval2000_ch']:
+            dataset_save_path = mkdir_join(
+                args.dataset_save_path, data_size, data_type)
+
+            print('---------- %s ----------' % data_type)
+            df = pd.DataFrame(
+                [], columns=['frame_num', 'input_path', 'transcript'])
+
+            for speaker, utt_dict in tqdm(speaker_dict_dict[data_type].items()):
+                for utt_name, transcript in utt_dict.items():
+                    input_utt_save_path = join(
+                        input_save_path, data_type, speaker, utt_name + '.npy')
+                    assert isfile(input_utt_save_path)
+                    input_utt = np.load(input_utt_save_path)
+                    frame_num = input_utt.shape[0]
+
+                    series = pd.Series(
+                        [frame_num, input_utt_save_path, transcript],
+                        index=df.columns)
+
+                    df = df.append(series, ignore_index=True)
+
+                df.to_csv(join(dataset_save_path, 'dataset.csv'))
 
         # Make a confirmation file to prove that dataset was saved correctly
-        # with open(join(label_save_path, 'complete.txt'), 'w') as f:
-        #     f.write('')
-
-    input_save_path = mkdir_join(
-        args.dataset_save_path, 'inputs', data_size)
-
-    print('=> Processing input data...')
-    if isfile(join(input_save_path, 'complete.txt')):
-        print('Already exists.')
-    else:
-        print('---------- train ----------')
-        if args.tool == 'htk':
-            audio_paths = path.htk(corpus='swbd')
-        else:
-            audio_paths = path.wav(corpus='swbd')
-
-        global_mean, global_std = read_audio(
-            audio_paths=audio_paths,
-            tool=args.tool,
-            config=CONFIG,
-            normalize=args.normalize,
-            speaker_dict=speaker_dict_train,
-            is_training=True,
-            save_path=mkdir_join(input_save_path, 'train'))
-        # NOTE: ex.) save_path:
-        # swbd/dataset/inputs/data_size/train/speaker/*.npy
-
-        print('---------- eval2000 (swbd) ----------')
-        if args.tool == 'htk':
-            audio_paths = path.htk(corpus='eval2000_swbd')
-        else:
-            audio_paths = path.wav(corpus='eval2000_swbd')
-
-        # read_audio(audio_paths=audio_paths,
-        #            tool=args.tool,
-        #            config=CONFIG,
-        #            normalize=args.normalize,
-        #            speaker_gender_dict=path.speaker_gender_dict,
-        #            is_training=False,
-        #            save_path=mkdir_join(input_save_path, 'test_swbd'),
-        #            global_mean=global_mean,
-        #            global_std=global_std)
-
-        print('---------- eval2000 (ch) ----------')
-        if args.tool == 'htk':
-            audio_paths = path.htk(corpus='eval2000_ch')
-        else:
-            audio_paths = path.wav(corpus='eval2000_ch')
-
-        # Read htk or wav files, and save input data and frame num dict
-        # read_audio(audio_paths=audio_paths,
-        #            tool=args.tool,
-        #            config=CONFIG,
-        #            normalize=args.normalize,
-        #            speaker_gender_dict=path.speaker_gender_dict,
-        #            is_training=False,
-        #            save_path=mkdir_join(input_save_path, 'test_ch'),
-        #            global_mean=global_mean,
-        #            global_std=global_std)
-
-        # Make a confirmation file to prove that dataset was saved correctly
-        # with open(join(input_save_path, 'complete.txt'), 'w') as f:
-        #     f.write('')
+        with open(join(args.dataset_save_path, data_size, 'complete.txt'), 'w') as f:
+            f.write('')
 
 
 if __name__ == '__main__':

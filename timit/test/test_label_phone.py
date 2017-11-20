@@ -37,14 +37,14 @@ class TestLabelPhone(unittest.TestCase):
 
         for data_type in ['train', 'dev', 'test']:
             save_vocab_file = True if data_type == 'train' else False
-            is_test = True if data_type == 'test' else False
 
             print('---------- %s ----------' % data_type)
-            read_phone(
+            trans_dict = read_phone(
                 label_paths=label_paths[data_type],
                 vocab_file_save_path=mkdir_join('../config/vocab_files'),
-                is_test=is_test,
                 save_vocab_file=save_vocab_file)
+
+            print(trans_dict)
 
 
 if __name__ == '__main__':

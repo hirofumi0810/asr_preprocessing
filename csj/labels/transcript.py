@@ -9,43 +9,43 @@ from __future__ import print_function
 
 from os.path import join, basename
 import re
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import jaconv
+from collections import OrderedDict
 
 from utils.util import mkdir_join
-from utils.labels.word import Word2idx
-from utils.labels.character import Char2idx
-from utils.labels.phone import Phone2idx
 from csj.labels.fix_trans import fix_transcript
 from csj.labels.fix_trans import is_hiragana, is_katakana
 
 # NOTE:
 ############################################################
 # [phone]
-# = 36 + noise(NZ), space(_) = 38 labels
+# = 36 phones + noise(NZ) = 37 labels
+# [phone_divide]
+# = 36 phones + noise(NZ), space(_) = 38 labels
 
 # [kana]
-# = 145 kana, noise(NZ) = 148 labels
+# = 145 kana, noise(NZ) = 146 labels
 # [kana_divide]
 # = 145 kana, noise(NZ), space(_) = 147 labels
 
-# [kanji, subset]
-# = 2980 kanji, noise(NZ) = 2983 lables
-# [kanji_divide, subset]
+# [kanji]
+# -subset
+# = 2980 kanji, noise(NZ) = 2981 lables
+# -fullset
+# = 3384 kanji, noise(NZ) = 3385 lables
+# [kanji_divide]
+# -subset
 # = 2980 kanji, noise(NZ), space(_) = 2982 lables
-
-# [kanji, fullset]
-# = 3384 kanji, noise(NZ) = 3387 lables
-# [kanji_divide, fullset]
+# -fullset
 # = 3384 kanji, noise(NZ), space(_) = 3386 lables
 
-# [word, subset, threshold == 1]
-# Original:  labels
-
-# [word, subset, threshold == 1]
-# Original:  labels
+# [word]
+# -subset
+# Original: ? labels + OOV
+# -fullset
+# Original: ? labels + OOV
 ############################################################
 
 SPACE = '_'
@@ -54,28 +54,40 @@ NOISE = 'NZ'
 OOV = 'OOV'
 
 
-def read_sdb(label_paths, data_size, vocab_file_save_path,
-             is_training=False, is_test=False,
-             save_vocab_file=False, save_path=None):
+def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
+             save_vocab_file=False, data_type=None):
     """Read transcripts (.sdb) & save files (.npy).
     Args:
         label_paths (list): list of paths to label files
         data_size (string): fullset or subset
         vocab_file_save_path (string): path to vocabulary files
-        is_training (bool, optional): Set True if save as the training set
         is_test (bool, optional): Set True if save as the test set
         save_vocab_file (bool, optional): if True, save vocabulary files
-        save_path (string, optional): path to save labels.
-            If None, don't save labels.
+        data_type (string, optional): eval1 or eval2 or eval3
     Returns:
         speaker_dict (dict): the dictionary of utterances of each speaker
             key (string) => speaker
             value (dict) => the dictionary of utterance information of each speaker
                 key (string) => utterance index
-                value (list) => [start_frame, end_frame, trans_kana, trans_kanji]
+                value (list) => [start_frame, end_frame, trans_kanji, trans_kana, trans_phone]
     """
+    # Make mapping dictionary from kana to phone
+    kana_list = []
+    kana2phone_dict = {}
+    phone_set = set([])
+    with open(join(vocab_file_save_path, '../kana2phone.txt'), 'r') as f:
+        for line in f:
+            line = line.strip().split('+')
+            kana, phone_seq = line
+            kana_list.append(kana)
+            kana2phone_dict[kana] = phone_seq
+            for phone in phone_seq.split(' '):
+                phone_set.add(phone)
+        kana2phone_dict[SPACE] = SIL
+        kana2phone_dict[NOISE] = NOISE
+
     print('===> Reading target labels...')
-    speaker_dict = {}
+    speaker_dict = OrderedDict()
     char_set = set([])
     word_count_dict = {}
     vocab_set = set([])
@@ -167,31 +179,32 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
                         if trans_kana[0:2] == 'Z_':
                             trans_kana = trans_kana[2:]
 
-                        # Skip long utterances (longer than 20s)
-                        duration = (end_frame_pre - start_frame_pre) / 100
-                        if duration < 20:
+                        for char in list(trans_kanji):
+                            char_set.add(char)
 
-                            utterance_dict[str(utt_index - 1).zfill(4)] = [
-                                start_frame_pre,
-                                end_frame_pre,
-                                trans_kana,
-                                trans_kanji]
+                        # Count words
+                        word_list = trans_kanji.split(SPACE)
+                        for word in word_list:
+                            vocab_set.add(word)
+                            if word not in word_count_dict.keys():
+                                word_count_dict[word] = 0
+                            word_count_dict[word] += 1
 
-                            for char in list(trans_kanji):
-                                char_set.add(char)
+                        # Convert kana character to phone
+                        trans_phone = ' '.join(
+                            kana2phone(trans_kana, kana2phone_dict))
 
-                            # Count words
-                            word_list = trans_kanji.split(SPACE)
-                            for word in word_list:
-                                vocab_set.add(word)
-                                if word not in word_count_dict.keys():
-                                    word_count_dict[word] = 0
-                                word_count_dict[word] += 1
+                        utterance_dict[str(utt_index - 1).zfill(4)] = [
+                            start_frame_pre,
+                            end_frame_pre,
+                            trans_kanji,
+                            trans_kana,
+                            trans_phone]
 
-                            # for debug
-                            # print(trans_kanji)
-                            # print(trans_kana)
-                            # print('-----')
+                        # for debug
+                        # print(trans_kanji)
+                        # print(trans_kana)
+                        # print('-----')
 
                     # Initialization
                     trans_kana = yomi + ' '
@@ -202,21 +215,6 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
 
         # Register all utterances of each speaker
         speaker_dict[speaker] = utterance_dict
-
-    # Make mapping dictionary from kana to phone
-    kana_list = []
-    kana2phone_dict = {}
-    phone_set = set([])
-    with open(join(vocab_file_save_path, '../kana2phone.txt'), 'r') as f:
-        for line in f:
-            line = line.strip().split('+')
-            kana, phone_seq = line
-            kana_list.append(kana)
-            kana2phone_dict[kana] = phone_seq
-            for phone in phone_seq.split(' '):
-                phone_set.add(phone)
-        kana2phone_dict[SPACE] = SIL
-        kana2phone_dict[NOISE] = NOISE
 
     # Make vocabulary files
     word_freq1_vocab_file_path = mkdir_join(
@@ -243,7 +241,7 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
     # for debug
     # print(sorted(list(char_set)))
 
-    if is_training and save_vocab_file:
+    if save_vocab_file:
         # character-level (kanji)
         kanji_set = set([])
         for char in char_set:
@@ -274,8 +272,6 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
             vocab_list = sorted(list(vocab_set)) + [NOISE, OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        original_vocab_num = len(vocab_list) - 1
-        print('Original vocab: %d' % original_vocab_num)
 
         # word-level (threshold == 5)
         with open(word_freq5_vocab_file_path, 'w') as f:
@@ -283,10 +279,6 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
                                  if freq >= 5 and word != NOISE]) + [NOISE, OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        print('Word (freq5):')
-        print('  Restriced vocab: %d' % len(vocab_list))
-        print('  OOV rate (train): %f %%' %
-              (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
 
         # word-level (threshold == 10)
         with open(word_freq10_vocab_file_path, 'w') as f:
@@ -294,10 +286,6 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
                                  if freq >= 10 and word != NOISE]) + [NOISE, OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        print('Word (freq10):')
-        print('  Restriced vocab: %d' % len(vocab_list))
-        print('  OOV rate (train): %f %%' %
-              (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
 
         # word-level (threshold == 15)
         with open(word_freq15_vocab_file_path, 'w') as f:
@@ -305,155 +293,34 @@ def read_sdb(label_paths, data_size, vocab_file_save_path,
                                  if freq >= 15 and word != NOISE]) + [NOISE, OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        print('Word (freq15):')
-        print('  Restriced vocab: %d' % len(vocab_list))
-        print('  OOV rate (train): %f %%' %
-              (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
 
     # Compute OOV rate
     if is_test:
-        # word-level (threshold == 1)
-        with open(word_freq1_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq1):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+        with open(join(vocab_file_save_path, '../oov_rate_' + data_type + '_' + data_size + '.txt'), 'w') as f:
 
-        # word-level (threshold == 5)
-        with open(word_freq5_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq5):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+            # word-level (threshold == 1)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq1_vocab_file_path)
+            f.write('Word (freq1):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
-        # word-level (threshold == 10)
-        with open(word_freq10_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq10):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+            # word-level (threshold == 5)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq5_vocab_file_path)
+            f.write('Word (freq5):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
-        # word-level (threshold == 15)
-        with open(word_freq15_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq15):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+            # word-level (threshold == 10)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq10_vocab_file_path)
+            f.write('Word (freq10):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
-    if not is_test:
-        kanji2idx = Char2idx(char_kanji_vocab_file_path,
-                             double_letter=True,
-                             remove_list=[SPACE])
-        kana2idx = Char2idx(char_kana_vocab_file_path,
-                            double_letter=True,
-                            remove_list=[SPACE])
-        phone2idx = Phone2idx(phone_vocab_file_path,
-                              remove_list=[SIL])
-        kanji2idx_divide = Char2idx(char_kanji_vocab_file_path,
-                                    double_letter=True)
-        kana2idx_divide = Char2idx(char_kana_vocab_file_path,
-                                   double_letter=True)
-        phone2idx_divide = Phone2idx(phone_vocab_file_path)
-        word2idx_freq1 = Word2idx(word_freq1_vocab_file_path)
-        word2idx_freq5 = Word2idx(word_freq5_vocab_file_path)
-        word2idx_freq10 = Word2idx(word_freq10_vocab_file_path)
-        word2idx_freq15 = Word2idx(word_freq15_vocab_file_path)
-
-    if save_path is not None:
-        # Save target labels
-        print('===> Saving target labels...')
-        for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_index, utt_info in utterance_dict.items():
-                start_frame, end_frame, trans_kana, trans_kanji = utt_info
-                save_file_name = speaker + '_' + utt_index + '.npy'
-
-                # kanji & kana characters
-                if is_test:
-                    # Save target labels as string
-                    np.save(mkdir_join(save_path, 'kanji', speaker, save_file_name),
-                            trans_kanji.replace(SPACE, ''))
-                    np.save(mkdir_join(save_path, 'kana', speaker, save_file_name),
-                            trans_kana.replace(SPACE, ''))
-                    np.save(mkdir_join(save_path, 'kanji_divide', speaker, save_file_name),
-                            trans_kanji.replace(SPACE, ''))
-                    np.save(mkdir_join(save_path, 'kana_divide', speaker, save_file_name),
-                            trans_kana.replace(SPACE, ''))
-                    np.save(mkdir_join(save_path, 'word_freq1', speaker, save_file_name),
-                            trans_kanji)
-                    np.save(mkdir_join(save_path, 'word_freq5', speaker, save_file_name),
-                            trans_kanji)
-                    np.save(mkdir_join(save_path, 'word_freq10', speaker, save_file_name),
-                            trans_kanji)
-                    np.save(mkdir_join(save_path, 'word_freq15', speaker, save_file_name),
-                            trans_kanji)
-                else:
-                    word_list = trans_kanji.split(SPACE)
-
-                    # Save target labels as index
-                    np.save(mkdir_join(save_path, 'kanji', speaker, save_file_name),
-                            kanji2idx(trans_kanji.replace(SPACE, '')))
-                    np.save(mkdir_join(save_path, 'kana', speaker, save_file_name),
-                            kana2idx(trans_kana.replace(SPACE, '')))
-                    np.save(mkdir_join(save_path, 'kanji_divide', speaker, save_file_name),
-                            kanji2idx_divide(trans_kanji))
-                    np.save(mkdir_join(save_path, 'kana_divide', speaker, save_file_name),
-                            kana2idx_divide(trans_kana))
-                    np.save(mkdir_join(save_path, 'word_freq1', speaker, save_file_name),
-                            word2idx_freq1(word_list))
-                    np.save(mkdir_join(save_path, 'word_freq5', speaker, save_file_name),
-                            word2idx_freq5(word_list))
-                    np.save(mkdir_join(save_path, 'word_freq10', speaker, save_file_name),
-                            word2idx_freq10(word_list))
-                    np.save(mkdir_join(save_path, 'word_freq15', speaker, save_file_name),
-                            word2idx_freq15(word_list))
-
-                # Convert kana character to phone
-                trans_phone_list = kana2phone(
-                    trans_kana.replace(SPACE, ''), kana2phone_dict)
-                trans_phone_divide_list = kana2phone(
-                    trans_kana, kana2phone_dict)
-
-                # phone
-                if is_test:
-                    # Save target labels as string
-                    np.save(mkdir_join(save_path, 'phone', speaker, save_file_name),
-                            ' '.join(trans_phone_list))
-                    np.save(mkdir_join(save_path, 'phone_divide', speaker, save_file_name),
-                            ' '.join(trans_phone_divide_list))
-                else:
-                    # Save target labels as index
-                    np.save(mkdir_join(save_path, 'phone', speaker, save_file_name),
-                            phone2idx(trans_phone_list))
-                    np.save(mkdir_join(save_path, 'phone_divide', speaker, save_file_name),
-                            phone2idx_divide(trans_phone_divide_list))
+            # word-level (threshold == 15)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq15_vocab_file_path)
+            f.write('Word (freq15):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
     return speaker_dict
 
@@ -488,3 +355,28 @@ def kana2phone(trans_kana, kana2phone_dict):
         i += 1
 
     return trans_phone_list
+
+
+def compute_oov_rate(speaker_dict, vocab_file_path):
+
+    with open(vocab_file_path, 'r') as f:
+        vocab_set = set([])
+        for line in f:
+            word = line.strip()
+            vocab_set.add(word)
+
+    oov_count = 0
+    word_num = 0
+    for speaker_dict, utt_dict in speaker_dict.items():
+        for utt_name, utt_info in utt_dict.items():
+            trans_kanji = utt_info[2]
+            word_list = trans_kanji.split(SPACE)
+            word_num += len(word_list)
+
+            for word in word_list:
+                if word not in vocab_set:
+                    oov_count += 1
+
+    oov_rate = oov_count * 100 / word_num
+
+    return oov_rate

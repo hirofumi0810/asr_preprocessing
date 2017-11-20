@@ -7,9 +7,9 @@ from __future__ import print_function
 
 import re
 
-LAUGHTER = '@'
-NOISE = '#'
-VOCALIZED_NOISE = '$'
+LAUGHTER = 'LA'
+NOISE = 'NZ'
+VOCALIZED_NOISE = 'VN'
 
 
 def fix_transcript(transcript):

@@ -115,6 +115,8 @@ class Path(object):
                     self._trans_paths['eval2000_ch'].append(file_path)
             self.stm_path = join(self.eval2000_trans_path,
                                  'reference', 'hub5e00.english.000405.stm')
+            self.glm_path = join(self.eval2000_trans_path,
+                                 'reference', 'en20000405_hub5.glm')
 
     def sph(self, corpus):
         """Get paths to sph files of training data.

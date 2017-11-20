@@ -10,6 +10,9 @@ from __future__ import print_function
 from os.path import join, isfile
 import sys
 import argparse
+from tqdm import tqdm
+import numpy as np
+import pandas as pd
 
 sys.path.append('../')
 from librispeech.path import Path
@@ -22,6 +25,8 @@ parser.add_argument('--data_path', type=str,
                     help='path to Librispeech dataset')
 parser.add_argument('--dataset_save_path', type=str,
                     help='path to save dataset')
+parser.add_argument('--feature_save_path', type=str,
+                    help='path to save input features')
 parser.add_argument('--tool', type=str,
                     help='the tool to extract features, htk or python_speech_features or htk')
 parser.add_argument('--htk_save_path', type=str, default=None,
@@ -33,7 +38,7 @@ parser.add_argument('--feature_type', type=str, default='logmelfbank',
                     help='the type of features, logmelfbank or mfcc or linearmelfbank')
 parser.add_argument('--channels', type=int, default=40,
                     help='the number of frequency channels')
-parser.add_argument('--sampling_rate', type=float,
+parser.add_argument('--sampling_rate', type=int,
                     default=16000, help='sampling rate')
 parser.add_argument('--window', type=float, default=0.025,
                     help='window width to extract features')
@@ -66,14 +71,13 @@ CONFIG = {
 }
 
 
-def make_input(data_size):
+def main(data_size):
 
-    print('=' * 30)
+    print('=' * 50)
     print('  data_size: %s' % data_size)
-    print('=' * 30)
+    print('=' * 50)
 
-    input_save_path = mkdir_join(
-        args.dataset_save_path, 'inputs', data_size)
+    input_save_path = mkdir_join(args.feature_save_path, data_size)
 
     print('=> Processing input data...')
     if isfile(join(input_save_path, 'complete.txt')):
@@ -94,7 +98,7 @@ def make_input(data_size):
             is_training=True,
             save_path=mkdir_join(input_save_path, 'train'))
         # NOTE: ex.) save_path:
-        # librispeech/inputs/data_size/train/speaker/***.npy
+        # librispeech/feature/data_size/train/speaker/*.npy
 
         for data_type in ['dev_clean', 'dev_other', 'test_clean', 'test_other']:
             print('---------- %s ----------' % data_type)
@@ -116,57 +120,58 @@ def make_input(data_size):
                 global_std_male=global_std_female,
                 global_std_female=global_std_female)
             # NOTE: ex.) save_path:
-            # librispeech/inputs/data_size/data_type/speaker/***.npy
+            # librispeech/feature/data_size/data_type/speaker/*.npy
 
         # Make a confirmation file to prove that dataset was saved correctly
         with open(join(input_save_path, 'complete.txt'), 'w') as f:
             f.write('')
 
-
-def make_label(data_size):
-
-    label_save_path = mkdir_join(
-        args.dataset_save_path, 'labels', data_size)
-
     print('=> Processing transcripts...')
-    if isfile(join(label_save_path, 'complete.txt')):
+
+    if isfile(join(args.dataset_save_path, data_size, 'complete.txt')):
         print('Already exists.')
     else:
-        print('---------- train ----------')
-        label_paths = path.trans(data_type='train' + data_size)
-        read_trans(
-            label_paths=label_paths,
-            data_size=data_size,
-            vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
-            is_training=True,
-            save_vocab_file=True,
-            save_path=mkdir_join(label_save_path, 'train'))
-        # NOTE: ex.) save_path:
-        # librispeech/labels/data_size/train/label_type/speaker/***.npy
+        for data_type in ['train', 'dev_clean', 'dev_other', 'test_clean', 'test_other']:
+            dataset_save_path = mkdir_join(
+                args.dataset_save_path, data_size, data_type)
 
-        for data_type in ['dev_clean', 'dev_other']:
             print('---------- %s ----------' % data_type)
-            read_trans(
-                label_paths=path.trans(data_type=data_type),
+            if data_type == 'train':
+                label_paths = path.trans(data_type='train' + data_size)
+            else:
+                label_paths = path.trans(data_type=data_type)
+            save_vocab_file = True if data_type == 'train' else False
+            is_test = True if 'test' in data_type else False
+
+            speaker_dict = read_trans(
+                label_paths=label_paths,
                 data_size=data_size,
                 vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
-                save_path=mkdir_join(label_save_path, data_type))
-            # NOTE: ex.) save_path:
-            # librispeech/labels/data_size/dev_*/label_type/speaker/***.npy
+                save_vocab_file=save_vocab_file,
+                is_test=is_test,
+                data_type=data_type)
 
-        for data_type in ['test_clean', 'test_other']:
-            print('---------- %s ----------' % data_type)
-            read_trans(
-                label_paths=path.trans(data_type=data_type),
-                data_size=data_size,
-                vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
-                is_test=True,
-                save_path=mkdir_join(label_save_path, data_type))
-            # NOTE: ex.) save_path:
-            # librispeech/labels/data_size/test_*/speaker/***.npy
+            df = pd.DataFrame(
+                [], columns=['frame_num', 'input_path', 'transcript'])
+
+            for speaker, utt_dict in tqdm(speaker_dict.items()):
+                for utt_name, transcript in utt_dict.items():
+                    input_utt_save_path = join(
+                        input_save_path, data_type, speaker, utt_name + '.npy')
+                    assert isfile(input_utt_save_path)
+                    input_utt = np.load(input_utt_save_path)
+                    frame_num = input_utt.shape[0]
+
+                    series = pd.Series(
+                        [frame_num, input_utt_save_path, transcript],
+                        index=df.columns)
+
+                    df = df.append(series, ignore_index=True)
+
+                df.to_csv(join(dataset_save_path, 'dataset.csv'))
 
         # Make a confirmation file to prove that dataset was saved correctly
-        with open(join(label_save_path, 'complete.txt'), 'w') as f:
+        with open(join(args.dataset_save_path, data_size, 'complete.txt'), 'w') as f:
             f.write('')
 
 
@@ -179,6 +184,5 @@ if __name__ == '__main__':
         data_sizes += ['960h']
 
     for data_size in data_sizes:
-        make_input(data_size)
-        make_label(data_size)
+        main(data_size)
         # TODO: add phone

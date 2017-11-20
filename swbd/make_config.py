@@ -31,14 +31,12 @@ parser.add_argument('--window', type=float, default=0.025,
                     help='window width to extract features')
 parser.add_argument('--slide', type=float, default=0.01,
                     help='extract features per \'slide\'')
-parser.add_argument('--energy', type=int, default=0,
+parser.add_argument('--energy', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--delta', type=int, default=1,
                     help='if 1, add the energy feature')
 parser.add_argument('--deltadelta', type=int, default=1,
                     help='if 1, double delta features are also extracted')
-parser.add_argument('--config_path', type=str,
-                    help='path to save the config file')
 
 
 def main():
@@ -50,52 +48,52 @@ def main():
     save(audio_file_type='wav',
          feature_type=args.feature_type,
          channels=args.channels,
-         config_save_path=args.config_path,
+         config_save_path='./config',
          sampling_rate=args.sampling_rate,
          window=args.window,
          slide=args.slide,
          energy=bool(args.energy),
          delta=bool(args.delta),
          deltadelta=bool(args.deltadelta))
-    # NOTE: 120-dim features are extracted by default
+    # NOTE: 123-dim features are extracted by default
 
     # Switchboard
     with open('./config/wav2htk_swbd.scp', 'w') as f:
         for wav_path in glob(join(args.wav_save_path, 'swbd/*.wav')):
-            # ex.) wav_path: wav/swbd/***.wav
+            # ex.) wav_path: wav/swbd/*.wav
             save_path = mkdir_join(
                 htk_save_path, 'swbd', basename(wav_path).split('.')[0] + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
-            # ex.) htk_path: wav/swbd/***.htk
+            # ex.) htk_path: wav/swbd/*.htk
 
     # eval2000 (swbd)
     with open('./config/wav2htk_eval2000_swbd.scp', 'w') as f:
         for wav_path in glob(join(args.wav_save_path, 'eval2000/swbd/*.wav')):
-            # ex.) wav_path: wav/eval2000_swbd/***.wav
+            # ex.) wav_path: wav/eval2000_swbd/*.wav
             save_path = mkdir_join(
                 htk_save_path, 'eval2000', 'swbd', basename(wav_path).split('.')[0] + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
-            # ex.) htk_path: wav/eval2000/swbd/***.htk
+            # ex.) htk_path: wav/eval2000/swbd/*.htk
 
     # eval2000 (callhome)
     with open('./config/wav2htk_eval2000_ch.scp', 'w') as f:
         for wav_path in glob(join(args.wav_save_path, 'eval2000/callhome/*.wav')):
-            # ex.) wav_path: wav/eval2000_ch/***.wav
+            # ex.) wav_path: wav/eval2000_ch/*.wav
             save_path = mkdir_join(
                 htk_save_path, 'eval2000', 'callhome', basename(wav_path).split('.')[0] + '.htk')
             f.write(wav_path + '  ' + save_path + '\n')
-            # ex.) htk_path: wav/eval2000/callhome/***.htk
+            # ex.) htk_path: wav/eval2000/callhome/*.htk
 
     # Fisher
     if isdir(join(args.wav_save_path, 'fisher')):
         with open('./config/wav2htk_fisher.scp', 'w') as f:
             for wav_path in glob(join(args.wav_save_path, 'fisher/*/*.wav')):
-                # ex.) wav_path: wav/fisher/speaker/***.wav
+                # ex.) wav_path: wav/fisher/speaker/*.wav
                 speaker = wav_path.split('/')[-2]
                 save_path = mkdir_join(
                     htk_save_path, 'fisher', speaker, basename(wav_path).split('.')[0] + '.htk')
                 f.write(wav_path + '  ' + save_path + '\n')
-                # ex.) htk_path: wav/fisher/speaker/***.htk
+                # ex.) htk_path: wav/fisher/speaker/*.htk
 
 
 if __name__ == '__main__':

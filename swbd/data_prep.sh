@@ -5,13 +5,11 @@ echo "                               Switchboard                                
 echo ============================================================================
 
 # Set paths
-SWBD_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/LDC97S62/'
-EVAL2000_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002S09/'
-EVAL2000_TRANS_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002T43/'
-FISHER_PATH='/n/sd8/inaguma/corpus/swbd/data/fisher/'
-DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/swbd/dataset'
-WAV_SAVE_PATH='/n/sd8/inaguma/corpus/swbd/wav'
-HTK_SAVE_PATH='/n/sd8/inaguma/corpus/swbd/htk'
+SWBD_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/LDC97S62'
+EVAL2000_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002S09'
+EVAL2000_TRANS_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002T43'
+FISHER_PATH='/n/sd8/inaguma/corpus/swbd/data/fisher'
+DATASET_ROOT_PATH='/n/sd8/inaguma/corpus/swbd'
 HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
 
 ### Select one tool to extract features (HTK is the fastest)
@@ -21,7 +19,7 @@ TOOL='htk'
 # TOOL='kaldi'  # under implementation
 
 ### Configuration (Set by yourself)
-FEATURE_TYPE='logmelfbank'  # or mfcc
+FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
 CHANNELS=40
 SAMPLING_RATE=8000
 WINDOW=0.025
@@ -38,6 +36,11 @@ NORMALIZE='speaker'
 # ↓↓↓ Don't change from here ↓↓↓
 ########################################
 set -eu
+DATASET_SAVE_PATH=$DATASET_ROOT_PATH/dataset
+WAV_SAVE_PATH=$DATASET_ROOT_PATH/wav
+HTK_SAVE_PATH=$DATASET_ROOT_PATH/htk
+FEATURE_SAVE_PATH=$DATASET_ROOT_PATH/feature
+RUN_ROOT_PATH=`pwd`
 
 if [ ! -e $SWBD_AUDIO_PATH ]; then
   echo "Switchboard directory was not found."
@@ -61,8 +64,6 @@ fi
 if [ ! -e $HTK_SAVE_PATH ] && [ $TOOL = 'htk' ]; then
   mkdir $HTK_SAVE_PATH
 fi
-
-RUN_ROOT_PATH=`pwd`
 
 
 echo ============================================================================
@@ -244,13 +245,6 @@ if [ $TOOL = 'htk' ]; then
   mkdir -p $HTK_SAVE_PATH/eval2000/callhome
   mkdir -p $HTK_SAVE_PATH/fisher
 
-  # Set the path to HTK (optional, set only when using HTK toolkit)
-  if [ $FEATURE_TYPE = 'logmelfbank' ]; then
-    CONFIG_PATH="./config/fbank.config"
-  else
-    CONFIG_PATH="./config/mfcc.config"
-  fi
-
   # Make a config file to covert from wav to htk file
   python make_config.py \
     --wav_save_path $WAV_SAVE_PATH \
@@ -263,15 +257,14 @@ if [ $TOOL = 'htk' ]; then
     --slide $SLIDE \
     --energy $ENERGY \
     --delta $DELTA \
-    --deltadelta $DELTADELTA \
-    --config_path $CONFIG_PATH
+    --deltadelta $DELTADELTA
 
   ### Convert from wav to htk files
   # Switchboard
   swbd_htk_paths=$(find $HTK_SAVE_PATH/swbd/ -iname '*.htk')
   swbd_htk_file_num=$(find $HTK_SAVE_PATH/swbd/ -iname '*.htk' | wc -l)
   if [ $swbd_htk_file_num -ne 4870 ] && [ $swbd_htk_file_num -ne 4876 ]; then
-    $HCOPY_PATH -T 1 -C $CONFIG_PATH -S ./config/wav2htk_swbd.scp
+    $HCOPY_PATH -T 1 -C ./config/$FEATURE_TYPE.conf -S ./config/wav2htk_swbd.scp
   else
     echo "Already extracted: LDC97S62"
   fi
@@ -311,6 +304,7 @@ python main.py \
   --eval2000_audio_path $EVAL2000_AUDIO_PATH \
   --eval2000_trans_path $EVAL2000_TRANS_PATH \
   --dataset_save_path $DATASET_SAVE_PATH \
+  --feature_save_path $FEATURE_SAVE_PATH \
   --run_root_path $RUN_ROOT_PATH \
   --tool $TOOL \
   --wav_save_path $WAV_SAVE_PATH \

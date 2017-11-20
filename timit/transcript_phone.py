@@ -8,24 +8,22 @@ from __future__ import division
 from __future__ import print_function
 
 from os.path import join, basename
-import numpy as np
 from tqdm import tqdm
 
-from utils.labels.phone import Phone2idx
 from utils.util import mkdir_join
 from timit.util import map_phone2phone
 
 
-def read_phone(label_paths, vocab_file_save_path, is_test=False,
-               save_vocab_file=False, save_path=None):
+def read_phone(label_paths, vocab_file_save_path, save_vocab_file=False):
     """Read phone transcript.
     Args:
         label_paths (list): list of paths to label files
         vocab_file_save_path (string): path to vocabulary files
-        is_test (bool, optional): Set True when proccessing the test set
         save_vocab_file (bool, optional): if True, save vocabulary files
-        save_path (string, optional): path to save labels.
-            If None, don't save labels.
+    Returns:
+        text_dict (dict):
+            key (string) => utterance name
+            value (list) => list of [trans_phone61, trans_phone48, trans_phone39]
     """
     # Make the mapping file (from phone to index)
     phone2phone_map_file_path = join(
@@ -61,18 +59,12 @@ def read_phone(label_paths, vocab_file_save_path, is_test=False,
             for phone in sorted(list(phone39_set)):
                 f.write('%s\n' % phone)
 
-    if not is_test:
-        phone61_to_idx = Phone2idx(
-            vocab_file_path=phone61_to_idx_map_file_path)
-        phone48_to_idx = Phone2idx(
-            vocab_file_path=phone48_to_idx_map_file_path)
-        phone39_to_idx = Phone2idx(
-            vocab_file_path=phone39_to_idx_map_file_path)
-
-    print('===> Reading & Saving target labels...')
+    print('===> Reading target labels...')
+    trans_dict = {}
     for label_path in tqdm(label_paths):
         speaker = label_path.split('/')[-2]
         utt_index = basename(label_path).split('.')[0]
+        utt_name = speaker + '_' + utt_index
 
         phone61_list = []
         with open(label_path, 'r') as f:
@@ -88,28 +80,17 @@ def read_phone(label_paths, vocab_file_save_path, is_test=False,
         phone39_list = map_phone2phone(phone61_list, 'phone39',
                                        phone2phone_map_file_path)
 
+        # Convert to string
+        trans_phone61 = ' '.join(phone61_list)
+        trans_phone48 = ' '.join(phone48_list)
+        trans_phone39 = ' '.join(phone39_list)
+
         # for debug
-        # print(' '.join(phone61_list))
-        # print(' '.join(phone48_list))
-        # print(' '.join(phone39_list))
+        # print(trans_phone61)
+        # print(trans_phone48)
+        # print(trans_phone39)
         # print('-----')
 
-        if save_path is not None:
-            save_file_name = speaker + '_' + utt_index + '.npy'
+        trans_dict[utt_name] = [trans_phone61, trans_phone48, trans_phone39]
 
-            if is_test:
-                # Save target labels as string
-                np.save(mkdir_join(save_path, 'phone61', save_file_name),
-                        ' '.join(phone61_list))
-                np.save(mkdir_join(save_path, 'phone48', save_file_name),
-                        ' '.join(phone48_list))
-                np.save(mkdir_join(save_path, 'phone39', save_file_name),
-                        ' '.join(phone39_list))
-            else:
-                # Save target labels as index
-                np.save(mkdir_join(save_path, 'phone61', save_file_name),
-                        phone61_to_idx(phone61_list))
-                np.save(mkdir_join(save_path, 'phone48', save_file_name),
-                        phone48_to_idx(phone48_list))
-                np.save(mkdir_join(save_path, 'phone39', save_file_name),
-                        phone39_to_idx(phone39_list))
+    return trans_dict

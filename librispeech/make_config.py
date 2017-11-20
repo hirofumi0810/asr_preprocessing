@@ -23,7 +23,7 @@ parser.add_argument('--feature_type', type=str, default='logmelfbank',
                     help='the type of features, logmelfbank or mfcc')
 parser.add_argument('--channels', type=int, default=40,
                     help='the number of frequency channels')
-parser.add_argument('--sampling_rate', type=float,
+parser.add_argument('--sampling_rate', type=int,
                     default=16000, help='sampling rate')
 parser.add_argument('--window', type=float, default=0.025,
                     help='window width to extract features')

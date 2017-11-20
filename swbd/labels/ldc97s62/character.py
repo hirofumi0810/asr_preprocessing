@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Make character-level target labels for the End-to-End model (LDC97S62 corpus)."""
+"""Make target labels for the End-to-End model (LDC97S62 corpus)."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -9,13 +9,10 @@ from __future__ import print_function
 
 from os.path import join
 import re
-import numpy as np
 from tqdm import tqdm
 from collections import OrderedDict
 
 from swbd.labels.ldc97s62.fix_trans import fix_transcript
-from utils.labels.character import Char2idx
-from utils.labels.word import Word2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -31,8 +28,8 @@ from utils.util import mkdir_join
 # laughter(L), noise(N), vocalized-noise(V)
 # = 92 labels
 
-# [word, threshold == 1]
-# Original:  labels + OOV
+# [word]
+# Original: ? labels + OOV
 ############################################################
 
 DOUBLE_LETTERS = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh', 'ii', 'jj',
@@ -41,27 +38,26 @@ DOUBLE_LETTERS = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh', 'ii', 'jj',
 SPACE = '_'
 HYPHEN = '-'
 APOSTROPHE = '\''
-LAUGHTER = '@'
-NOISE = '#'
-VOCALIZED_NOISE = '$'
+LAUGHTER = 'LA'
+NOISE = 'NZ'
+VOCALIZED_NOISE = 'VN'
 OOV = 'OOV'
 
 
 def read_trans(label_paths, run_root_path, vocab_file_save_path,
-               save_path=None):
+               save_vocab_file=False):
     """Read transcripts (*_trans.txt) & save files (.npy).
     Args:
         label_paths (list): list of paths to label files
         run_root_path (string):
         vocab_file_save_path (string): path to vocabulary files
-        save_path (string, optional): path to save target labels.
-            If None, don't save labels
+        save_vocab_file (bool, optional): if True, save vocabulary files
     Returns:
         speaker_dict: dictionary of speakers
             key (string) => speaker
             value (dict) => dictionary of utterance infomation of each speaker
                 key (string) => utterance index
-                value (list) => [start_frame, end_frame, transcript, transcript_capital_divide]
+                value (list) => [start_frame, end_frame, transcript]
     """
     print('===> Reading target labels...')
     speaker_dict = OrderedDict()
@@ -136,7 +132,7 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                     char_set.add(c)
 
                 utterance_dict[utt_index.zfill(4)] = [
-                    start_frame, end_frame, transcript, transcript_capital]
+                    start_frame, end_frame, transcript]
 
                 fp_original.write('%s  %s  %s\n' %
                                   (speaker, utt_index, transcript_original))
@@ -158,118 +154,68 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
 
     # Make vocabulary files
     char_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'character_swbd.txt')
+        vocab_file_save_path, 'character_300h.txt')
     char_capital_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'character_capital_divide_swbd.txt')
+        vocab_file_save_path, 'character_capital_divide_300h.txt')
     word_freq1_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq1_swbd.txt')
+        vocab_file_save_path, 'word_freq1_300h.txt')
     word_freq5_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq5_swbd.txt')
+        vocab_file_save_path, 'word_freq5_300h.txt')
     word_freq10_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq10_swbd.txt')
+        vocab_file_save_path, 'word_freq10_300h.txt')
     word_freq15_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq15_swbd.txt')
+        vocab_file_save_path, 'word_freq15_300h.txt')
 
     # Reserve some indices
-    char_set.discard(SPACE)
-    char_set.discard(LAUGHTER)  # laughter
-    char_set.discard(NOISE)  # noise
-    char_set.discard(VOCALIZED_NOISE)  # vocalized-noise
-    char_capital_set.discard(LAUGHTER)  # laughter
-    char_capital_set.discard(NOISE)  # noise
-    char_capital_set.discard(VOCALIZED_NOISE)  # vocalized-noise
+    for mark in [SPACE, LAUGHTER, NOISE, VOCALIZED_NOISE]:
+        for c in list(mark):
+            char_set.discard(c)
+            char_capital_set.discard(c)
 
     # for debug
     # print(sorted(list(char_set)))
     # print(sorted(list(char_capital_set)))
 
-    # character-level
-    with open(char_vocab_file_path, 'w') as f:
-        char_list = sorted(list(char_set)) + \
-            [APOSTROPHE, HYPHEN, LAUGHTER, NOISE, VOCALIZED_NOISE]
-        for char in char_list:
-            f.write('%s\n' % char)
+    if save_vocab_file:
+        # character-level
+        with open(char_vocab_file_path, 'w') as f:
+            char_list = sorted(list(char_set)) + \
+                [APOSTROPHE, HYPHEN, LAUGHTER, NOISE, VOCALIZED_NOISE]
+            for char in char_list:
+                f.write('%s\n' % char)
 
-    # character-level (capital-divided)
-    with open(char_capital_vocab_file_path, 'w') as f:
-        char_capital_list = [SPACE] + sorted(list(char_capital_set)) + \
-            [APOSTROPHE, HYPHEN, LAUGHTER, NOISE, VOCALIZED_NOISE]
-        for char in char_capital_list:
-            f.write('%s\n' % char)
+        # character-level (capital-divided)
+        with open(char_capital_vocab_file_path, 'w') as f:
+            char_capital_list = [SPACE] + sorted(list(char_capital_set)) + \
+                [APOSTROPHE, HYPHEN, LAUGHTER, NOISE, VOCALIZED_NOISE]
+            for char in char_capital_list:
+                f.write('%s\n' % char)
 
-    # word-level (threshold == 1)
-    with open(word_freq1_vocab_file_path, 'w') as f:
-        vocab_list = sorted(list(vocab_set)) + [OOV]
-        for word in vocab_list:
-            f.write('%s\n' % word)
-    original_vocab_num = len(vocab_list) - 1
-    print('Original vocab: %d' % original_vocab_num)
+        # word-level (threshold == 1)
+        with open(word_freq1_vocab_file_path, 'w') as f:
+            vocab_list = sorted(list(vocab_set)) + [OOV]
+            for word in vocab_list:
+                f.write('%s\n' % word)
 
-    # word-level (threshold == 5)
-    with open(word_freq5_vocab_file_path, 'w') as f:
-        vocab_list = sorted([word for word, freq in list(word_count_dict.items())
-                             if freq >= 5]) + [OOV]
-        for word in vocab_list:
-            f.write('%s\n' % word)
-    print('Word (freq5):')
-    print('  Restriced vocab: %d' % len(vocab_list))
-    print('  OOV rate (train): %f %%' %
-          (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
+        # word-level (threshold == 5)
+        with open(word_freq5_vocab_file_path, 'w') as f:
+            vocab_list = sorted([word for word, freq in list(word_count_dict.items())
+                                 if freq >= 5]) + [OOV]
+            for word in vocab_list:
+                f.write('%s\n' % word)
 
-    # word-level (threshold == 10)
-    with open(word_freq10_vocab_file_path, 'w') as f:
-        vocab_list = sorted([word for word, freq in list(word_count_dict.items())
-                             if freq >= 10]) + [OOV]
-        for word in vocab_list:
-            f.write('%s\n' % word)
-    print('Word (freq10):')
-    print('  Restriced vocab: %d' % len(vocab_list))
-    print('  OOV rate (train): %f %%' %
-          (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
+        # word-level (threshold == 10)
+        with open(word_freq10_vocab_file_path, 'w') as f:
+            vocab_list = sorted([word for word, freq in list(word_count_dict.items())
+                                 if freq >= 10]) + [OOV]
+            for word in vocab_list:
+                f.write('%s\n' % word)
 
-    # word-level (threshold == 15)
-    with open(word_freq15_vocab_file_path, 'w') as f:
-        vocab_list = sorted([word for word, freq in list(word_count_dict.items())
-                             if freq >= 15]) + [OOV]
-        for word in vocab_list:
-            f.write('%s\n' % word)
-    print('Word (freq15):')
-    print('  Restriced vocab: %d' % len(vocab_list))
-    print('  OOV rate (train): %f %%' %
-          (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
-
-    char2idx = Char2idx(char_vocab_file_path)
-    char2idx_capital = Char2idx(char_capital_vocab_file_path,
-                                double_letter=True)
-    word2idx_freq1 = Word2idx(word_freq1_vocab_file_path)
-    word2idx_freq5 = Word2idx(word_freq5_vocab_file_path)
-    word2idx_freq10 = Word2idx(word_freq10_vocab_file_path)
-    word2idx_freq15 = Word2idx(word_freq15_vocab_file_path)
-
-    # Save target labels
-    print('===> Saving target labels...')
-    for speaker, utterance_dict in tqdm(speaker_dict.items()):
-        for utt_index, utt_info in utterance_dict.items():
-            start_frame, end_frame, transcript, transcript_capital = utt_info
-            save_file_name = speaker + '_' + utt_index + '.npy'
-
-            # TODO: Convert to word to phone
-
-            if save_path is not None:
-                word_list = transcript.split(SPACE)
-
-                # Save target labels as index
-                np.save(mkdir_join(save_path, 'character' 'train', speaker, save_file_name),
-                        char2idx(transcript))
-                np.save(mkdir_join(save_path, 'character_capital_divide' 'train', speaker, save_file_name),
-                        char2idx_capital(transcript))
-                np.save(mkdir_join(save_path, 'word_freq1', 'train', speaker, save_file_name),
-                        word2idx_freq1(word_list))
-                np.save(mkdir_join(save_path, 'word_freq5', 'train', speaker, save_file_name),
-                        word2idx_freq5(word_list))
-                np.save(mkdir_join(save_path, 'word_freq10', 'train', speaker, save_file_name),
-                        word2idx_freq10(word_list))
-                np.save(mkdir_join(save_path, 'word_freq15', 'train', speaker, save_file_name),
-                        word2idx_freq15(word_list))
+        # word-level (threshold == 15)
+        with open(word_freq15_vocab_file_path, 'w') as f:
+            vocab_list = sorted([word for word, freq in list(word_count_dict.items())
+                                 if freq >= 15]) + [OOV]
+            for word in vocab_list:
+                f.write('%s\n' % word)
 
     return speaker_dict

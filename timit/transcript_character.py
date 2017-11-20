@@ -9,10 +9,8 @@ from __future__ import print_function
 
 from os.path import basename
 import re
-import numpy as np
 from tqdm import tqdm
 
-from utils.labels.character import Char2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -35,23 +33,26 @@ SPACE = '_'
 APOSTROPHE = '\''
 
 
-def read_char(label_paths, vocab_file_save_path, is_test=False,
-              save_vocab_file=False, save_path=None):
+def read_char(label_paths, vocab_file_save_path, save_vocab_file=False):
     """Read text transcript.
     Args:
         label_paths (list): list of paths to label files
         vocab_file_save_path (string): path to vocabulary files
-        is_test (bool, optional): Set True when proccessing the test set
         save_vocab_file (string): if True, save vocabulary files
-        save_path (string, optional): path to save labels.
-            If None, don't save labels.
+    Returns:
+        trans_dict (dict):
+            key (string) => utterance name
+            value (string) => transcript
     """
     print('===> Reading target labels...')
-    text_dict = {}
+    trans_dict = {}
     char_set, char_capital_set = set([]), set([])
     for label_path in tqdm(label_paths):
         with open(label_path, 'r') as f:
             line = f.readlines()[-1]
+            speaker = label_path.split('/')[-2]
+            utt_index = basename(label_path).split('.')[0]
+            utt_name = speaker + '_' + utt_index
 
             # Remove 「"」, 「:」, 「;」, 「！」, 「?」, 「,」, 「.」, 「-」
             # Convert to lowercase
@@ -69,23 +70,31 @@ def read_char(label_paths, vocab_file_save_path, is_test=False,
             if transcript[-1] == ' ':
                 transcript = transcript[:-1]
 
-            # capital-divided version
-            transcript_capital = ''
+            # Capital-divided
             for word in transcript.split(' '):
                 if len(word) == 1:
-                    char_capital_set.add(word)
-                    transcript_capital += word
+                    char_capital_set.add(word.upper())
                 else:
                     # Replace the first character with the capital letter
                     word = word[0].upper() + word[1:]
+                    char_capital_set.add(word[0].upper())
 
                     # Check double-letters
-                    for i in range(0, len(word) - 1, 1):
-                        if word[i:i + 2] in DOUBLE_LETTERS:
-                            char_capital_set.add(word[i] * 2)
+                    skip_flag = False
+                    for i in range(1, len(word) - 1, 1):
+                        if skip_flag:
+                            skip_flag = False
+                            continue
+
+                        if not skip_flag and word[i:i + 2] in DOUBLE_LETTERS:
+                            char_capital_set.add(word[i:i + 2])
+                            skip_flag = True
                         else:
                             char_capital_set.add(word[i])
-                    transcript_capital += word
+
+                    # Final character
+                    if not skip_flag:
+                        char_capital_set.add(word[-1])
 
             # Convert space to "_"
             transcript = re.sub(r'\s', SPACE, transcript)
@@ -93,11 +102,11 @@ def read_char(label_paths, vocab_file_save_path, is_test=False,
             for c in list(transcript):
                 char_set.add(c)
 
-        text_dict[label_path] = [transcript, transcript_capital]
+            trans_dict[utt_name] = transcript
 
-        # for debug
-        # print(transcript)
-        # print(transcript_capital)
+            # for debug
+            # print(transcript)
+            # print(trans_char_capital_divide)
 
     # Make vocabulary files
     char_vocab_file_path = mkdir_join(vocab_file_save_path, 'character.txt')
@@ -126,29 +135,4 @@ def read_char(label_paths, vocab_file_save_path, is_test=False,
             for char in char_capital_list:
                 f.write('%s\n' % char)
 
-    if not is_test:
-        char2idx = Char2idx(vocab_file_path=char_vocab_file_path)
-        char2idx_capital = Char2idx(vocab_file_path=char_capital_vocab_file_path,
-                                    double_letter=True)
-
-    if save_path is not None:
-        # Save target labels
-        print('===> Saving target labels...')
-        for label_path, [transcript, transcript_capital] in tqdm(text_dict.items()):
-            speaker = label_path.split('/')[-2]
-            utt_index = basename(label_path).split('.')[0]
-            save_file_name = speaker + '_' + utt_index + '.npy'
-
-            if is_test:
-                # Save target labels as string
-                np.save(mkdir_join(save_path, 'character',
-                                   save_file_name), transcript)
-                np.save(mkdir_join(save_path, 'character_capital_divide',
-                                   save_file_name), transcript)
-            else:
-                # Save target labels as index
-                np.save(mkdir_join(save_path, 'character', save_file_name),
-                        char2idx(transcript))
-                np.save(mkdir_join(save_path, 'character_capital_divide',
-                                   save_file_name),
-                        char2idx_capital(transcript_capital))
+    return trans_dict

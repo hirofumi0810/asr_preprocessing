@@ -1,0 +1,8 @@
+Word (freq1):
+  OOV rate (eval2000, swbd, from txt): 4.138223 %
+Word (freq5):
+  OOV rate (eval2000, swbd, from txt): 4.990349 %
+Word (freq10):
+  OOV rate (eval2000, swbd, from txt): 5.776564 %
+Word (freq15):
+  OOV rate (eval2000, swbd, from txt): 6.219105 %

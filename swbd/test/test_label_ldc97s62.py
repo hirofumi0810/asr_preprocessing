@@ -25,19 +25,20 @@ for trans_path in glob(join(swbd_trans_path, '*/*/*.text')):
 label_paths = sorted(label_paths)
 
 
-class TestCTCLabelSwitchboardChar(unittest.TestCase):
+class TestLabelLDC97S62(unittest.TestCase):
 
     def test(self):
 
-        self.check_reading()
+        self.check()
 
     @measure_time
-    def check_reading(self):
+    def check(self):
 
         read_trans(
             label_paths=label_paths,
             run_root_path='../',
-            vocab_file_save_path=mkdir_join('../config/vocab_files'))
+            vocab_file_save_path=mkdir_join('../config/vocab_files'),
+            save_vocab_file=True)
 
 
 if __name__ == '__main__':

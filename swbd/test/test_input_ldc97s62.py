@@ -11,7 +11,7 @@ import unittest
 from glob import glob
 
 sys.path.append('../../')
-from swbd.inputs.input_data import read_audio
+from swbd.input_data import read_audio
 from swbd.labels.ldc97s62.character import read_trans
 from utils.measure_time_func import measure_time
 from utils.util import mkdir_join
@@ -50,7 +50,8 @@ class TestInputLDC97S62(unittest.TestCase):
         self.speaker_dict = read_trans(
             label_paths=label_paths,
             run_root_path='../',
-            vocab_file_save_path=mkdir_join('../config/vocab_files'))
+            vocab_file_save_path=mkdir_join('../config/vocab_files'),
+            save_vocab_file=False)
 
         self.check(normalize='global', tool='htk')
         self.check(normalize='speaker', tool='htk')
@@ -67,10 +68,10 @@ class TestInputLDC97S62(unittest.TestCase):
     @measure_time
     def check(self, normalize, tool):
 
-        print('==================================================')
+        print('=' * 50)
         print('  normalize: %s' % normalize)
         print('  tool: %s' % tool)
-        print('==================================================')
+        print('=' * 50)
 
         audio_paths = htk_paths if tool == 'htk' else wav_paths
 

@@ -6,8 +6,7 @@ echo ===========================================================================
 
 # Set paths
 CSJ_PATH='/n/sd8/inaguma/corpus/csj/data'
-DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/csj/dataset'
-HTK_SAVE_PATH='/n/sd8/inaguma/corpus/csj/htk'
+DATASET_ROOT_PATH='/n/sd8/inaguma/corpus/csj'
 HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
 
 ### Select one tool to extract features (HTK is the fastest)
@@ -41,6 +40,9 @@ fullset=true
 # ↓↓↓ Don't change from here ↓↓↓
 ########################################
 set -eu
+DATASET_SAVE_PATH=$DATASET_ROOT_PATH/dataset
+HTK_SAVE_PATH=$DATASET_ROOT_PATH/htk
+FEATURE_SAVE_PATH=$DATASET_ROOT_PATH/feature
 RUN_ROOT_PATH=`pwd`
 
 if [ ! -e $CSJ_PATH ]; then
@@ -111,6 +113,7 @@ echo ===========================================================================
 python main.py \
     --data_path $CSJ_PATH \
     --dataset_save_path $DATASET_SAVE_PATH \
+    --feature_save_path $FEATURE_SAVE_PATH \
     --tool $TOOL \
     --htk_save_path $HTK_SAVE_PATH \
     --feature_type $FEATURE_TYPE \

@@ -7,13 +7,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import isfile
+from os.path import join
 import re
-import numpy as np
 from tqdm import tqdm
 
-from utils.labels.word import Word2idx
-from utils.labels.character import Char2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -38,7 +35,7 @@ from utils.util import mkdir_join
 # 24 special double-letters, apostorophe(')
 # = 79 labels
 
-### [word, threshold == 1]
+# [word]
 # - 100h
 # Original: 33798 labels + OOV
 # - 460h
@@ -55,19 +52,20 @@ APOSTROPHE = '\''
 OOV = 'OOV'
 
 
-def read_trans(label_paths, data_size, vocab_file_save_path,
-               is_training=False, is_test=False,
-               save_vocab_file=False, save_path=None):
+def read_trans(label_paths, data_size, vocab_file_save_path, is_test=False,
+               save_vocab_file=False, data_type=None):
     """Read transcript.
     Args:
         label_paths (list): list of paths to label files
         data_size (string): 100h or 460h or 960h
         vocab_file_save_path (string): path to vocabulary files
-        is_training (bool, optional): Set True when proccessing the training set
-        is_test (bool, optional): Set True when proccessing the test set
+        is_test (bool, optional): if True, compute OOV rate
         save_vocab_file (bool, optional): if True, save vocabulary files
-        save_path (string, optional): path to save labels.
-            If None, don't save labels.
+        data_type (string, optional): test_clean or test_other
+    Returns:
+        trans_dict (dict):
+            key (string) => speaker-book-utt_index
+            value (string) => transcript
     """
     print('===> Reading target labels...')
     speaker_dict = {}
@@ -93,22 +91,30 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
                     word_count_dict[word] += 1
 
                 # Capital-divided
-                transcript_capital = ''
                 for word in transcript.split(' '):
                     if len(word) == 1:
-                        char_capital_set.add(word)
-                        transcript_capital += word
+                        char_capital_set.add(word.upper())
                     else:
                         # Replace the first character with the capital letter
                         word = word[0].upper() + word[1:]
+                        char_capital_set.add(word[0].upper())
 
                         # Check double-letters
-                        for i in range(0, len(word) - 1, 1):
-                            if word[i:i + 2] in DOUBLE_LETTERS:
+                        skip_flag = False
+                        for i in range(1, len(word) - 1, 1):
+                            if skip_flag:
+                                skip_flag = False
+                                continue
+
+                            if not skip_flag and word[i:i + 2] in DOUBLE_LETTERS:
                                 char_capital_set.add(word[i:i + 2])
+                                skip_flag = True
                             else:
                                 char_capital_set.add(word[i])
-                        transcript_capital += word
+
+                        # Final character
+                        if not skip_flag:
+                            char_capital_set.add(word[-1])
 
                 # Convert space to "_"
                 transcript = re.sub(r'\s', SPACE, transcript)
@@ -116,17 +122,16 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
                 for c in list(transcript):
                     char_set.add(c)
 
-                speaker_dict[speaker][utt_name] = [
-                    transcript, transcript_capital]
+                speaker_dict[speaker][utt_name] = transcript
 
                 # for debug
                 # print(transcript)
-                # print(transcript_capital)
+                # print(transcript_capital_divide)
                 # print('-----')
 
     # Make vocabulary files
     char_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'character.txt')
+        vocab_file_save_path, 'character_' + data_size + '.txt')
     char_capital_vocab_file_path = mkdir_join(
         vocab_file_save_path,
         'character_capital_divide_' + data_size + '.txt')
@@ -148,13 +153,12 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
     # print(sorted(list(char_set)))
     # print(sorted(list(char_capital_set)))
 
-    if is_training and save_vocab_file:
+    if save_vocab_file:
         # character-level
-        if not isfile(char_vocab_file_path):
-            with open(char_vocab_file_path, 'w') as f:
-                char_list = sorted(list(char_set)) + [SPACE, APOSTROPHE]
-                for char in char_list:
-                    f.write('%s\n' % char)
+        with open(char_vocab_file_path, 'w') as f:
+            char_list = sorted(list(char_set)) + [SPACE, APOSTROPHE]
+            for char in char_list:
+                f.write('%s\n' % char)
 
         # character-level (capital-divided)
         with open(char_capital_vocab_file_path, 'w') as f:
@@ -167,8 +171,6 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
             vocab_list = sorted(list(vocab_set)) + [OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        original_vocab_num = len(vocab_list) - 1
-        print('Original vocab: %d' % original_vocab_num)
 
         # word-level (threshold == 5)
         with open(word_freq5_vocab_file_path, 'w') as f:
@@ -176,10 +178,6 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
                                  if freq >= 5]) + [OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        print('Word (freq5):')
-        print('  Restriced vocab: %d' % len(vocab_list))
-        print('  OOV rate (train): %f %%' %
-              (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
 
         # word-level (threshold == 10)
         with open(word_freq10_vocab_file_path, 'w') as f:
@@ -187,10 +185,6 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
                                  if freq >= 10]) + [OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        print('Word (freq10):')
-        print('  Restriced vocab: %d' % len(vocab_list))
-        print('  OOV rate (train): %f %%' %
-              (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
 
         # word-level (threshold == 15)
         with open(word_freq15_vocab_file_path, 'w') as f:
@@ -198,114 +192,57 @@ def read_trans(label_paths, data_size, vocab_file_save_path,
                                  if freq >= 15]) + [OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
-        print('Word (freq15):')
-        print('  Restriced vocab: %d' % len(vocab_list))
-        print('  OOV rate (train): %f %%' %
-              (((original_vocab_num - len(vocab_list) + 1) / original_vocab_num) * 100))
 
     # Compute OOV rate
     if is_test:
-        # word-level (threshold == 1)
-        with open(word_freq1_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq1):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+        with open(join(vocab_file_save_path, '../oov_rate_' + data_type + '_' + data_size + '.txt'), 'w') as f:
 
-        # word-level (threshold == 5)
-        with open(word_freq5_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq5):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+            # word-level (threshold == 1)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq1_vocab_file_path)
+            f.write('Word (freq1):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
-        # word-level (threshold == 10)
-        with open(word_freq10_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq10):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+            # word-level (threshold == 5)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq5_vocab_file_path)
+            f.write('Word (freq5):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
-        # word-level (threshold == 15)
-        with open(word_freq15_vocab_file_path, 'r') as f:
-            train_vocab_set = set([])
-            for line in f:
-                word = line.strip()
-                train_vocab_set.add(word)
-        oov_count = 0
-        for word in vocab_set:
-            if word not in train_vocab_set:
-                oov_count += 1
-        print('Word (freq15):')
-        print('  OOV rate (test): %f %%' %
-              ((oov_count / len(vocab_set)) * 100))
+            # word-level (threshold == 10)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq10_vocab_file_path)
+            f.write('Word (freq10):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
-    if not is_test:
-        char2idx = Char2idx(char_vocab_file_path)
-        char2idx_capital = Char2idx(
-            char_capital_vocab_file_path,
-            double_letter=True)
-        word2idx_freq1 = Word2idx(word_freq1_vocab_file_path)
-        word2idx_freq5 = Word2idx(word_freq5_vocab_file_path)
-        word2idx_freq10 = Word2idx(word_freq10_vocab_file_path)
-        word2idx_freq15 = Word2idx(word_freq15_vocab_file_path)
+            # word-level (threshold == 15)
+            oov_rate = compute_oov_rate(
+                speaker_dict, word_freq15_vocab_file_path)
+            f.write('Word (freq15):\n')
+            f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
-    if save_path is not None:
-        # Save target labels
-        print('===> Saving target labels...')
-        for speaker, utterance_dict in tqdm(speaker_dict.items()):
-            for utt_name, [transcript, transcript_capital] in utterance_dict.items():
-                save_file_name = utt_name + '.npy'
-                # ex.) utt_name: speaker-book-utt_index
+    return speaker_dict
 
-                if is_test:
-                    # Save target labels as string
-                    np.save(mkdir_join(save_path, 'character',
-                                       speaker, save_file_name), transcript)
-                    np.save(mkdir_join(save_path, 'character_capital_divide',
-                                       speaker, save_file_name), transcript)
-                    np.save(mkdir_join(save_path, 'word_freq1',
-                                       speaker, save_file_name), transcript)
-                    np.save(mkdir_join(save_path, 'word_freq5',
-                                       speaker, save_file_name), transcript)
-                    np.save(mkdir_join(save_path, 'word_freq10',
-                                       speaker, save_file_name), transcript)
-                    np.save(mkdir_join(save_path, 'word_freq15',
-                                       speaker, save_file_name), transcript)
-                else:
-                    word_list = transcript.split(SPACE)
 
-                    # Save target labels as index
-                    np.save(mkdir_join(save_path, 'character', speaker, save_file_name),
-                            char2idx(transcript))
-                    np.save(mkdir_join(save_path, 'character_capital_divide', speaker, save_file_name),
-                            char2idx_capital(transcript_capital))
-                    np.save(mkdir_join(save_path, 'word_freq1', speaker, save_file_name),
-                            word2idx_freq1(word_list))
-                    np.save(mkdir_join(save_path, 'word_freq5', speaker, save_file_name),
-                            word2idx_freq5(word_list))
-                    np.save(mkdir_join(save_path, 'word_freq10', speaker, save_file_name),
-                            word2idx_freq10(word_list))
-                    np.save(mkdir_join(save_path, 'word_freq15', speaker, save_file_name),
-                            word2idx_freq15(word_list))
+def compute_oov_rate(speaker_dict, vocab_file_path):
+
+    with open(vocab_file_path, 'r') as f:
+        vocab_set = set([])
+        for line in f:
+            word = line.strip()
+            vocab_set.add(word)
+
+    oov_count = 0
+    word_num = 0
+    for speaker_dict, utt_dict in speaker_dict.items():
+        for utt_name, transcript in utt_dict.items():
+            word_list = transcript.split(SPACE)
+            word_num += len(word_list)
+
+            for word in word_list:
+                if word not in vocab_set:
+                    oov_count += 1
+
+    oov_rate = oov_count * 100 / word_num
+
+    return oov_rate

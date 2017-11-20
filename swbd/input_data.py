@@ -4,7 +4,6 @@
 """Make input data (Switchboard corpus)."""
 
 from os.path import join, basename
-import pickle
 import numpy as np
 from tqdm import tqdm
 
@@ -129,7 +128,6 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
 
     # Loop 2: Normalization and Saving
     print('===> Normalization...')
-    frame_num_dict = {}
     for audio_path in tqdm(audio_paths):
         speaker = basename(audio_path).split('.')[0]
 
@@ -178,12 +176,5 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 input_data_save_path = mkdir_join(
                     save_path, speaker, speaker + '_' + utt_index + '.npy')
                 np.save(input_data_save_path, input_data_utt)
-                frame_num_dict[speaker + '_' +
-                               utt_index] = input_data_utt.shape[0]
-
-    if save_path is not None:
-        # Save the frame number dictionary
-        with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
-            pickle.dump(frame_num_dict, f)
 
     return global_mean, global_std

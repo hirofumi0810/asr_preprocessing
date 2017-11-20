@@ -8,7 +8,6 @@ from __future__ import division
 from __future__ import print_function
 
 from os.path import join, basename
-import pickle
 import numpy as np
 from tqdm import tqdm
 
@@ -76,11 +75,11 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         utt_index = basename(audio_path).split('.')[0]
 
         if tool == 'htk':
-            input_data_utt = read_htk_utt(audio_path)
+            input_utt = read_htk_utt(audio_path)
             # NOTE: audio_path is a htk file path in this case
 
         elif tool == 'python_speech_features':
-            input_data_utt = w2f_psf(
+            input_utt = w2f_psf(
                 audio_path,
                 feature_type=config['feature_type'],
                 feature_dim=config['channels'],
@@ -91,7 +90,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                 slide=config['slide'])
 
         elif tool == 'librosa':
-            input_data_utt = w2f_librosa(
+            input_utt = w2f_librosa(
                 audio_path,
                 feature_type=config['feature_type'],
                 feature_dim=config['channels'],
@@ -102,13 +101,13 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                 slide=config['slide'])
 
         # for debug
-        # print(input_data_utt.shape)
+        # print(input_utt.shape)
 
         if gender == 'm':
-            input_data_list_male.append(input_data_utt)
+            input_data_list_male.append(input_utt)
             audio_paths_male.append(audio_path)
         elif gender == 'f':
-            input_data_list_female.append(input_data_utt)
+            input_data_list_female.append(input_utt)
             audio_paths_female.append(audio_path)
         else:
             raise ValueError('gender is m or f.')
@@ -116,7 +115,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         if is_training:
             speaker = audio_path.split('/')[-2]
             gender = speaker[0]
-            frame_num_utt, feat_dim = input_data_utt.shape
+            frame_num_utt, feat_dim = input_utt.shape
 
             if gender == 'm':
                 total_frame_num_male += frame_num_utt
@@ -135,7 +134,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
                                                          dtype=dtype)
 
                 total_frame_num_dict[speaker] += frame_num_utt
-                speaker_mean_dict[speaker] += np.sum(input_data_utt, axis=0)
+                speaker_mean_dict[speaker] += np.sum(input_utt, axis=0)
     # NOTE: Load all data in advance because TIMIT is a small dataset.
     # TODO: Make this pararell
 
@@ -152,31 +151,31 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
         train_data_male = np.empty((total_frame_num_male, feat_dim))
         train_data_female = np.empty((total_frame_num_female, feat_dim))
         # male
-        for input_data_utt, audio_path in zip(tqdm(input_data_list_male),
-                                              audio_paths_male):
+        for input_utt, audio_path in zip(tqdm(input_data_list_male),
+                                         audio_paths_male):
             speaker = audio_path.split('/')[-2]
-            frame_num_utt = input_data_utt.shape[0]
+            frame_num_utt = input_utt.shape[0]
             train_data_male[frame_offset:frame_offset +
-                            frame_num_utt] = input_data_utt
+                            frame_num_utt] = input_utt
             frame_offset += frame_num_utt
 
             if normalize == 'speaker':
                 speaker_std_dict[speaker] += np.sum(
-                    np.abs(input_data_utt -
+                    np.abs(input_utt -
                            speaker_mean_dict[speaker]) ** 2, axis=0)
         # female
         frame_offset = 0
-        for input_data_utt, audio_path in zip(tqdm(input_data_list_female),
-                                              audio_paths_female):
+        for input_utt, audio_path in zip(tqdm(input_data_list_female),
+                                         audio_paths_female):
             speaker = audio_path.split('/')[-2]
-            frame_num_utt = input_data_utt.shape[0]
+            frame_num_utt = input_utt.shape[0]
             train_data_female[frame_offset:frame_offset +
-                              frame_num_utt] = input_data_utt
+                              frame_num_utt] = input_utt
             frame_offset += frame_num_utt
 
             if normalize == 'speaker':
                 speaker_std_dict[speaker] += np.sum(
-                    np.abs(input_data_utt -
+                    np.abs(input_utt -
                            speaker_mean_dict[speaker]) ** 2, axis=0)
 
         # Compute speaker std
@@ -204,39 +203,33 @@ def read_audio(audio_paths, tool, config, normalize, is_training, save_path=None
     if save_path is not None:
         # Save input features as npy files
         print('===> Saving input features...')
-        frame_num_dict = {}
-        for input_data_utt, audio_path in zip(tqdm(input_data_list_male + input_data_list_female),
-                                              audio_paths_male + audio_paths_female):
+        for input_utt, audio_path in zip(tqdm(input_data_list_male + input_data_list_female),
+                                         audio_paths_male + audio_paths_female):
             speaker = audio_path.split('/')[-2]
             utt_index = basename(audio_path).split('.')[0]
             gender = speaker[0]
 
             # Normalize by global mean & std over the training set
             if normalize == 'speaker' and is_training:
-                input_data_utt -= speaker_mean_dict[speaker]
-                input_data_utt /= speaker_std_dict[speaker]
+                input_utt -= speaker_mean_dict[speaker]
+                input_utt /= speaker_std_dict[speaker]
             elif normalize == 'utterance' and is_training:
-                mean_utt = np.mean(input_data_utt, axis=0)
-                std_utt = np.std(input_data_utt, axis=0)
-                input_data_utt -= mean_utt
-                input_data_utt /= std_utt
+                mean_utt = np.mean(input_utt, axis=0)
+                std_utt = np.std(input_utt, axis=0)
+                input_utt -= mean_utt
+                input_utt /= std_utt
             else:
                 if gender == 'm':
-                    input_data_utt -= global_mean_male
-                    input_data_utt /= global_std_male
+                    input_utt -= global_mean_male
+                    input_utt /= global_std_male
                 elif gender == 'f':
-                    input_data_utt -= global_mean_female
-                    input_data_utt /= global_std_female
+                    input_utt -= global_mean_female
+                    input_utt /= global_std_female
                 else:
                     raise ValueError('gender is m or f.')
 
             np.save(mkdir_join(save_path, speaker + '_' +
-                               utt_index + '.npy'), input_data_utt)
-            frame_num_dict[speaker + '_' + utt_index] = input_data_utt.shape[0]
-
-        # Save a frame number dictionary
-        with open(join(save_path, 'frame_num.pickle'), 'wb') as f:
-            pickle.dump(frame_num_dict, f)
+                               utt_index + '.npy'), input_utt)
 
     return (global_mean_male, global_std_male,
             global_mean_female, global_std_female)

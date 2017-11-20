@@ -31,6 +31,8 @@ def mkdir_join(path_to_dir, *dir_name):
     """
     if path_to_dir is None:
         return path_to_dir
+
+    path_to_dir = mkdir(path_to_dir)
     for i in range(len(dir_name)):
         if i == len(dir_name) - 1 and '.' in dir_name[i]:
             path_to_dir = os.path.join(path_to_dir, dir_name[i])

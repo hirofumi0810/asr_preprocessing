@@ -30,32 +30,25 @@ class TestLabel(unittest.TestCase):
     @measure_time
     def check(self, data_size):
 
-        print('=' * 30)
+        print('=' * 50)
         print('  data_size: %s' % str(data_size))
-        print('=' * 30)
+        print('=' * 50)
 
-        print('---------- train ----------')
-        read_trans(
-            label_paths=path.trans(data_type='train' + data_size),
-            data_size=data_size,
-            vocab_file_save_path=mkdir_join('../config/vocab_files'),
-            is_training=True,
-            save_vocab_file=True)
+        for data_type in ['train', 'dev_clean', 'dev_other', 'test_clean', 'test_other']:
+            if data_type == 'train':
+                label_paths = path.trans(data_type='train_' + data_size)
+            else:
+                label_paths = path.trans(data_type=data_type)
+            save_vocab_file = True if data_type == 'train'
+            is_test = True if 'test' in data_type else False
 
-        for data_type in ['dev_clean', 'dev_other']:
             print('---------- %s ----------' % data_type)
             read_trans(
-                label_paths=path.trans(data_type=data_type),
-                data_size=data_size,
-                vocab_file_save_path=mkdir_join('../config/vocab_files'))
-
-        for data_type in ['test_clean', 'test_other']:
-            print('---------- %s ----------' % data_type)
-            read_trans(
-                label_paths=path.trans(data_type=data_type),
+                label_paths=label_paths,
                 data_size=data_size,
                 vocab_file_save_path=mkdir_join('../config/vocab_files'),
-                is_test=True)
+                is_test=is_test,
+                data_type=data_type)
 
 
 if __name__ == '__main__':

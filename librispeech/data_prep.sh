@@ -5,9 +5,7 @@ echo "                              Librispeech                                 
 echo ============================================================================
 
 ### Set paths
-DOWNLOAD_DATA_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/data'
-DATASET_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/dataset'
-HTK_SAVE_PATH='/n/sd8/inaguma/corpus/librispeech/htk'
+DATASET_ROOT_PATH='/n/sd8/inaguma/corpus/librispeech'
 HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
 
 ### Select one tool to extract features (default is HTK)
@@ -42,6 +40,10 @@ large=true
 # ↓↓↓ Don't change from here ↓↓↓
 ########################################
 set -eu
+DOWNLOAD_DATA_SAVE_PATH=$DATASET_ROOT_PATH/data
+DATASET_SAVE_PATH=$DATASET_ROOT_PATH/dataset
+HTK_SAVE_PATH=$DATASET_ROOT_PATH/htk
+FEATURE_SAVE_PATH=$DATASET_ROOT_PATH/feature
 
 if [ ! -e $DOWNLOAD_DATA_SAVE_PATH ]; then
   mkdir $DOWNLOAD_DATA_SAVE_PATH
@@ -223,6 +225,7 @@ echo ===========================================================================
 python main.py \
   --data_path $DOWNLOAD_DATA_SAVE_PATH \
   --dataset_save_path $DATASET_SAVE_PATH \
+  --feature_save_path $FEATURE_SAVE_PATH \
   --tool $TOOL \
   --htk_save_path $HTK_SAVE_PATH \
   --feature_type $FEATURE_TYPE \
