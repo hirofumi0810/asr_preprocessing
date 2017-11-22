@@ -41,7 +41,7 @@ SAVE_FORMAT='htk'
 
 ### Data size
 # SWBD + Fisher (about 2000h)
-fisher=0
+fisher=1
 
 
 ########################################

@@ -15,11 +15,13 @@ import argparse
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
+from collections import Counter
 
 sys.path.append('../')
 from swbd.path import Path
 from swbd.input_data import read_audio
 from swbd.labels.ldc97s62.character import read_trans
+from swbd.labels.fisher.character import read_trans as read_trans_fisher
 from swbd.labels.eval2000.stm import read_stm
 from utils.util import mkdir_join
 
@@ -100,10 +102,36 @@ def main(data_size):
     ########################################
     speaker_dict_dict = {}  # dict of speaker_dict
     print('---------- train ----------')
-    speaker_dict_train = read_trans(
-        label_paths=path.trans(corpus='swbd'),
-        run_root_path='./',
-        vocab_file_save_path=mkdir_join('./config/vocab_files'))
+    if data_size == '300h':
+        speaker_dict_train = read_trans(
+            label_paths=path.trans(corpus='swbd'),
+            run_root_path='./',
+            vocab_file_save_path=mkdir_join('./config/vocab_files'),
+            save_vocab_file=True)
+    elif data_size == '2000h':
+        speaker_dict_a, char_set_a, char_capital_set_a, word_count_dict_a = read_trans_fisher(
+            label_paths=path.trans(corpus='fisher'),
+            target_speaker='A')
+        speaker_dict_b, char_set_b, char_capital_set_b, word_count_dict_b = read_trans_fisher(
+            label_paths=path.trans(corpus='fisher'),
+            target_speaker='B')
+
+        # Meage 2 dictionaries
+        speaker_dict_fisher = merge_dicts([speaker_dict_a, speaker_dict_b])
+        char_set = char_set_a | char_set_b
+        char_capital_set = char_capital_set_a | char_capital_set_b
+        word_count_dict_fisher = dict(
+            Counter(word_count_dict_a) + Counter(word_count_dict_b))
+
+        read_trans(
+            label_paths=path.trans(corpus='swbd'),
+            run_root_path='../',
+            vocab_file_save_path=mkdir_join('../config/vocab_files'),
+            save_vocab_file=True,
+            speaker_dict_fisher=speaker_dict_fisher,
+            char_set=char_set,
+            char_capital_set=char_capital_set,
+            word_count_dict=word_count_dict_fisher)
     speaker_dict_dict['train'] = speaker_dict_train
 
     print('---------- eval2000 (swbd + ch) ----------')
@@ -132,6 +160,8 @@ def main(data_size):
                 print('---------- %s ----------' % data_type)
                 if data_type == 'train':
                     wav_paths = path.wav(corpus='swbd')
+                    if data_size == '2000h':
+                        wav_paths += path.wav(corpus='fisher')
                 else:
                     wav_paths = path.wav(corpus=data_type)
 
@@ -147,8 +177,12 @@ def main(data_size):
                 if data_type == 'train':
                     if args.tool == 'htk':
                         audio_paths = path.htk(corpus='swbd')
+                        if data_size == '2000h':
+                            audio_paths += path.htk(corpus='fisher')
                     else:
                         audio_paths = path.wav(corpus='swbd')
+                        if data_size == '2000h':
+                            audio_paths += path.wav(corpus='fisher')
                     is_training = True
                     global_mean, global_std = None, None
                 else:
@@ -271,6 +305,10 @@ def main(data_size):
                     df = df.append(series, ignore_index=True)
 
         df.to_csv(join(dataset_save_path, 'dataset_' + args.save_format + '.csv'))
+
+
+def merge_dicts(dicts):
+    return {k: v for dic in dicts for k, v in dic.items()}
 
 
 if __name__ == '__main__':
