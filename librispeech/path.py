@@ -62,6 +62,7 @@ class Path(object):
             'test-clean': [],
             'test-other': []
         }
+        self._utt2wav = {}
 
         self._trans_paths = {
             'train-clean-100': [],
@@ -77,8 +78,12 @@ class Path(object):
             for file_path in glob(join(self.data_paths[data_type], '*/*/*')):
                 if splitext(basename(file_path))[1] == '.wav':
                     self._wav_paths[data_type].append(file_path)
+                    self._utt2wav[basename(file_path)] = file_path
                 elif splitext(basename(file_path))[1] == '.txt':
                     self._trans_paths[data_type].append(file_path)
+
+    def utt2wav(self, utt_name):
+        return self._utt2wav[utt_name]
 
     def wav(self, data_type):
         """Get paths to wav files.

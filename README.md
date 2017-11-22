@@ -1,22 +1,7 @@
 # TODO
 
-## WSJ
-#### CTC
-- [ ] **phone**
-- [ ] **character**
-- [ ] **word**
-#### Attention
-- [ ] **phone**
-- [ ] **character**
-- [ ] **word**
-
-
-## AMI
-#### CTC
-- [ ] **phone**
-- [ ] **character**
-- [ ] **word**
-#### Attention
-- [ ] **phone**
-- [ ] **character**
-- [ ] **word**
+- [ ] **Fisher**
+- [ ] **AMI**
+- [ ] **WSJ0**
+- [ ] **WSJ1**
+- [ ] **Chime3**

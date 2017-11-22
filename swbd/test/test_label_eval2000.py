@@ -41,20 +41,15 @@ class TestLabelEval2000Swbd(unittest.TestCase):
         read_stm(stm_path=eval2000_stm_path,
                  pem_path=eval2000_pem_path,
                  glm_path=eval2000_glm_path,
-                 run_root_path='../')
+                 run_root_path='../',
+                 data_size='300h')
 
         # From txt files
         read_text(label_paths=label_paths,
                   pem_path=eval2000_pem_path,
                   glm_path=eval2000_glm_path,
-                  run_root_path='../')
-
-        print('---------- ch ----------')
-        # From txt files
-        # read_text(label_paths=label_paths,
-        #           pem_path=eval2000_pem_path,
-        #           glm_path=eval2000_glm_path,
-        #           run_root_path='../')
+                  run_root_path='../',
+                  data_size='300h')
 
 
 if __name__ == '__main__':

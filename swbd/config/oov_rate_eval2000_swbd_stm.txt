@@ -1,8 +1,8 @@
 Word (freq1):
-  OOV rate (eval2000, swbd, from stm): 4.090676 %
+  OOV rate (eval2000, swbd, from stm): 4.111331 %
 Word (freq5):
-  OOV rate (eval2000, swbd, from stm): 4.948925 %
+  OOV rate (eval2000, swbd, from stm): 4.977866 %
 Word (freq10):
-  OOV rate (eval2000, swbd, from stm): 5.746537 %
+  OOV rate (eval2000, swbd, from stm): 5.769050 %
 Word (freq15):
-  OOV rate (eval2000, swbd, from stm): 6.180326 %
+  OOV rate (eval2000, swbd, from stm): 6.211736 %

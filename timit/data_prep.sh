@@ -18,15 +18,21 @@ TOOL='htk'
 ### Configuration (Set by yourself)
 FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
 CHANNELS=40
-SAMPLING_RATE=16000
 WINDOW=0.025
 SLIDE=0.01
 ENERGY=1
 DELTA=1
 DELTADELTA=1
+
 # NORMALIZE='global'
 NORMALIZE='speaker'
 # NORMALIZE='utterance'
+# NORMALIZE='no'
+
+# SAVE_FORMAT='numpy'
+SAVE_FORMAT='htk'
+# SAVE_FORMAT='wav'
+# NOTE: normalization will not be conducted in case of wav
 
 
 ########################################
@@ -67,7 +73,6 @@ if [ $TOOL = 'htk' ]; then
     --htk_save_path $HTK_SAVE_PATH \
     --feature_type $FEATURE_TYPE \
     --channels $CHANNELS \
-    --sampling_rate $SAMPLING_RATE \
     --window $WINDOW \
     --slide $SLIDE \
     --energy $ENERGY \
@@ -103,15 +108,16 @@ python main.py \
   --config_path $RUN_ROOT_PATH/config \
   --tool $TOOL \
   --htk_save_path $HTK_SAVE_PATH \
+  --normalize $NORMALIZE \
+  --save_format $SAVE_FORMAT \
   --feature_type $FEATURE_TYPE \
   --channels $CHANNELS \
-  --sampling_rate $SAMPLING_RATE \
   --window $WINDOW \
   --slide $SLIDE \
   --energy $ENERGY \
   --delta $DELTA \
-  --deltadelta $DELTADELTA \
-  --normalize $NORMALIZE
+  --deltadelta $DELTADELTA
+
 
 
 echo 'Successfully completed!!!'

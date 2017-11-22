@@ -17,23 +17,29 @@ TOOL='htk'
 ### Configuration (Set by yourself)
 FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
 CHANNELS=40
-SAMPLING_RATE=16000
 WINDOW=0.025
 SLIDE=0.01
 ENERGY=1
 DELTA=1
 DELTADELTA=1
+
 # NORMALIZE='global'
 NORMALIZE='speaker'
 # NORMALIZE='utterance'
+# NORMALIZE='no'
+
+# SAVE_FORMAT='numpy'
+SAVE_FORMAT='htk'
+# SAVE_FORMAT='wav'
+# NOTE: normalization will not be conducted in case of wav
 
 ### data size to create
 # NOTE: 100h (train-clean-100) will be created by default
 # 460h (train-clean-100 + train-clean-360)
-medium=true
+medium=1
 
 # 960h (train-clean-100 + train-clean-360  +train-other-500)
-large=true
+large=1
 
 
 ########################################
@@ -190,7 +196,6 @@ if [ $TOOL = 'htk' ]; then
     --htk_save_path $HTK_SAVE_PATH \
     --feature_type $FEATURE_TYPE \
     --channels $CHANNELS \
-    --sampling_rate $SAMPLING_RATE \
     --window $WINDOW \
     --slide $SLIDE \
     --energy $ENERGY \
@@ -230,13 +235,13 @@ python main.py \
   --htk_save_path $HTK_SAVE_PATH \
   --feature_type $FEATURE_TYPE \
   --channels $CHANNELS \
-  --sampling_rate $SAMPLING_RATE \
   --window $WINDOW \
   --slide $SLIDE \
   --energy $ENERGY \
   --delta $DELTA \
   --deltadelta $DELTADELTA \
   --normalize $NORMALIZE \
+  --save_format $SAVE_FORMAT \
   --medium $medium \
   --large $large
 

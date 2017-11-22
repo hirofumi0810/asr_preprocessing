@@ -38,6 +38,8 @@ class Path(object):
         self._word_paths = {}
         self._phone_paths = {}
 
+        self._utt2wav = {}
+
         for data_type in ['train', 'dev', 'test']:
 
             self._wav_paths[data_type] = []
@@ -56,24 +58,25 @@ class Path(object):
 
             for file_path in glob(join(data_path, '*/*/*')):
                 region, speaker, file_name = file_path.split('/')[-3:]
+                utt_index = basename(file_name)
                 ext = splitext(file_name)[1]
 
                 if data_type != 'train' and speaker not in test_speakers:
                     continue
 
-                if basename(file_name)[0: 2] in ['sx', 'si']:
+                if utt_index[0: 2] in ['sx', 'si']:
                     if ext == '.wav':
-                        self._wav_paths[data_type].append(
-                            join(data_path, file_path))
+                        self._wav_paths[data_type].append(file_path)
+                        self._utt2wav[speaker + '_' + utt_index] = file_path
                     elif ext == '.txt':
-                        self._text_paths[data_type].append(
-                            join(data_path, file_path))
+                        self._text_paths[data_type].append(file_path)
                     elif ext == '.wrd':
-                        self._word_paths[data_type].append(
-                            join(data_path, file_path))
+                        self._word_paths[data_type].append(file_path)
                     elif ext == '.phn':
-                        self._phone_paths[data_type].append(
-                            join(data_path, file_path))
+                        self._phone_paths[data_type].append(file_path)
+
+    def utt2wav(self, utt_name):
+        return self._utt2wav[utt_name]
 
     def wav(self, data_type):
         """Get paths to wav files.
@@ -89,13 +92,13 @@ class Path(object):
         Args:
             data_type (string): train or dev or test
         Returns:
-            list of paths to htk files
+            htk_paths (list): paths to htk files
         """
         if self.htk_save_path is None:
             raise ValueError('Set path to htk files.')
 
-        # NOTE: ex.) timit/htk/data_type/speaker/*.htk
         return [p for p in glob(join(self.htk_save_path, data_type, '*/*.htk'))]
+        # NOTE: ex.) timit/htk/data_type/speaker/speaker_utt-index.htk
 
     def trans(self, data_type):
         """Get paths to sentence-level transcription files.

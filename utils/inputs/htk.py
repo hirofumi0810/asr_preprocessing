@@ -6,38 +6,63 @@ from __future__ import division
 from __future__ import print_function
 
 from os.path import join
-from struct import unpack
+from struct import unpack, pack
 import numpy as np
 
 
-def read(audio_path):
+def read(htk_path):
     """Read each HTK file.
     Args:
-        audio_path (string): path to a HTK file
+        htk_path (string): path to a HTK file
     Returns:
         input_data (np.ndarray): A tensor of size (frame_num, feature_dim)
+        sampPeriod (int):
+        parmKind (int):
     """
-    with open(audio_path, "rb") as fh:
-        spam = fh.read(12)
+    # print('...Reading: %s' % htk_path)
+    with open(htk_path, "rb") as f:
+        # Read header
+        spam = f.read(12)
         frame_num, sampPeriod, sampSize, parmKind = unpack(">IIHH", spam)
+
+        # for debug
         # print(frame_num)  # frame num
         # print(sampPeriod)  # 10ms
         # print(sampSize)  # feature dim * 4 (byte)
         # print(parmKind)
-        veclen = int(sampSize / 4)
-        fh.seek(12, 0)
-        input_data = np.fromfile(fh, 'f')
-        # input_data = input_data.reshape(int(len(input_data) / veclen),
-        # veclen)
-        input_data = input_data.reshape(-1, veclen)
+
+        # Read data
+        feature_dim = int(sampSize / 4)
+        f.seek(12, 0)
+        input_data = np.fromfile(f, 'f')
+        input_data = input_data.reshape(-1, feature_dim)
         input_data.byteswap(True)
 
-    return input_data
+    return input_data, sampPeriod, parmKind
 
 
-def save(audio_file_type, feature_type, channels, config_save_path,
-         sampling_rate=16000, window=0.025, slide=0.01,
-         energy=True, delta=True, deltadelta=True):
+def write(input_data, htk_path, sampPeriod, parmKind):
+    """Save numpy array as a HTK file.
+    Args:
+        input_data (np.ndarray): A tensor of size (frame_num, feature_dim)
+        htk_path (string): path to a HTK file
+        sampPeriod (int):
+        parmKind (int):
+    """
+    # print('...Saving: %s' % htk_path)
+    with open(htk_path, "wb") as f:
+        # Write header
+        frame_num, feature_dim = input_data.shape
+        sampSize = feature_dim * 4
+        f.write(pack(">iihh", frame_num, sampPeriod, sampSize, parmKind))
+
+        # Write data
+        f.write(pack(">%df" % (frame_num * feature_dim), *input_data.ravel()))
+
+
+def save_config(audio_file_type, feature_type, channels, config_save_path,
+                sampling_rate=16000, window=0.025, slide=0.01,
+                energy=True, delta=True, deltadelta=True):
     """Save a configuration file for HTK.
     Args:
         audio_file_type (string): nist or wav

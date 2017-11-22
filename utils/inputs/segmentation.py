@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-"""Segment an audio file into each utterance."""
+"""Segment an audio file into each utterance (save as numpy files)."""
 
 import numpy as np
 
@@ -16,7 +16,7 @@ from utils.inputs.wav2feature_librosa import wav2feature as w2f_librosa
 
 def segment(audio_path, speaker, utterance_dict, is_training,
             sil_duration=0., tool='htk', config=None, mean=None,
-            dtype=np.float64):
+            dtype=np.float32):
     """Segment each HTK or WAV file into utterances. Normalization will not be
        conducted here.
     Args:
@@ -45,7 +45,7 @@ def segment(audio_path, speaker, utterance_dict, is_training,
 
     # Read the HTK or WAV file
     if tool == 'htk':
-        input_data = read_htk(audio_path)
+        input_data, _, _ = read_htk(audio_path)
     elif tool == 'python_speech_features':
         input_data = w2f_psf(
             audio_path,
@@ -56,7 +56,6 @@ def segment(audio_path, speaker, utterance_dict, is_training,
             use_delta2=config['deltadelta'],
             window=config['window'],
             slide=config['slide'])
-
     elif tool == 'librosa':
         input_data = w2f_librosa(
             audio_path,

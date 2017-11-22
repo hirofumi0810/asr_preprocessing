@@ -8,9 +8,11 @@ echo ===========================================================================
 SWBD_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/LDC97S62'
 EVAL2000_AUDIO_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002S09'
 EVAL2000_TRANS_PATH='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002T43'
-FISHER_PATH='/n/sd8/inaguma/corpus/swbd/data/fisher'
 DATASET_ROOT_PATH='/n/sd8/inaguma/corpus/swbd'
 HCOPY_PATH='/home/lab5/inaguma/htk-3.4/bin/HCopy'
+
+# (optional)
+FISHER_PATH='/n/sd8/inaguma/corpus/swbd/data/fisher'
 
 ### Select one tool to extract features (HTK is the fastest)
 TOOL='htk'
@@ -21,15 +23,25 @@ TOOL='htk'
 ### Configuration (Set by yourself)
 FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
 CHANNELS=40
-SAMPLING_RATE=8000
 WINDOW=0.025
 SLIDE=0.01
 ENERGY=1
 DELTA=1
 DELTADELTA=1
+
 # NORMALIZE='global'
 NORMALIZE='speaker'
 # NORMALIZE='utterance'
+# NORMALIZE=None
+
+# SAVE_FORMAT='numpy'
+SAVE_FORMAT='htk'
+# SAVE_FORMAT='wav'
+# NOTE: normalization will not be conducted in case of wav
+
+### Data size
+# SWBD + Fisher (about 2000h)
+fisher=0
 
 
 ########################################
@@ -252,12 +264,12 @@ if [ $TOOL = 'htk' ]; then
     --run_root_path $RUN_ROOT_PATH \
     --feature_type $FEATURE_TYPE \
     --channels $CHANNELS \
-    --sampling_rate $SAMPLING_RATE \
     --window $WINDOW \
     --slide $SLIDE \
     --energy $ENERGY \
     --delta $DELTA \
-    --deltadelta $DELTADELTA
+    --deltadelta $DELTADELTA \
+    --fisher $fisher
 
   ### Convert from wav to htk files
   # Switchboard
@@ -311,13 +323,14 @@ python main.py \
   --htk_save_path $HTK_SAVE_PATH \
   --feature_type $FEATURE_TYPE \
   --channels $CHANNELS \
-  --sampling_rate $SAMPLING_RATE \
   --window $WINDOW \
   --slide $SLIDE \
   --energy $ENERGY \
   --delta $DELTA \
   --deltadelta $DELTADELTA \
-  --normalize $NORMALIZE
+  --normalize $NORMALIZE \
+  --save_format $SAVE_FORMAT \
+  --fisher $fisher
 
 
 echo 'Successfully completed!!!'

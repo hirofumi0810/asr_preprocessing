@@ -12,19 +12,21 @@ import re
 from tqdm import tqdm
 from collections import OrderedDict
 
-from swbd.labels.eval2000.fix_trans_swbd_text import fix_transcript
+from swbd.labels.eval2000.fix_trans_text import fix_transcript
 from swbd.labels.eval2000.stm import compute_oov_rate
 
 SPACE = '_'
 
 
-def read_text(label_paths, pem_path, glm_path, run_root_path):
+def read_text(label_paths, pem_path, glm_path, run_root_path,
+              data_size='300h'):
     """Read transcripts (.txt) & save files (.npy).
     Args:
         label_paths (list): list of paths to label files
         pem_path (string): path to the segmentation file
         glm_path (string): path to the GLM file
         run_root_path (string): absolute path of make.sh
+        data_size (string): 300h or 2000h
     Returns:
         speaker_dict: dictionary of speakers
             key (string) => speaker
@@ -105,6 +107,7 @@ def read_text(label_paths, pem_path, glm_path, run_root_path):
                 # Clean transcript
                 transcript = fix_transcript(transcript, speaker)
 
+                # Skip silence
                 if transcript in ['', ' ']:
                     continue
 
@@ -138,19 +141,19 @@ def read_text(label_paths, pem_path, glm_path, run_root_path):
     fp_fixed.close()
 
     # for debug
-    print(sorted(list(char_set)))
+    # print(sorted(list(char_set)))
 
     word_freq1_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq1_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq1_' + data_size + '.txt')
     word_freq5_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq5_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq5_' + data_size + '.txt')
     word_freq10_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq10_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq10_' + data_size + '.txt')
     word_freq15_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq15_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq15_' + data_size + '.txt')
 
     # Compute OOV rate
-    with open(join(run_root_path, 'config/oov_rate_eval2000_swbd_txt.txt'), 'w') as f:
+    with open(join(run_root_path, 'config/OOV_eval2000_swbd_txt_' + data_size + '.txt'), 'w') as f:
 
         # word-level (threshold == 1)
         oov_rate = compute_oov_rate(

@@ -78,8 +78,9 @@ class TestInputEval2000(unittest.TestCase):
 
         # Load statistics over train dataset
         global_mean = np.load(
-            '/n/sd8/inaguma/dataset/300h/train/train_mean.npy')
-        global_std = np.load('dataset/300h/train/train_std.npy')
+            '/n/sd8/inaguma/corpus/swbd/feature/htk/300h/train/global_mean.npy')
+        global_std = np.load(
+            '/n/sd8/inaguma/corpus/swbd/feature/htk/300h/train/global_std.npy')
 
         # swbd
         audio_paths_swbd = htk_paths_swbd if tool == 'htk' else wav_paths_swbd
@@ -89,8 +90,8 @@ class TestInputEval2000(unittest.TestCase):
                    speaker_dict=self.speaker_dict_swbd,
                    normalize=normalize,
                    is_training=False,
-                   global_mean=None,
-                   global_std=None)
+                   global_mean=global_mean,
+                   global_std=global_std)
 
         # ch
         audio_paths_ch = htk_paths_ch if tool == 'htk' else wav_paths_ch
@@ -100,8 +101,8 @@ class TestInputEval2000(unittest.TestCase):
                    speaker_dict=self.speaker_dict_ch,
                    normalize=normalize,
                    is_training=False,
-                   global_mean=None,
-                   global_std=None)
+                   global_mean=global_mean,
+                   global_std=global_std)
 
 
 if __name__ == '__main__':

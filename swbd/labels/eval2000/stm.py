@@ -16,13 +16,14 @@ HESITATION = ['uh', 'um', 'eh', 'mm', 'hm', 'ah', 'huh', 'ha', 'er', 'oof',
               'hee', 'ach', 'eee', 'ew']
 
 
-def read_stm(stm_path, pem_path, glm_path, run_root_path):
+def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
     """Read transcripts (.stm) & save files (.npy).
     Args:
         stm_path (string): path to the transcription file
         pem_path (string): path to the segmentation file
         glm_path (string): path to the GLM file
         run_root_path (string): absolute path of make.sh
+        data_size (string): 300h or 2000h
     Returns:
         speaker_dict_swbd (dict): dictionary of speakers in eval2000 (swbd)
             key (string) => speaker
@@ -133,10 +134,10 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path):
 
             if speaker != speaker_pre:
                 if speaker_pre != '':
-                    if speaker[:2] == 'sw':
-                        speaker_dict_swbd[speaker] = utterance_dict
-                    elif speaker[:2] == 'en':
-                        speaker_dict_ch[speaker] = utterance_dict
+                    if speaker_pre[:2] == 'sw':
+                        speaker_dict_swbd[speaker_pre] = utterance_dict
+                    elif speaker_pre[:2] == 'en':
+                        speaker_dict_ch[speaker_pre] = utterance_dict
                     else:
                         raise ValueError
 
@@ -210,26 +211,29 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path):
             utt_index += 1
             speaker_pre = speaker
 
+    # Last speaker
+    speaker_dict_swbd[speaker_pre] = utterance_dict
+
     fp_swbd_original.close()
     fp_swbd_fixed.close()
     fp_ch_original.close()
     fp_ch_fixed.close()
 
     # for debug
-    print(sorted(list(char_set)))
+    # print(sorted(list(char_set)))
 
     word_freq1_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq1_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq1_' + data_size + '.txt')
     word_freq5_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq5_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq5_' + data_size + '.txt')
     word_freq10_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq10_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq10_' + data_size + '.txt')
     word_freq15_vocab_file_path = join(
-        run_root_path, 'config/vocab_files/word_freq15_300h.txt')
+        run_root_path, 'config/vocab_files/word_freq15_' + data_size + '.txt')
 
     # Compute OOV rate
     # NOTE: these are not corrct because many %hesitation are included.
-    with open(join(run_root_path, 'config/oov_rate_eval2000_swbd_stm.txt'), 'w') as f:
+    with open(join(run_root_path, 'config/OOV_eval2000_swbd_stm_' + data_size + '.txt'), 'w') as f:
 
         # word-level (threshold == 1)
         oov_rate = compute_oov_rate(

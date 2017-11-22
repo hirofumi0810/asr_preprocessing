@@ -75,7 +75,7 @@ class TestInputLDC97S62(unittest.TestCase):
 
         audio_paths = htk_paths if tool == 'htk' else wav_paths
 
-        global_mean, global_std = read_audio(
+        global_mean, global_std, _ = read_audio(
             audio_paths=audio_paths,
             tool=tool,
             config=CONFIG,

@@ -45,13 +45,18 @@ OOV = 'OOV'
 
 
 def read_trans(label_paths, run_root_path, vocab_file_save_path,
-               save_vocab_file=False):
+               save_vocab_file=False,  speaker_dict_fisher=None,
+               char_set=None, char_capital_set=None, word_count_dict=None):
     """Read transcripts (*_trans.txt) & save files (.npy).
     Args:
         label_paths (list): list of paths to label files
         run_root_path (string):
         vocab_file_save_path (string): path to vocabulary files
         save_vocab_file (bool, optional): if True, save vocabulary files
+        speaker_dict_fisher (dict):
+        char_set (set):
+        char_capital_set (set):
+        word_count_dict (dict):
     Returns:
         speaker_dict: dictionary of speakers
             key (string) => speaker
@@ -59,11 +64,19 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                 key (string) => utterance index
                 value (list) => [start_frame, end_frame, transcript]
     """
+    merge_with_fisher = True if speaker_dict_fisher is not None else False
+
     print('===> Reading target labels...')
-    speaker_dict = OrderedDict()
-    char_set, char_capital_set = set([]), set([])
-    word_count_dict = {}
-    vocab_set = set([])
+    if merge_with_fisher:
+        speaker_dict = speaker_dict_fisher
+        vocab_set = set([])
+        for word in word_count_dict.keys():
+            vocab_set.add(word)
+    else:
+        speaker_dict = OrderedDict()
+        char_set, char_capital_set = set([]), set([])
+        word_count_dict = {}
+        vocab_set = set([])
 
     # for debug
     fp_original = open(join(run_root_path, 'labels',
@@ -74,7 +87,7 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
         join(run_root_path, 'labels', 'ldc97s62', 'trans_fixed_capital.txt'), 'w')
 
     for label_path in tqdm(label_paths):
-        utterance_dict = {}
+        utterance_dict = OrderedDict()
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
@@ -87,11 +100,12 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                 end_frame = int(float(line[2]) * 100 + 0.05)
                 transcript = ' '.join(line[3:])
 
+                # Clean transcript
                 transcript_original = transcript
                 transcript = fix_transcript(transcript)
 
                 # Skip silence
-                if transcript == '':
+                if transcript in ['', ' ']:
                     continue
 
                 # Remove the first and last space
@@ -153,18 +167,19 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
     fp_fixed_capital.close()
 
     # Make vocabulary files
+    data_size = '2000h' if merge_with_fisher else '300h'
     char_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'character_300h.txt')
+        vocab_file_save_path, 'character_' + data_size + '.txt')
     char_capital_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'character_capital_divide_300h.txt')
+        vocab_file_save_path, 'character_capital_divide_' + data_size + '.txt')
     word_freq1_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq1_300h.txt')
+        vocab_file_save_path, 'word_freq1_' + data_size + '.txt')
     word_freq5_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq5_300h.txt')
+        vocab_file_save_path, 'word_freq5_' + data_size + '.txt')
     word_freq10_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq10_300h.txt')
+        vocab_file_save_path, 'word_freq10_' + data_size + '.txt')
     word_freq15_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'word_freq15_300h.txt')
+        vocab_file_save_path, 'word_freq15_' + data_size + '.txt')
 
     # Reserve some indices
     for mark in [SPACE, LAUGHTER, NOISE, VOCALIZED_NOISE]:

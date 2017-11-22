@@ -6,37 +6,32 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
-from os.path import join, basename, isdir
+from os.path import join, basename
 import argparse
 from glob import glob
 
 sys.path.append('../')
 from utils.util import mkdir_join, mkdir
-from utils.inputs.htk import save
+from utils.inputs.htk import save_config
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--wav_save_path', type=str,
-                    help='path to audio files')
+parser.add_argument('--wav_save_path', type=str, help='path to audio files')
 parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
 parser.add_argument('--run_root_path', type=str,
                     help='path to run this script')
 
-parser.add_argument('--feature_type', type=str, default='logmelfbank',
-                    help='the type of features, logmelfbank or mfcc')
-parser.add_argument('--channels', type=int, default=40,
+parser.add_argument('--feature_type', type=str, help='fbank or mfcc')
+parser.add_argument('--channels', type=int,
                     help='the number of frequency channels')
-parser.add_argument('--sampling_rate', type=float,
-                    default=16000, help='sampling rate')
-parser.add_argument('--window', type=float, default=0.025,
+parser.add_argument('--window', type=float,
                     help='window width to extract features')
-parser.add_argument('--slide', type=float, default=0.01,
-                    help='extract features per \'slide\'')
-parser.add_argument('--energy', type=int, default=1,
-                    help='if 1, add the energy feature')
-parser.add_argument('--delta', type=int, default=1,
-                    help='if 1, add the energy feature')
-parser.add_argument('--deltadelta', type=int, default=1,
+parser.add_argument('--slide', type=float, help='extract features per slide')
+parser.add_argument('--energy', type=int, help='if 1, add the energy feature')
+parser.add_argument('--delta', type=int, help='if 1, add the energy feature')
+parser.add_argument('--deltadelta', type=int,
                     help='if 1, double delta features are also extracted')
+parser.add_argument('--fisher', type=int,
+                    help='If True, create large-size dataset (2000h).')
 
 
 def main():
@@ -45,16 +40,16 @@ def main():
     htk_save_path = mkdir(args.htk_save_path)
 
     # HTK settings
-    save(audio_file_type='wav',
-         feature_type=args.feature_type,
-         channels=args.channels,
-         config_save_path='./config',
-         sampling_rate=args.sampling_rate,
-         window=args.window,
-         slide=args.slide,
-         energy=bool(args.energy),
-         delta=bool(args.delta),
-         deltadelta=bool(args.deltadelta))
+    save_config(audio_file_type='wav',
+                feature_type=args.feature_type,
+                channels=args.channels,
+                config_save_path='./config',
+                sampling_rate=8000,
+                window=args.window,
+                slide=args.slide,
+                energy=bool(args.energy),
+                delta=bool(args.delta),
+                deltadelta=bool(args.deltadelta))
     # NOTE: 123-dim features are extracted by default
 
     # Switchboard
@@ -85,7 +80,7 @@ def main():
             # ex.) htk_path: wav/eval2000/callhome/*.htk
 
     # Fisher
-    if isdir(join(args.wav_save_path, 'fisher')):
+    if bool(args.fisher):
         with open('./config/wav2htk_fisher.scp', 'w') as f:
             for wav_path in glob(join(args.wav_save_path, 'fisher/*/*.wav')):
                 # ex.) wav_path: wav/fisher/speaker/*.wav
