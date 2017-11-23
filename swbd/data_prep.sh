@@ -25,7 +25,7 @@ FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
 CHANNELS=40
 WINDOW=0.025
 SLIDE=0.01
-ENERGY=1
+ENERGY=0
 DELTA=1
 DELTADELTA=1
 
@@ -34,8 +34,8 @@ NORMALIZE='speaker'
 # NORMALIZE='utterance'
 # NORMALIZE=None
 
-# SAVE_FORMAT='numpy'
-SAVE_FORMAT='htk'
+SAVE_FORMAT='numpy'
+# SAVE_FORMAT='htk'
 # SAVE_FORMAT='wav'
 # NOTE: normalization will not be conducted in case of wav
 

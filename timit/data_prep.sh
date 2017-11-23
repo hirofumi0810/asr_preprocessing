@@ -29,8 +29,8 @@ NORMALIZE='speaker'
 # NORMALIZE='utterance'
 # NORMALIZE='no'
 
-# SAVE_FORMAT='numpy'
-SAVE_FORMAT='htk'
+SAVE_FORMAT='numpy'
+# SAVE_FORMAT='htk'
 # SAVE_FORMAT='wav'
 # NOTE: normalization will not be conducted in case of wav
 
@@ -117,7 +117,6 @@ python main.py \
   --energy $ENERGY \
   --delta $DELTA \
   --deltadelta $DELTADELTA
-
 
 
 echo 'Successfully completed!!!'

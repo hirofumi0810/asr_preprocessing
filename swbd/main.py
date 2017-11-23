@@ -100,6 +100,7 @@ def main(data_size):
     ########################################
     # labels
     ########################################
+    print('=> Processing transcripts...')
     speaker_dict_dict = {}  # dict of speaker_dict
     print('---------- train ----------')
     if data_size == '300h':
@@ -125,8 +126,8 @@ def main(data_size):
 
         read_trans(
             label_paths=path.trans(corpus='swbd'),
-            run_root_path='../',
-            vocab_file_save_path=mkdir_join('../config/vocab_files'),
+            run_root_path='./',
+            vocab_file_save_path=mkdir_join('./config/vocab_files'),
             save_vocab_file=True,
             speaker_dict_fisher=speaker_dict_fisher,
             char_set=char_set,
@@ -146,18 +147,18 @@ def main(data_size):
     ########################################
     # inputs
     ########################################
-    print('=> Processing input data...')
+    print('\n=> Processing input data...')
     input_save_path = mkdir_join(
         args.feature_save_path, args.save_format, data_size)
-    if isfile(join(input_save_path, 'complete.txt')):
-        print('Already exists.')
-    else:
-        if args.save_format == 'wav':
-            ########################################
-            # Split WAV files per utterance
-            ########################################
-            for data_type in ['train', 'eval2000_swbd', 'eval2000_ch']:
-                print('---------- %s ----------' % data_type)
+    for data_type in ['train', 'eval2000_swbd', 'eval2000_ch']:
+        print('---------- %s ----------' % data_type)
+        if isfile(join(input_save_path, data_type, 'complete.txt')):
+            print('Already exists.')
+        else:
+            if args.save_format == 'wav':
+                ########################################
+                # Split WAV files per utterance
+                ########################################
                 if data_type == 'train':
                     wav_paths = path.wav(corpus='swbd')
                     if data_size == '2000h':
@@ -171,9 +172,7 @@ def main(data_size):
                 # NOTE: ex.) save_path:
                 # swbd/feature/save_format/data_size/data_type/speaker/utt_name.npy
 
-        elif args.save_format in ['numpy', 'htk']:
-            for data_type in ['train', 'eval2000_swbd', 'eval2000_ch']:
-                print('---------- %s ----------' % data_type)
+            elif args.save_format in ['numpy', 'htk']:
                 if data_type == 'train':
                     if args.tool == 'htk':
                         audio_paths = path.htk(corpus='swbd')
@@ -211,100 +210,83 @@ def main(data_size):
                 # NOTE: ex.) save_path:
                 # swbd/feature/save_format/data_size/data_type/speaker/*.npy
 
-        # Make a confirmation file to prove that dataset was saved
-        # correctly
-        with open(join(input_save_path, 'complete.txt'), 'w') as f:
-            f.write('')
+            # Make a confirmation file to prove that dataset was saved
+            # correctly
+            with open(join(input_save_path, data_type, 'complete.txt'), 'w') as f:
+                f.write('')
 
     ########################################
     # dataset (csv)
     ########################################
-    for data_type in ['train', 'dev', 'eval2000_swbd', 'eval2000_ch']:
+    print('\n=> Saving dataset files...')
+    for data_type in ['train', 'eval2000_swbd', 'eval2000_ch']:
         dataset_save_path = mkdir_join(
-            args.dataset_save_path, data_size, data_type)
+            args.dataset_save_path, args.save_format, data_size, data_type)
 
         print('---------- %s ----------' % data_type)
         df = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
 
-        if data_type == 'dev':
-            # Use the first 4000 utterances as the dev set
-            utt_count = 0
-            for speaker, utt_dict in tqdm(speaker_dict_dict['train'].items()):
-                for utt_index, utt_info in utt_dict.items():
-                    transcript = utt_info[2]
-                    if args.save_format == 'numpy':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
-                        assert isfile(input_utt_save_path)
-                        input_utt = np.load(input_utt_save_path)
-                    elif args.save_format == 'htk':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, utt_index + '.htk')
-                        assert isfile(input_utt_save_path)
-                        input_utt, _, _ = read(input_utt_save_path)
-                    elif args.save_format == 'wav':
-                        input_utt_save_path = path.utt2wav(utt_index)
-                        assert isfile(input_utt_save_path)
-                        input_utt = w2f_psf(
-                            input_utt_save_path,
-                            feature_type=CONFIG['feature_type'],
-                            feature_dim=CONFIG['channels'],
-                            use_energy=CONFIG['energy'],
-                            use_delta1=CONFIG['delta'],
-                            use_delta2=CONFIG['deltadelta'],
-                            window=CONFIG['window'],
-                            slide=CONFIG['slide'])
-                    else:
-                        raise ValueError('save_format is numpy or htk or wav.')
-                    frame_num = input_utt.shape[0]
+        utt_count = 0
+        df_list = []
+        for speaker, utt_dict in tqdm(speaker_dict_dict[data_type].items()):
+            for utt_index, utt_info in utt_dict.items():
+                transcript = utt_info[2]
+                if args.save_format == 'numpy':
+                    input_utt_save_path = join(
+                        input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
+                    assert isfile(input_utt_save_path)
+                    input_utt = np.load(input_utt_save_path)
+                elif args.save_format == 'htk':
+                    input_utt_save_path = join(
+                        input_save_path, data_type, speaker, speaker + '_' + utt_index + '.htk')
+                    assert isfile(input_utt_save_path)
+                    input_utt, _, _ = read(input_utt_save_path)
+                elif args.save_format == 'wav':
+                    input_utt_save_path = path.utt2wav(utt_index)
+                    assert isfile(input_utt_save_path)
+                    input_utt = w2f_psf(
+                        input_utt_save_path,
+                        feature_type=CONFIG['feature_type'],
+                        feature_dim=CONFIG['channels'],
+                        use_energy=CONFIG['energy'],
+                        use_delta1=CONFIG['delta'],
+                        use_delta2=CONFIG['deltadelta'],
+                        window=CONFIG['window'],
+                        slide=CONFIG['slide'])
+                else:
+                    raise ValueError('save_format is numpy or htk or wav.')
+                frame_num = input_utt.shape[0]
+                del input_utt
 
-                    series = pd.Series(
-                        [frame_num, input_utt_save_path, transcript],
-                        index=df.columns)
+                series = pd.Series(
+                    [frame_num, input_utt_save_path, transcript],
+                    index=df.columns)
+                df = df.append(series, ignore_index=True)
+                utt_count += 1
 
-                    df = df.append(series, ignore_index=True)
+                # Reset
+                if utt_count == 50000:
+                    df_list.append(df)
+                    df = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    utt_count = 0
 
-                    utt_count += 1
-                    if utt_count == 4000:
-                        break
-        else:
-            for speaker, utt_dict in tqdm(speaker_dict_dict[data_type].items()):
-                for utt_index, utt_info in utt_dict.items():
-                    transcript = utt_info[2]
-                    if args.save_format == 'numpy':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
-                        assert isfile(input_utt_save_path)
-                        input_utt = np.load(input_utt_save_path)
-                    elif args.save_format == 'htk':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, utt_index + '.htk')
-                        assert isfile(input_utt_save_path)
-                        input_utt, _, _ = read(input_utt_save_path)
-                    elif args.save_format == 'wav':
-                        input_utt_save_path = path.utt2wav(utt_index)
-                        assert isfile(input_utt_save_path)
-                        input_utt = w2f_psf(
-                            input_utt_save_path,
-                            feature_type=CONFIG['feature_type'],
-                            feature_dim=CONFIG['channels'],
-                            use_energy=CONFIG['energy'],
-                            use_delta1=CONFIG['delta'],
-                            use_delta2=CONFIG['deltadelta'],
-                            window=CONFIG['window'],
-                            slide=CONFIG['slide'])
-                    else:
-                        raise ValueError('save_format is numpy or htk or wav.')
-                    frame_num = input_utt.shape[0]
+        # Last dataframe
+        df_list.append(df)
 
-                    series = pd.Series(
-                        [frame_num, input_utt_save_path, transcript],
-                        index=df.columns)
+        # Concatenate all dataframes
+        df = df_list[0]
+        for df_i in df_list[1:]:
+            df = pd.concat([df, df_i], axis=0)
 
-                    df = df.append(series, ignore_index=True)
+        df.to_csv(join(dataset_save_path, 'dataset.csv'))
 
-        df.to_csv(join(dataset_save_path, 'dataset_' + args.save_format + '.csv'))
+        # Use the first 4000 utterances as the dev set
+        if data_type == 'train':
+            df[:4000].to_csv(mkdir_join(
+                args.dataset_save_path, args.save_format, data_size, 'dev',
+                'dataset.csv'))
 
 
 def merge_dicts(dicts):

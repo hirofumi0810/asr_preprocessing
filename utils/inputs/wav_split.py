@@ -82,15 +82,15 @@ class Audio(object):
 
         return audio_data
 
-    def split(self, audio_data, utterance_dict, save_path, speaker):
+    def split(self, audio_data, utterance_dict, speaker, save_path):
         """
         Args:
             audio_data:
             utterance_dict: the dictionary of utterance information of each speaker
                 key => utterance index
                 value => [start_frame, end_frame, transcript]
-            save_path: path to save each WAV file
             speaker:
+            save_path: path to save each WAV file
         """
         for utt_index, utt_info in sorted(utterance_dict.items(),
                                           key=lambda x: x[0]):

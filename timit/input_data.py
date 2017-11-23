@@ -70,7 +70,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
             'normalize must be "utterance" or "speaker" or "global" or "no".')
 
     # Read each audio file
-    print('===> Reading audio files...')
+    print('=====> Reading audio files...')
     audio_paths_male, audio_paths_female = [], []
     input_data_list_male, input_data_list_female = [], []
     total_frame_num_male, total_frame_num_female = 0, 0
@@ -149,7 +149,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 speaker_mean_dict[speaker] /= total_frame_num_dict[speaker]
 
         # Compute global mean & std per gender
-        print('===> Computing global mean & std over the training set...')
+        print('=====> Computing global mean & std over the training set...')
         frame_offset = 0
         feat_dim = input_data_list_male[0].shape[1]
         train_data_male = np.empty((total_frame_num_male, feat_dim))
@@ -205,7 +205,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                     global_std_female)
 
     # Save input features as npy files
-    print('===> Normalization...')
+    print('=====> Normalization...')
     frame_num_dict = {}
     for input_utt, audio_path in zip(tqdm(input_data_list_male + input_data_list_female),
                                      audio_paths_male + audio_paths_female):

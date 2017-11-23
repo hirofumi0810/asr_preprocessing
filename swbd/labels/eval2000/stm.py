@@ -36,7 +36,7 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
                 key (string) => utterance index
                 value (list) => [start_frame, end_frame, transcript]
     """
-    print('===> Reading the segmentation file...')
+    print('=====> Processing target labels...')
     segmentation_info = {}
     speaker_pre = ''
     utt_index = 0
@@ -98,7 +98,6 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
     #         word_list_fixed.append(word)
     # transcript = ' '.join(word_list_fixed)
 
-    print('===> Reading target labels...')
     speaker_dict_swbd = OrderedDict()
     speaker_dict_ch = OrderedDict()
     char_set = set([])
@@ -233,7 +232,7 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
 
     # Compute OOV rate
     # NOTE: these are not corrct because many %hesitation are included.
-    with open(join(run_root_path, 'config/OOV_eval2000_swbd_stm_' + data_size + '.txt'), 'w') as f:
+    with open(join(run_root_path, 'config/oov_rate_eval2000_swbd_stm_' + data_size + '.txt'), 'w') as f:
 
         # word-level (threshold == 1)
         oov_rate = compute_oov_rate(

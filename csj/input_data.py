@@ -84,7 +84,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
 
     # Loop 1: Computing global mean and statistics
     if is_training and normalize != 'no':
-        print('===> Reading audio files...')
+        print('=====> Reading audio files...')
         for i, audio_path in enumerate(tqdm(audio_paths)):
             speaker = basename(audio_path).split('.')[0]
 
@@ -125,7 +125,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                 total_frame_num_dict[speaker] = total_frame_num_speaker
                 # NOTE: speaker mean is already computed
 
-        print('===> Computing global mean & stddev...')
+        print('=====> Computing global mean & stddev...')
         # Compute global mean per gender
         global_mean_male /= total_frame_num_male
         global_mean_female /= total_frame_num_female
@@ -173,7 +173,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                     global_std_female)
 
     # Loop 2: Normalization and Saving
-    print('===> Normalization...')
+    print('=====> Normalization...')
     frame_num_dict = {}
     sampPeriod, parmKind = None, None
     for audio_path in tqdm(audio_paths):

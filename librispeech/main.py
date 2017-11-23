@@ -73,11 +73,10 @@ if args.save_format == 'htk':
 
 def main(data_size):
 
-    print('=' * 50)
-    print('  data_size: %s' % data_size)
-    print('=' * 50)
-
     for data_type in ['train', 'dev_clean', 'dev_other', 'test_clean', 'test_other']:
+        print('=' * 50)
+        print(' ' * 20 + data_type + ' (' + data_size + ')' + ' ' * 20)
+        print('=' * 50)
 
         ########################################
         # inputs
@@ -86,10 +85,9 @@ def main(data_size):
         if args.save_format in ['numpy', 'htk']:
             input_save_path = mkdir_join(
                 args.feature_save_path, args.save_format, data_size)
-            if isfile(join(input_save_path, 'complete.txt')):
+            if isfile(join(input_save_path, data_type, 'complete.txt')):
                 print('Already exists.')
             else:
-                print('---------- %s ----------' % data_type)
                 if data_type == 'train':
                     if args.tool == 'htk':
                         audio_paths = path.htk(data_type='train' + data_size)
@@ -106,13 +104,13 @@ def main(data_size):
 
                     # Load statistics over train dataset
                     global_mean_male = np.load(
-                        join(args.feature_save_path, data_size, 'train/global_mean_male.npy'))
+                        join(input_save_path, 'train/global_mean_male.npy'))
                     global_std_male = np.load(
-                        join(args.feature_save_path, data_size, 'train/global_std_male.npy'))
+                        join(input_save_path, 'train/global_std_male.npy'))
                     global_mean_female = np.load(
-                        join(args.feature_save_path, data_size, 'train/global_mean_female.npy'))
+                        join(input_save_path, 'train/global_mean_female.npy'))
                     global_std_female = np.load(
-                        join(args.feature_save_path, data_size, 'train/global_std_female.npy'))
+                        join(input_save_path, 'train/global_std_female.npy'))
 
                 read_audio(audio_paths=audio_paths,
                            tool=args.tool,
@@ -131,16 +129,13 @@ def main(data_size):
 
             # Make a confirmation file to prove that dataset was saved
             # correctly
-            with open(join(input_save_path, 'complete.txt'), 'w') as f:
+            with open(join(input_save_path, data_type, 'complete.txt'), 'w') as f:
                 f.write('')
 
         ########################################
         # labels
         ########################################
-        print('=> Processing transcripts...')
-        dataset_save_path = mkdir_join(
-            args.dataset_save_path, data_size, data_type)
-        print('---------- %s ----------' % data_type)
+        print('\n=> Processing transcripts...')
         if data_type == 'train':
             label_paths = path.trans(data_type='train' + data_size)
         else:
@@ -159,8 +154,14 @@ def main(data_size):
         ########################################
         # dataset (csv)
         ########################################
+        print('\n=> Saving dataset files...')
+        dataset_save_path = mkdir_join(
+            args.dataset_save_path, args.save_format, data_size, data_type)
         df = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
+
+        utt_count = 0
+        df_list = []
         for speaker, utt_dict in tqdm(speaker_dict.items()):
             for utt_name, transcript in utt_dict.items():
                 if args.save_format == 'numpy':
@@ -188,15 +189,30 @@ def main(data_size):
                 else:
                     raise ValueError('save_format is numpy or htk or wav.')
                 frame_num = input_utt.shape[0]
+                del input_utt
 
                 series = pd.Series(
                     [frame_num, input_utt_save_path, transcript],
                     index=df.columns)
-
                 df = df.append(series, ignore_index=True)
+                utt_count += 1
 
-            df.to_csv(join(dataset_save_path,
-                           'dataset_' + args.save_format + '.csv'))
+                # Reset
+                if utt_count == 50000:
+                    df_list.append(df)
+                    df = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    utt_count = 0
+
+        # Last dataframe
+        df_list.append(df)
+
+        # Concatenate all dataframes
+        df = df_list[0]
+        for df_i in df_list[1:]:
+            df = pd.concat([df, df_i], axis=0)
+
+        df.to_csv(join(dataset_save_path, 'dataset.csv'))
 
 
 if __name__ == '__main__':

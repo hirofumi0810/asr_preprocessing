@@ -67,7 +67,7 @@ def read_trans(label_paths, data_size, vocab_file_save_path, is_test=False,
             key (string) => speaker-book-utt_index
             value (string) => transcript
     """
-    print('===> Reading target labels...')
+    print('=====> Reading target labels...')
     speaker_dict = {}
     char_set, char_capital_set = set([]), set([])
     word_count_dict = {}

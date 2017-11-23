@@ -44,7 +44,7 @@ def read_char(label_paths, vocab_file_save_path, save_vocab_file=False):
             key (string) => utterance name
             value (string) => transcript
     """
-    print('===> Reading target labels...')
+    print('=====> Reading target labels...')
     trans_dict = {}
     char_set, char_capital_set = set([]), set([])
     for label_path in tqdm(label_paths):

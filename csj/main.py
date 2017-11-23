@@ -78,13 +78,11 @@ if args.save_format == 'htk':
 
 def main(data_size):
 
-    print('=' * 50)
-    print('  data_size: %s' % data_size)
-    print('=' * 50)
-
     speaker_dict_dict = {}  # dict of speaker_dict
     for data_type in ['train', 'eval1', 'eval2', 'eval3']:
-        print('---------- %s ----------' % data_type)
+        print('=' * 50)
+        print(' ' * 20 + data_type + ' (' + data_size + ')' + ' ' * 20)
+        print('=' * 50)
 
         ########################################
         # labels
@@ -108,7 +106,7 @@ def main(data_size):
         ########################################
         # inputs
         ########################################
-        print('=> Processing input data...')
+        print('\n=> Processing input data...')
         input_save_path = mkdir_join(
             args.feature_save_path, args.save_format, data_size)
         if isfile(join(input_save_path, data_type, 'complete.txt')):
@@ -130,7 +128,6 @@ def main(data_size):
                 # csj/feature/save_format/data_size/data_type/speaker/utt_name.npy
 
             elif args.save_format in ['numpy', 'htk']:
-                print('---------- %s ----------' % data_type)
                 if data_type == 'train':
                     if args.tool == 'htk':
                         audio_paths = path.htk(data_type='train_' + data_size)
@@ -178,9 +175,10 @@ def main(data_size):
     ########################################
     # dataset (csv)
     ########################################
-    for data_type in ['train', 'dev', 'eval1', 'eval2', 'eval3']:
+    print('\n=> Saving dataset files...')
+    for data_type in ['train', 'eval1', 'eval2', 'eval3']:
         dataset_save_path = mkdir_join(
-            args.dataset_save_path, data_size, data_type)
+            args.dataset_save_path, args.save_format, data_size, data_type)
 
         print('---------- %s ----------' % data_type)
         df_kanji = pd.DataFrame(
@@ -190,105 +188,98 @@ def main(data_size):
         df_phone = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
 
-        if data_type == 'dev':
-            # Use the first 4000 utterances as the dev set
-            utt_count = 0
-            for speaker, utt_dict in tqdm(speaker_dict_dict['train'].items()):
-                for utt_index, utt_info in utt_dict.items():
-                    trans_kanji, trans_kana, trans_phone = utt_info[2:]
-                    if args.save_format == 'numpy':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
-                        assert isfile(input_utt_save_path)
-                        input_utt = np.load(input_utt_save_path)
-                    elif args.save_format == 'htk':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, utt_index + '.htk')
-                        assert isfile(input_utt_save_path)
-                        input_utt, _, _ = read(input_utt_save_path)
-                    elif args.save_format == 'wav':
-                        input_utt_save_path = path.utt2wav(utt_index)
-                        assert isfile(input_utt_save_path)
-                        input_utt = w2f_psf(
-                            input_utt_save_path,
-                            feature_type=CONFIG['feature_type'],
-                            feature_dim=CONFIG['channels'],
-                            use_energy=CONFIG['energy'],
-                            use_delta1=CONFIG['delta'],
-                            use_delta2=CONFIG['deltadelta'],
-                            window=CONFIG['window'],
-                            slide=CONFIG['slide'])
-                    else:
-                        raise ValueError('save_format is numpy or htk or wav.')
-                    frame_num = input_utt.shape[0]
+        utt_count = 0
+        df_kanji_list, df_kana_list, df_phone_list = [], [], []
+        for speaker, utt_dict in tqdm(speaker_dict_dict[data_type].items()):
+            for utt_index, utt_info in utt_dict.items():
+                trans_kanji, trans_kana, trans_phone = utt_info[2:]
+                if args.save_format == 'numpy':
+                    input_utt_save_path = join(
+                        input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
+                    assert isfile(input_utt_save_path)
+                    input_utt = np.load(input_utt_save_path)
+                elif args.save_format == 'htk':
+                    input_utt_save_path = join(
+                        input_save_path, data_type, speaker, speaker + '_' + utt_index + '.htk')
+                    assert isfile(input_utt_save_path)
+                    input_utt, _, _ = read(input_utt_save_path)
+                elif args.save_format == 'wav':
+                    input_utt_save_path = path.utt2wav(utt_index)
+                    assert isfile(input_utt_save_path)
+                    input_utt = w2f_psf(
+                        input_utt_save_path,
+                        feature_type=CONFIG['feature_type'],
+                        feature_dim=CONFIG['channels'],
+                        use_energy=CONFIG['energy'],
+                        use_delta1=CONFIG['delta'],
+                        use_delta2=CONFIG['deltadelta'],
+                        window=CONFIG['window'],
+                        slide=CONFIG['slide'])
+                else:
+                    raise ValueError('save_format is numpy or htk or wav.')
+                frame_num = input_utt.shape[0]
+                del input_utt
 
-                    series_kanji = pd.Series(
-                        [frame_num, input_utt_save_path, trans_kanji],
-                        index=df_kanji.columns)
-                    series_kana = pd.Series(
-                        [frame_num, input_utt_save_path, trans_kana],
-                        index=df_kana.columns)
-                    series_phone = pd.Series(
-                        [frame_num, input_utt_save_path, trans_phone],
-                        index=df_phone.columns)
+                series_kanji = pd.Series(
+                    [frame_num, input_utt_save_path, trans_kanji],
+                    index=df_kanji.columns)
+                series_kana = pd.Series(
+                    [frame_num, input_utt_save_path, trans_kana],
+                    index=df_kana.columns)
+                series_phone = pd.Series(
+                    [frame_num, input_utt_save_path, trans_phone],
+                    index=df_phone.columns)
 
-                    df_kanji = df_kanji.append(series_kanji, ignore_index=True)
-                    df_kana = df_kana.append(series_kana, ignore_index=True)
-                    df_phone = df_phone.append(series_phone, ignore_index=True)
+                df_kanji = df_kanji.append(series_kanji, ignore_index=True)
+                df_kana = df_kana.append(series_kana, ignore_index=True)
+                df_phone = df_phone.append(series_phone, ignore_index=True)
 
-                    utt_count += 1
-                    if utt_count == 4000:
-                        break
-        else:
-            for speaker, utt_dict in tqdm(speaker_dict_dict[data_type].items()):
-                for utt_index, utt_info in utt_dict.items():
-                    trans_kanji, trans_kana, trans_phone = utt_info[2:]
-                    if args.save_format == 'numpy':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
-                        assert isfile(input_utt_save_path)
-                        input_utt = np.load(input_utt_save_path)
-                    elif args.save_format == 'htk':
-                        input_utt_save_path = join(
-                            input_save_path, data_type, speaker, utt_index + '.htk')
-                        assert isfile(input_utt_save_path)
-                        input_utt, _, _ = read(input_utt_save_path)
-                    elif args.save_format == 'wav':
-                        input_utt_save_path = path.utt2wav(utt_index)
-                        assert isfile(input_utt_save_path)
-                        input_utt = w2f_psf(
-                            input_utt_save_path,
-                            feature_type=CONFIG['feature_type'],
-                            feature_dim=CONFIG['channels'],
-                            use_energy=CONFIG['energy'],
-                            use_delta1=CONFIG['delta'],
-                            use_delta2=CONFIG['deltadelta'],
-                            window=CONFIG['window'],
-                            slide=CONFIG['slide'])
-                    else:
-                        raise ValueError('save_format is numpy or htk or wav.')
-                    frame_num = input_utt.shape[0]
+                utt_count += 1
 
-                    series_kanji = pd.Series(
-                        [frame_num, input_utt_save_path, trans_kanji],
-                        index=df_kanji.columns)
-                    series_kana = pd.Series(
-                        [frame_num, input_utt_save_path, trans_kana],
-                        index=df_kana.columns)
-                    series_phone = pd.Series(
-                        [frame_num, input_utt_save_path, trans_phone],
-                        index=df_phone.columns)
+                # Reset
+                if utt_count == 50000:
+                    df_kanji_list.append(df_kanji)
+                    df_kana_list.append(df_kana)
+                    df_phone_list.append(df_phone)
+                    df_kanji = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_kana = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_phone = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    utt_count = 0
 
-                    df_kanji = df_kanji.append(series_kanji, ignore_index=True)
-                    df_kana = df_kana.append(series_kana, ignore_index=True)
-                    df_phone = df_phone.append(series_phone, ignore_index=True)
+            # Last dataframe
+            df_kanji_list.append(df_kanji)
+            df_kana_list.append(df_kana)
+            df_phone_list.append(df_phone)
 
-            df_kanji.to_csv(
-                join(dataset_save_path, 'dataset_' + args.save_format + '_kanji.csv'))
-            df_kana.to_csv(
-                join(dataset_save_path, 'dataset_' + args.save_format + '_kana.csv'))
-            df_phone.to_csv(
-                join(dataset_save_path, 'dataset_' + args.save_format + '_phone.csv'))
+            # Concatenate all dataframes
+            df_kanji = df_kanji_list[0]
+            df_kana = df_kana_list[0]
+            df_phone = df_phone_list[0]
+            for df_i in df_kanji_list[1:]:
+                df_kanji = pd.concat([df_kanji, df_i], axis=0)
+            for df_i in df_kana_list[1:]:
+                df_kana = pd.concat([df_kana, df_i], axis=0)
+            for df_i in df_phone_list[1:]:
+                df_phone = pd.concat([df_phone, df_i], axis=0)
+
+        df_kanji.to_csv(join(dataset_save_path, 'dataset_kanji.csv'))
+        df_kana.to_csv(join(dataset_save_path, 'dataset_kana.csv'))
+        df_phone.to_csv(join(dataset_save_path, 'dataset_phone.csv'))
+
+        # Use the first 4000 utterances as the dev set
+        if data_type == 'train':
+            df_kanji[:4000].to_csv(mkdir_join(
+                args.dataset_save_path, args.save_format, data_size, 'dev',
+                'dataset_kanji.csv'))
+            df_kana[:4000].to_csv(mkdir_join(
+                args.dataset_save_path, args.save_format, data_size, 'dev',
+                'dataset_kana.csv'))
+            df_phone[:4000].to_csv(mkdir_join(
+                args.dataset_save_path, args.save_format, data_size, 'dev',
+                'dataset_phone.csv'))
 
 
 if __name__ == '__main__':

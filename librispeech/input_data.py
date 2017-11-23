@@ -82,7 +82,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
     speaker_mean_dict, speaker_std_dict = {}, {}
 
     # Loop 1: Divide all audio paths into speakers
-    print('===> Reading audio files...')
+    print('=====> Reading audio files...')
     for i, audio_path in enumerate(tqdm(audio_paths)):
         # ex.) audio_path: speaker-book-utt_index.***
         speaker, book, utt_index = basename(
@@ -153,7 +153,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
 
     # Loop 2: Computing global mean and sttdev
     if is_training and normalize != 'no':
-        print('===> Computing global mean & stddev...')
+        print('=====> Computing global mean & stddev...')
         # Compute global mean per gender
         global_mean_male /= total_frame_num_male
         global_mean_female /= total_frame_num_female
@@ -229,7 +229,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                     global_std_female)
 
     # Loop 3: Normalization and Saving
-    print('===> Normalization...')
+    print('=====> Normalization...')
     frame_num_dict = {}
     for speaker, audio_paths_speaker in tqdm(audio_path_dict.items()):
         for audio_path in audio_paths_speaker:
@@ -288,15 +288,15 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
 
             if save_path is not None:
                 # Save input features
+                input_name = basename(audio_path).split('.')[0]
                 if save_format == 'numpy':
-                    input_name = basename(audio_path).split('.')[0]
                     input_data_save_path = mkdir_join(
                         save_path, speaker, input_name + '.npy')
                     np.save(input_data_save_path, input_utt)
                 elif save_format == 'htk':
                     write(input_utt,
                           htk_path=mkdir_join(
-                              save_path, speaker, speaker + '_' + utt_index + '.htk'),
+                              save_path, speaker, input_name + '.htk'),
                           sampPeriod=sampPeriod,
                           parmKind=parmKind)
                 else:

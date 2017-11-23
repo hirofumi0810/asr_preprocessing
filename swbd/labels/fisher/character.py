@@ -44,7 +44,7 @@ def read_trans(label_paths, target_speaker):
             key => word
             value => the number of words in Fisher corpus
     """
-    print('===> Reading target labels...')
+    print('=====> Processing target labels...')
     speaker_dict = OrderedDict()
     char_set, char_capital_set = set([]), set([])
     word_count_dict = {}

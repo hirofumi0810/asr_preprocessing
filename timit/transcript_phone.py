@@ -25,6 +25,8 @@ def read_phone(label_paths, vocab_file_save_path, save_vocab_file=False):
             key (string) => utterance name
             value (list) => list of [trans_phone61, trans_phone48, trans_phone39]
     """
+    print('=====> Reading target labels...')
+
     # Make the mapping file (from phone to index)
     phone2phone_map_file_path = join(
         vocab_file_save_path, '../phone2phone.txt')
@@ -59,7 +61,6 @@ def read_phone(label_paths, vocab_file_save_path, save_vocab_file=False):
             for phone in sorted(list(phone39_set)):
                 f.write('%s\n' % phone)
 
-    print('===> Reading target labels...')
     trans_dict = {}
     for label_path in tqdm(label_paths):
         speaker = label_path.split('/')[-2]

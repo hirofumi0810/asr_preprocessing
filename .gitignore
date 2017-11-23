@@ -5,23 +5,17 @@ __pychache__
 *.pyc
 *.scp
 .nfs*
+nohup.out
+word*.txt
 trans*.txt
-mapping_files
-make_mine.sh
 
 # tools
 sph2pipe_v2.5
 
-# csj
-*_ss.py
-*_dialog.py
-*_ss.sh
-*_dialog.sh
-*_ss.txt
-make_wav.py
-split.py
+# Librispeech
+phone.py
+test_label_phone.py
 
-# librispeech
-word*.txt
-librispeech/phone*
-librispeech/*/*phone*
+# CSJ
+*dialog*
+*ss*

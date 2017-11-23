@@ -71,6 +71,8 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
                 key (string) => utterance index
                 value (list) => [start_frame, end_frame, trans_kanji, trans_kana, trans_phone]
     """
+    print('=====> Reading target labels...')
+
     # Make mapping dictionary from kana to phone
     kana_list = []
     kana2phone_dict = {}
@@ -86,7 +88,6 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
         kana2phone_dict[SPACE] = SIL
         kana2phone_dict[NOISE] = NOISE
 
-    print('===> Reading target labels...')
     speaker_dict = OrderedDict()
     char_set = set([])
     word_count_dict = {}

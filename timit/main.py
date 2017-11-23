@@ -72,6 +72,9 @@ if args.save_format == 'htk':
 def main():
 
     for data_type in ['train', 'dev', 'test']:
+        print('=' * 50)
+        print(' ' * 20 + data_type + ' ' * 20)
+        print('=' * 50)
 
         ########################################
         # inputs
@@ -80,10 +83,9 @@ def main():
         if args.save_format in ['numpy', 'htk']:
             input_save_path = mkdir_join(
                 args.feature_save_path, args.save_format)
-            if isfile(join(input_save_path, 'complete.txt')):
-                print('Already exists.\n')
+            if isfile(join(input_save_path, data_type, 'complete.txt')):
+                print('Already exists.')
             else:
-                print('---------- %s ----------' % data_type)
                 if args.tool == 'htk':
                     audio_paths = path.htk(data_type=data_type)
                 else:
@@ -122,18 +124,14 @@ def main():
 
             # Make a confirmation file to prove that dataset was saved
             # correctly
-            with open(join(input_save_path, 'complete.txt'), 'w') as f:
+            with open(join(input_save_path, data_type, 'complete.txt'), 'w') as f:
                 f.write('')
 
         ########################################
         # labels (character)
         ########################################
-        print('=> Processing transcripts...')
-        dataset_save_path = mkdir_join(args.dataset_save_path, data_type)
+        print('\n=> Processing transcripts (char)...')
         save_vocab_file = True if data_type == 'train' else False
-        print('=' * 50)
-        print('  label_type: character, character_capital_divide')
-        print('=' * 50)
         trans_dict = read_char(
             label_paths=path.trans(data_type=data_type),
             vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
@@ -142,6 +140,9 @@ def main():
         ########################################
         # dataset (character, csv)
         ########################################
+        print('\n=> Saving dataset files (char)...')
+        dataset_save_path = mkdir_join(
+            args.dataset_save_path, args.save_format, data_type)
         df_char = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
         for utt_name, trans_char in tqdm(trans_dict.items()):
@@ -172,6 +173,7 @@ def main():
             else:
                 raise ValueError('save_format is numpy or htk or wav.')
             frame_num = input_utt.shape[0]
+            del input_utt
 
             series_char = pd.Series(
                 [frame_num, input_utt_save_path, trans_char],
@@ -180,14 +182,12 @@ def main():
             df_char = df_char.append(series_char, ignore_index=True)
 
         df_char.to_csv(
-            join(dataset_save_path, 'dataset_' + args.save_format + '_character.csv'))
+            join(dataset_save_path, 'dataset_character.csv'))
 
         ########################################
         # labels (phone)
         ########################################
-        print('=' * 50)
-        print('  label_type: phone')
-        print('=' * 50)
+        print('\n=> Processing transcripts (phone)...')
         trans_dict = read_phone(
             label_paths=path.phone(data_type=data_type),
             vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
@@ -196,6 +196,7 @@ def main():
         ########################################
         # dataset (phone, csv)
         ########################################
+        print('\n=> Saving dataset files (phone)...')
         df_phone61 = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
         df_phone48 = pd.DataFrame(
@@ -230,6 +231,7 @@ def main():
             else:
                 raise ValueError('save_format is numpy or htk or wav.')
             frame_num = input_utt.shape[0]
+            del input_utt
 
             series_phone61 = pd.Series(
                 [frame_num, input_utt_save_path, trans_phone61],
@@ -249,11 +251,11 @@ def main():
                 series_phone39, ignore_index=True)
 
         df_phone61.to_csv(
-            join(dataset_save_path, 'dataset_' + args.save_format + '_phone61.csv'))
+            join(dataset_save_path, 'dataset_phone61.csv'))
         df_phone48.to_csv(
-            join(dataset_save_path, 'dataset_' + args.save_format + '_phone48.csv'))
+            join(dataset_save_path, 'dataset_phone48.csv'))
         df_phone39.to_csv(
-            join(dataset_save_path, 'dataset_' + args.save_format + '_phone39.csv'))
+            join(dataset_save_path, 'dataset_phone39.csv'))
 
 
 if __name__ == '__main__':

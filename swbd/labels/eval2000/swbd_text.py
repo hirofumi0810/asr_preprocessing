@@ -34,7 +34,7 @@ def read_text(label_paths, pem_path, glm_path, run_root_path,
                 key (string) => utterance index
                 value (list) => [start_frame, end_frame, transcript]
     """
-    print('===> Reading the segmentation file...')
+    print('=====> Processing target labels...')
     segmentation_info = {}
     speaker_pre = ''
     utt_index = 0
@@ -69,7 +69,6 @@ def read_text(label_paths, pem_path, glm_path, run_root_path,
             utt_index += 1
             speaker_pre = speaker
 
-    print('===> Reading target labels...')
     speaker_dict = OrderedDict()
     char_set = set([])
     fp_original = open(join(run_root_path, 'labels',
@@ -153,7 +152,7 @@ def read_text(label_paths, pem_path, glm_path, run_root_path,
         run_root_path, 'config/vocab_files/word_freq15_' + data_size + '.txt')
 
     # Compute OOV rate
-    with open(join(run_root_path, 'config/OOV_eval2000_swbd_txt_' + data_size + '.txt'), 'w') as f:
+    with open(join(run_root_path, 'config/oov_rate_eval2000_swbd_txt_' + data_size + '.txt'), 'w') as f:
 
         # word-level (threshold == 1)
         oov_rate = compute_oov_rate(

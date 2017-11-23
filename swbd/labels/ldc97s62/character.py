@@ -64,9 +64,9 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                 key (string) => utterance index
                 value (list) => [start_frame, end_frame, transcript]
     """
+    print('=====> Processing target labels...')
     merge_with_fisher = True if speaker_dict_fisher is not None else False
 
-    print('===> Reading target labels...')
     if merge_with_fisher:
         speaker_dict = speaker_dict_fisher
         vocab_set = set([])
@@ -77,14 +77,6 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
         char_set, char_capital_set = set([]), set([])
         word_count_dict = {}
         vocab_set = set([])
-
-    # for debug
-    fp_original = open(join(run_root_path, 'labels',
-                            'ldc97s62', 'trans_original.txt'), 'w')
-    fp_fixed = open(join(run_root_path, 'labels',
-                         'ldc97s62', 'trans_fixed.txt'), 'w')
-    fp_fixed_capital = open(
-        join(run_root_path, 'labels', 'ldc97s62', 'trans_fixed_capital.txt'), 'w')
 
     for label_path in tqdm(label_paths):
         utterance_dict = OrderedDict()
@@ -101,70 +93,62 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                 transcript = ' '.join(line[3:])
 
                 # Clean transcript
-                transcript_original = transcript
                 transcript = fix_transcript(transcript)
 
                 # Skip silence
                 if transcript in ['', ' ']:
                     continue
 
-                # Remove the first and last space
-                if transcript[0] == ' ':
-                    transcript = transcript[1:]
-                if transcript[-1] == ' ':
-                    transcript = transcript[:-1]
+                # Skip laughter, noise, vocalized-noise only utterance
+                if transcript.replace(NOISE, '').replace(SPACE, '').replace(VOCALIZED_NOISE, '') != '':
 
-                # Count words
-                for word in transcript.split(' '):
-                    vocab_set.add(word)
-                    if word not in word_count_dict.keys():
-                        word_count_dict[word] = 0
-                    word_count_dict[word] += 1
+                    # Remove the first and last space
+                    if transcript[0] == ' ':
+                        transcript = transcript[1:]
+                    if transcript[-1] == ' ':
+                        transcript = transcript[:-1]
 
-                # Capital-divided
-                transcript_capital = ''
-                for word in transcript.split(' '):
-                    if len(word) == 1:
-                        char_capital_set.add(word)
-                        transcript_capital += word
-                    else:
-                        # Replace the first character with the capital letter
-                        word = word[0].upper() + word[1:]
+                    # Count words
+                    for word in transcript.split(' '):
+                        vocab_set.add(word)
+                        if word not in word_count_dict.keys():
+                            word_count_dict[word] = 0
+                        word_count_dict[word] += 1
 
-                        # Check double-letters
-                        for i in range(0, len(word) - 1, 1):
-                            if word[i:i + 2] in DOUBLE_LETTERS:
-                                char_capital_set.add(word[i:i + 2])
-                            else:
-                                char_capital_set.add(word[i])
-                        transcript_capital += word
+                    # Capital-divided
+                    transcript_capital = ''
+                    for word in transcript.split(' '):
+                        if len(word) == 1:
+                            char_capital_set.add(word)
+                            transcript_capital += word
+                        else:
+                            # Replace the first character with the capital
+                            # letter
+                            word = word[0].upper() + word[1:]
 
-                # Convert space to "_"
-                transcript = re.sub(r'\s', SPACE, transcript)
+                            # Check double-letters
+                            for i in range(0, len(word) - 1, 1):
+                                if word[i:i + 2] in DOUBLE_LETTERS:
+                                    char_capital_set.add(word[i:i + 2])
+                                else:
+                                    char_capital_set.add(word[i])
+                            transcript_capital += word
 
-                for c in list(transcript):
-                    char_set.add(c)
+                    # Convert space to "_"
+                    transcript = re.sub(r'\s', SPACE, transcript)
 
-                utterance_dict[utt_index.zfill(4)] = [
-                    start_frame, end_frame, transcript]
+                    for c in list(transcript):
+                        char_set.add(c)
 
-                fp_original.write('%s  %s  %s\n' %
-                                  (speaker, utt_index, transcript_original))
-                fp_fixed.write('%s  %s  %s\n' %
-                               (speaker, utt_index, transcript))
-                fp_fixed_capital.write('%s  %s  %s\n' % (
-                    speaker, utt_index, transcript_capital))
+                    utterance_dict[utt_index.zfill(4)] = [
+                        start_frame, end_frame, transcript]
 
-                # for debug
-                # print(transcript_original)
-                # print(transcript)
-                # print(transcript_capital)
+                    # for debug
+                    # print(transcript_original)
+                    # print(transcript)
+                    # print(transcript_capital)
 
             speaker_dict[speaker] = utterance_dict
-
-    fp_original.close()
-    fp_fixed.close()
-    fp_fixed_capital.close()
 
     # Make vocabulary files
     data_size = '2000h' if merge_with_fisher else '300h'
@@ -195,13 +179,13 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
         # character-level
         with open(char_vocab_file_path, 'w') as f:
             char_list = sorted(list(char_set)) + \
-                [APOSTROPHE, HYPHEN, LAUGHTER, NOISE, VOCALIZED_NOISE]
+                [SPACE, APOSTROPHE, HYPHEN, LAUGHTER, NOISE, VOCALIZED_NOISE]
             for char in char_list:
                 f.write('%s\n' % char)
 
         # character-level (capital-divided)
         with open(char_capital_vocab_file_path, 'w') as f:
-            char_capital_list = [SPACE] + sorted(list(char_capital_set)) + \
+            char_capital_list = sorted(list(char_capital_set)) + \
                 [APOSTROPHE, HYPHEN, LAUGHTER, NOISE, VOCALIZED_NOISE]
             for char in char_capital_list:
                 f.write('%s\n' % char)

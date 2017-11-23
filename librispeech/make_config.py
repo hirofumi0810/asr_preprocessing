@@ -51,7 +51,7 @@ def main():
                 energy=bool(args.energy),
                 delta=bool(args.delta),
                 deltadelta=bool(args.deltadelta))
-    # NOTE: 123-dim features are extracted by default
+    # NOTE: 120-dim features are extracted by default
 
     parts = ['train-clean-100', 'dev-clean', 'dev-other',
              'test-clean', 'test-other']
