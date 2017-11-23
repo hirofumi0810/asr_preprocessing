@@ -18,9 +18,9 @@ from utils.util import mkdir_join
 # NOTE:
 ############################################################
 # [character]
-# 26 alphabets(a-z), space(_), apostorophe('), hyphen(-)
+# 26 alphabets(a-z), number(0-9), space(_), apostorophe('), hyphen(-)
 # laughter(L), noise(N), vocalized-noise(V)
-# = 32 labels
+# = 42 labels
 
 # [character_capital_divide]
 # 26 lower alphabets(a-z), 26 upper alphabets(A-Z),
@@ -166,7 +166,7 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
         vocab_file_save_path, 'word_freq15_' + data_size + '.txt')
 
     # Reserve some indices
-    for mark in [SPACE, LAUGHTER, NOISE, VOCALIZED_NOISE]:
+    for mark in [SPACE, HYPHEN, APOSTROPHE, LAUGHTER, NOISE, VOCALIZED_NOISE]:
         for c in list(mark):
             char_set.discard(c)
             char_capital_set.discard(c)

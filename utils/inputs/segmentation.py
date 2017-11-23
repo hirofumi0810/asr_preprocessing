@@ -95,18 +95,22 @@ def segment(audio_path, speaker, utterance_dict, is_training,
             else:
                 start_frame_extend = 0
 
-            start_frame_next = utt_dict_sorted[i + 1][1][0]
-            if end_frame > start_frame_next:
-                print('Warning: utterances are overlapping.')
-                print('speaker index: %s' % speaker)
-                print('utterance index: %s & %s' %
-                      (str(utt_index), utt_dict_sorted[i + 1][0]))
+            if len(utt_dict_sorted) != 1:
+                start_frame_next = utt_dict_sorted[i + 1][1][0]
+                if end_frame > start_frame_next:
+                    print('Warning: utterances are overlapping.')
+                    print('speaker index: %s' % speaker)
+                    print('utterance index: %s & %s' %
+                          (str(utt_index), utt_dict_sorted[i + 1][0]))
 
-            if start_frame_next - end_frame >= sil_duration * 2:
-                end_frame_extend = end_frame + sil_duration
+                if start_frame_next - end_frame >= sil_duration * 2:
+                    end_frame_extend = end_frame + sil_duration
+                else:
+                    end_frame_extend = end_frame + \
+                        int((start_frame_next - end_frame) / 2)
             else:
-                end_frame_extend = end_frame + \
-                    int((start_frame_next - end_frame) / 2)
+                end_frame_extend = end_frame + sil_duration
+                # end_frame_extend = end_frame
 
         # Check the last utterance
         elif i == utt_num - 1:

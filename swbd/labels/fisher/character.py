@@ -74,56 +74,60 @@ def read_trans(label_paths, target_speaker):
                 if transcript in ['', ' ']:
                     continue
 
-                # Remove the first and last space
-                if transcript[0] == ' ':
-                    transcript = transcript[1:]
-                if transcript[-1] == ' ':
-                    transcript = transcript[:-1]
+                # Skip laughter, noise, vocalized-noise only utterance
+                if transcript.replace(NOISE, '').replace(SPACE, '').replace(VOCALIZED_NOISE, '') != '':
 
-                # Count words
-                for word in transcript.split(' '):
-                    vocab_set.add(word)
-                    if word not in word_count_dict.keys():
-                        word_count_dict[word] = 0
-                    word_count_dict[word] += 1
+                    # Remove the first and last space
+                    if transcript[0] == ' ':
+                        transcript = transcript[1:]
+                    if transcript[-1] == ' ':
+                        transcript = transcript[:-1]
 
-                # Capital-divided
-                transcript_capital = ''
-                for word in transcript.split(' '):
-                    if len(word) == 1:
-                        char_capital_set.add(word)
-                        transcript_capital += word
-                    else:
-                        # Replace the first character with the capital letter
-                        word = word[0].upper() + word[1:]
+                    # Count words
+                    for word in transcript.split(' '):
+                        vocab_set.add(word)
+                        if word not in word_count_dict.keys():
+                            word_count_dict[word] = 0
+                        word_count_dict[word] += 1
 
-                        # Check double-letters
-                        for i in range(0, len(word) - 1, 1):
-                            if word[i:i + 2] in DOUBLE_LETTERS:
-                                char_capital_set.add(word[i:i + 2])
-                            else:
-                                char_capital_set.add(word[i])
-                        transcript_capital += word
+                    # Capital-divided
+                    transcript_capital = ''
+                    for word in transcript.split(' '):
+                        if len(word) == 1:
+                            char_capital_set.add(word)
+                            transcript_capital += word
+                        else:
+                            # Replace the first character with the capital
+                            # letter
+                            word = word[0].upper() + word[1:]
 
-                # Convert space to "_"
-                transcript = re.sub(r'\s', SPACE, transcript)
+                            # Check double-letters
+                            for i in range(0, len(word) - 1, 1):
+                                if word[i:i + 2] in DOUBLE_LETTERS:
+                                    char_capital_set.add(word[i:i + 2])
+                                else:
+                                    char_capital_set.add(word[i])
+                            transcript_capital += word
 
-                for c in list(transcript):
-                    char_set.add(c)
+                    # Convert space to "_"
+                    transcript = re.sub(r'\s', SPACE, transcript)
 
-                utterance_dict[str(utt_index).zfill(4)] = [
-                    start_frame, end_frame, transcript]
+                    for c in list(transcript):
+                        char_set.add(c)
 
-                # for debug
-                # print(transcript_original)
-                # print(transcript)
+                    utterance_dict[str(utt_index).zfill(4)] = [
+                        start_frame, end_frame, transcript]
+
+                    # for debug
+                    # print(transcript_original)
+                    # print(transcript)
 
                 utt_index += 1
 
             speaker_dict[speaker] = utterance_dict
 
     # Reserve some indices
-    for mark in [SPACE, LAUGHTER, NOISE, VOCALIZED_NOISE]:
+    for mark in [SPACE, HYPHEN, APOSTROPHE, LAUGHTER, NOISE, VOCALIZED_NOISE]:
         for c in list(mark):
             char_set.discard(c)
             char_capital_set.discard(c)
