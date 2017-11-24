@@ -132,10 +132,12 @@ def main():
         ########################################
         print('\n=> Processing transcripts (char)...')
         save_vocab_file = True if data_type == 'train' else False
+        is_test = True if data_type == 'test' else False
         trans_dict = read_char(
             label_paths=path.trans(data_type=data_type),
             vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
-            save_vocab_file=save_vocab_file)
+            save_vocab_file=save_vocab_file,
+            is_test=is_test)
 
         ########################################
         # dataset (character, csv)
@@ -145,7 +147,9 @@ def main():
             args.dataset_save_path, args.save_format, data_type)
         df_char = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
-        for utt_name, trans_char in tqdm(trans_dict.items()):
+        df_char_capital = pd.DataFrame(
+            [], columns=['frame_num', 'input_path', 'transcript'])
+        for utt_name, [char_indices, char_indices_capital] in tqdm(trans_dict.items()):
             if args.save_format == 'numpy':
                 speaker = utt_name.split('_')[0]
                 input_utt_save_path = join(
@@ -176,13 +180,20 @@ def main():
             del input_utt
 
             series_char = pd.Series(
-                [frame_num, input_utt_save_path, trans_char],
+                [frame_num, input_utt_save_path, char_indices],
                 index=df_char.columns)
+            series_char_capital = pd.Series(
+                [frame_num, input_utt_save_path, char_indices_capital],
+                index=df_char_capital.columns)
 
             df_char = df_char.append(series_char, ignore_index=True)
+            df_char_capital = df_char_capital.append(
+                series_char_capital, ignore_index=True)
 
         df_char.to_csv(
             join(dataset_save_path, 'dataset_character.csv'))
+        df_char_capital.to_csv(
+            join(dataset_save_path, 'dataset_character_capital_divide.csv'))
 
         ########################################
         # labels (phone)
@@ -191,7 +202,8 @@ def main():
         trans_dict = read_phone(
             label_paths=path.phone(data_type=data_type),
             vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
-            save_vocab_file=save_vocab_file)
+            save_vocab_file=save_vocab_file,
+            is_test=is_test)
 
         ########################################
         # dataset (phone, csv)
@@ -203,7 +215,7 @@ def main():
             [], columns=['frame_num', 'input_path', 'transcript'])
         df_phone39 = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
-        for utt_name, [trans_phone61, trans_phone48, trans_phone39] in tqdm(trans_dict.items()):
+        for utt_name, [phone61_indices, phone48_indices, phone39_indices] in tqdm(trans_dict.items()):
             if args.save_format == 'numpy':
                 speaker = utt_name.split('_')[0]
                 input_utt_save_path = join(
@@ -234,13 +246,13 @@ def main():
             del input_utt
 
             series_phone61 = pd.Series(
-                [frame_num, input_utt_save_path, trans_phone61],
+                [frame_num, input_utt_save_path, phone61_indices],
                 index=df_phone61.columns)
             series_phone48 = pd.Series(
-                [frame_num, input_utt_save_path, trans_phone48],
+                [frame_num, input_utt_save_path, phone48_indices],
                 index=df_phone48.columns)
             series_phone39 = pd.Series(
-                [frame_num, input_utt_save_path, trans_phone39],
+                [frame_num, input_utt_save_path, phone39_indices],
                 index=df_phone39.columns)
 
             df_phone61 = df_phone61.append(

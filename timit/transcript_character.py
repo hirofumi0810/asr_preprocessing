@@ -11,6 +11,7 @@ from os.path import basename
 import re
 from tqdm import tqdm
 
+from utils.io.labels.character import Char2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -33,12 +34,14 @@ SPACE = '_'
 APOSTROPHE = '\''
 
 
-def read_char(label_paths, vocab_file_save_path, save_vocab_file=False):
+def read_char(label_paths, vocab_file_save_path, save_vocab_file=False,
+              is_test=False):
     """Read text transcript.
     Args:
         label_paths (list): list of paths to label files
         vocab_file_save_path (string): path to vocabulary files
         save_vocab_file (string): if True, save vocabulary files
+        is_test (bool, optional): set True in case of the test set
     Returns:
         trans_dict (dict):
             key (string) => utterance name
@@ -134,5 +137,23 @@ def read_char(label_paths, vocab_file_save_path, save_vocab_file=False):
             char_capital_list = sorted(list(char_capital_set)) + [APOSTROPHE]
             for char in char_capital_list:
                 f.write('%s\n' % char)
+
+    # Tokenize
+    char2idx = Char2idx(char_vocab_file_path)
+    char2idx_capital = Char2idx(
+        char_capital_vocab_file_path, capital_divide=True)
+    for utt_name, transcript in tqdm(trans_dict.keys()):
+        if is_test:
+            trans_dict[utt_name] = [transcript, transcript]
+            # NOTE: save as it is
+        else:
+            char_indices = char2idx(transcript)
+            char_indices_capital = char2idx_capital(transcript)
+
+            char_indices = ' '.join(list(map(str, char_indices.tolist())))
+            char_indices_capital = ' '.join(
+                list(map(str, char_indices_capital.tolist())))
+
+            trans_dict[utt_name] = [char_indices, char_indices_capital]
 
     return trans_dict
