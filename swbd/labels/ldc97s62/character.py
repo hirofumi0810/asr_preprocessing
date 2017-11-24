@@ -7,12 +7,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from os.path import join
 import re
 from tqdm import tqdm
 from collections import OrderedDict
 
 from swbd.labels.ldc97s62.fix_trans import fix_transcript
+from utils.io.labels.character import Char2idx
+from utils.io.labels.word import Word2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -62,7 +63,9 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
             key (string) => speaker
             value (dict) => dictionary of utterance infomation of each speaker
                 key (string) => utterance index
-                value (list) => [start_frame, end_frame, transcript]
+                value (list) => [start_frame, end_frame, char_indices, char_indices_capital,
+                                word_freq1_indices, word_freq5_indices,
+                                word_freq10_indices, word_freq15_indices]
     """
     print('=====> Processing target labels...')
     merge_with_fisher = True if speaker_dict_fisher is not None else False
@@ -99,17 +102,20 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                 if transcript in ['', ' ']:
                     continue
 
+                # Convert space to "_"
+                transcript = re.sub(r'\s', SPACE, transcript)
+
                 # Skip laughter, noise, vocalized-noise only utterance
-                if transcript.replace(NOISE, '').replace(SPACE, '').replace(VOCALIZED_NOISE, '') != '':
+                if transcript.replace(NOISE, '').replace(LAUGHTER, '').replace(VOCALIZED_NOISE, '').replace(SPACE, '') != '':
 
                     # Remove the first and last space
-                    if transcript[0] == ' ':
+                    if transcript[0] == SPACE:
                         transcript = transcript[1:]
-                    if transcript[-1] == ' ':
+                    if transcript[-1] == SPACE:
                         transcript = transcript[:-1]
 
                     # Count words
-                    for word in transcript.split(' '):
+                    for word in transcript.split(SPACE):
                         vocab_set.add(word)
                         if word not in word_count_dict.keys():
                             word_count_dict[word] = 0
@@ -117,7 +123,7 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
 
                     # Capital-divided
                     transcript_capital = ''
-                    for word in transcript.split(' '):
+                    for word in transcript.split(SPACE):
                         if len(word) == 1:
                             char_capital_set.add(word)
                             transcript_capital += word
@@ -133,9 +139,6 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                                 else:
                                     char_capital_set.add(word[i])
                             transcript_capital += word
-
-                    # Convert space to "_"
-                    transcript = re.sub(r'\s', SPACE, transcript)
 
                     for c in list(transcript):
                         char_set.add(c)
@@ -216,5 +219,41 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                                  if freq >= 15]) + [OOV]
             for word in vocab_list:
                 f.write('%s\n' % word)
+
+    # Tokenize
+    print('=====> Tokenize...')
+    char2idx = Char2idx(char_vocab_file_path)
+    char2idx_capital = Char2idx(
+        char_capital_vocab_file_path, capital_divide=True)
+    word2idx_freq1 = Word2idx(word_freq1_vocab_file_path)
+    word2idx_freq5 = Word2idx(word_freq5_vocab_file_path)
+    word2idx_freq10 = Word2idx(word_freq10_vocab_file_path)
+    word2idx_freq15 = Word2idx(word_freq15_vocab_file_path)
+    for speaker, utt_dict in tqdm(speaker_dict.items()):
+        for utt_index, [start_frame, end_frame, transcript] in utt_dict.items():
+            char_indices = char2idx(transcript)
+            char_indices_capital = char2idx_capital(transcript)
+            word_freq1_indices = word2idx_freq1(transcript)
+            word_freq5_indices = word2idx_freq5(transcript)
+            word_freq10_indices = word2idx_freq10(transcript)
+            word_freq15_indices = word2idx_freq15(transcript)
+
+            char_indices = ' '.join(list(map(str, char_indices.tolist())))
+            char_indices_capital = ' '.join(
+                list(map(str, char_indices_capital.tolist())))
+            word_freq1_indices = ' '.join(
+                list(map(str, word_freq1_indices.tolist())))
+            word_freq5_indices = ' '.join(
+                list(map(str, word_freq5_indices.tolist())))
+            word_freq10_indices = ' '.join(
+                list(map(str, word_freq10_indices.tolist())))
+            word_freq15_indices = ' '.join(
+                list(map(str, word_freq15_indices.tolist())))
+
+            utt_dict[utt_index] = [start_frame, end_frame,
+                                   char_indices, char_indices_capital,
+                                   word_freq1_indices, word_freq5_indices,
+                                   word_freq10_indices, word_freq15_indices]
+        speaker_dict[speaker] = utt_dict
 
     return speaker_dict

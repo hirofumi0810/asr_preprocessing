@@ -64,7 +64,7 @@ def read_trans(label_paths, target_speaker):
                 which_speaker = line[2].replace(':', '')
                 if which_speaker != target_speaker:
                     continue
-                speaker = session + which_speaker
+                speaker = session + '-' + which_speaker
 
                 # Clean transcript
                 transcript_original = ' '.join(line[3:]).lower()
@@ -74,17 +74,20 @@ def read_trans(label_paths, target_speaker):
                 if transcript in ['', ' ']:
                     continue
 
+                # Convert space to "_"
+                transcript = re.sub(r'\s', SPACE, transcript)
+
                 # Skip laughter, noise, vocalized-noise only utterance
-                if transcript.replace(NOISE, '').replace(SPACE, '').replace(VOCALIZED_NOISE, '') != '':
+                if transcript.replace(NOISE, '').replace(LAUGHTER, '').replace(VOCALIZED_NOISE, '').replace(SPACE, '') != '':
 
                     # Remove the first and last space
-                    if transcript[0] == ' ':
+                    if transcript[0] == SPACE:
                         transcript = transcript[1:]
-                    if transcript[-1] == ' ':
+                    if transcript[-1] == SPACE:
                         transcript = transcript[:-1]
 
                     # Count words
-                    for word in transcript.split(' '):
+                    for word in transcript.split(SPACE):
                         vocab_set.add(word)
                         if word not in word_count_dict.keys():
                             word_count_dict[word] = 0
@@ -92,7 +95,7 @@ def read_trans(label_paths, target_speaker):
 
                     # Capital-divided
                     transcript_capital = ''
-                    for word in transcript.split(' '):
+                    for word in transcript.split(SPACE):
                         if len(word) == 1:
                             char_capital_set.add(word)
                             transcript_capital += word
@@ -108,9 +111,6 @@ def read_trans(label_paths, target_speaker):
                                 else:
                                     char_capital_set.add(word[i])
                             transcript_capital += word
-
-                    # Convert space to "_"
-                    transcript = re.sub(r'\s', SPACE, transcript)
 
                     for c in list(transcript):
                         char_set.add(c)

@@ -34,7 +34,7 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
             key (string) => speaker
             value (dict) => dictionary of utterance infomation of each speaker
                 key (string) => utterance index
-                value (list) => [start_frame, end_frame, transcript]
+                value (list) => [start_frame, end_frame, transcript * 6]
     """
     print('=====> Processing target labels...')
     segmentation_info = {}
@@ -205,7 +205,8 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
             start_frame = int(start_time * 100 + 0.5)
             end_frame = int(end_time * 100 + 0.5)
             utterance_dict[str(utt_index).zfill(4)] = [
-                start_frame, end_frame, transcript]
+                start_frame, end_frame, transcript, transcript,
+                transcript, transcript, transcript, transcript]
 
             utt_index += 1
             speaker_pre = speaker
