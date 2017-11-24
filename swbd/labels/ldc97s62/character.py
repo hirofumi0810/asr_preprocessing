@@ -12,8 +12,8 @@ from tqdm import tqdm
 from collections import OrderedDict
 
 from swbd.labels.ldc97s62.fix_trans import fix_transcript
-from utils.io.labels.character import Char2idx
-from utils.io.labels.word import Word2idx
+from utils.labels.character import Char2idx
+from utils.labels.word import Word2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -172,6 +172,8 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
     for mark in [SPACE, HYPHEN, APOSTROPHE, LAUGHTER, NOISE, VOCALIZED_NOISE]:
         for c in list(mark):
             char_set.discard(c)
+    for mark in [SPACE, HYPHEN, APOSTROPHE]:
+        for c in list(mark):
             char_capital_set.discard(c)
 
     # for debug
@@ -222,7 +224,7 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
 
     # Tokenize
     print('=====> Tokenize...')
-    char2idx = Char2idx(char_vocab_file_path)
+    char2idx = Char2idx(char_vocab_file_path, double_letter=True)
     char2idx_capital = Char2idx(
         char_capital_vocab_file_path, capital_divide=True)
     word2idx_freq1 = Word2idx(word_freq1_vocab_file_path)

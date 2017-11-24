@@ -11,7 +11,7 @@ from os.path import basename
 import re
 from tqdm import tqdm
 
-from utils.io.labels.character import Char2idx
+from utils.labels.character import Char2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -45,7 +45,7 @@ def read_char(label_paths, vocab_file_save_path, save_vocab_file=False,
     Returns:
         trans_dict (dict):
             key (string) => utterance name
-            value (string) => transcript
+            value (list) => [char_indices, char_indices_capital]
     """
     print('=====> Reading target labels...')
     trans_dict = {}
@@ -139,10 +139,11 @@ def read_char(label_paths, vocab_file_save_path, save_vocab_file=False,
                 f.write('%s\n' % char)
 
     # Tokenize
+    print('=====> Tokenize...')
     char2idx = Char2idx(char_vocab_file_path)
     char2idx_capital = Char2idx(
         char_capital_vocab_file_path, capital_divide=True)
-    for utt_name, transcript in tqdm(trans_dict.keys()):
+    for utt_name, transcript in tqdm(trans_dict.items()):
         if is_test:
             trans_dict[utt_name] = [transcript, transcript]
             # NOTE: save as it is

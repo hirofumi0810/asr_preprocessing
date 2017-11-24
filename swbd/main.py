@@ -339,21 +339,22 @@ def main(data_size):
 
         # Concatenate all dataframes
         df_char = df_char_list[0]
+        df_char_capital = df_char_capital_list[0]
+        df_word_freq1 = df_word_freq1_list[0]
+        df_word_freq5 = df_word_freq5_list[0]
+        df_word_freq10 = df_word_freq10_list[0]
+        df_word_freq15 = df_word_freq15_list[0]
+
         for df_i in df_char_list[1:]:
             df_char = pd.concat([df_char, df_i], axis=0)
-        df_char_capital = df_char_capital_list[0]
         for df_i in df_char_list[1:]:
             df_char_capital = pd.concat([df_char_capital, df_i], axis=0)
-        df_word_freq1 = df_word_freq1_list[0]
         for df_i in df_word_freq1_list[1:]:
             df_word_freq1 = pd.concat([df_word_freq1, df_i], axis=0)
-        df_word_freq5 = df_word_freq5_list[0]
         for df_i in df_word_freq5_list[1:]:
             df_word_freq5 = pd.concat([df_word_freq5, df_i], axis=0)
-        df_word_freq10 = df_word_freq10_list[0]
         for df_i in df_word_freq10_list[1:]:
             df_word_freq10 = pd.concat([df_word_freq10, df_i], axis=0)
-        df_word_freq15 = df_word_freq15_list[0]
         for df_i in df_word_freq15_list[1:]:
             df_word_freq15 = pd.concat([df_word_freq15, df_i], axis=0)
 

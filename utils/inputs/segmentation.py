@@ -82,11 +82,9 @@ def segment(audio_path, speaker, utterance_dict, is_training,
 
         # Check timestamp
         if start_frame > end_frame:
-            print(utterance_dict)
             print('Warning: time stamp is reversed.')
             print('speaker index: %s' % speaker)
-            print('utterance index: %s & %s' %
-                  (str(utt_index), utt_dict_sorted[i + 1][0]))
+            print('utterance index: %s' % utt_index)
 
         # Check the first utterance
         if i == 0:
@@ -100,8 +98,7 @@ def segment(audio_path, speaker, utterance_dict, is_training,
                 if end_frame > start_frame_next:
                     print('Warning: utterances are overlapping.')
                     print('speaker index: %s' % speaker)
-                    print('utterance index: %s & %s' %
-                          (str(utt_index), utt_dict_sorted[i + 1][0]))
+                    print('utterance index: %s' % utt_index)
 
                 if start_frame_next - end_frame >= sil_duration * 2:
                     end_frame_extend = end_frame + sil_duration
@@ -137,8 +134,7 @@ def segment(audio_path, speaker, utterance_dict, is_training,
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
                 print('speaker: %s' % speaker)
-                print('utt index: %s & %s' %
-                      (str(utt_index), utt_dict_sorted[i + 1][0]))
+                print('utterance index: %s' % utt_index)
 
             if start_frame_next - end_frame >= sil_duration * 2:
                 end_frame_extend = end_frame + sil_duration

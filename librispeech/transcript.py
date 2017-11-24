@@ -11,6 +11,8 @@ from os.path import join
 import re
 from tqdm import tqdm
 
+from utils.labels.character import Char2idx
+from utils.labels.word import Word2idx
 from utils.util import mkdir_join
 
 # NOTE:
@@ -65,7 +67,9 @@ def read_trans(label_paths, data_size, vocab_file_save_path, is_test=False,
     Returns:
         trans_dict (dict):
             key (string) => speaker-book-utt_index
-            value (string) => transcript
+            value (list) => [char_indices, char_indices_capital,
+                            word_freq1_indices, word_freq5_indices,
+                            word_freq10_indices, word_freq15_indices]
     """
     print('=====> Reading target labels...')
     speaker_dict = {}
@@ -220,6 +224,44 @@ def read_trans(label_paths, data_size, vocab_file_save_path, is_test=False,
                 speaker_dict, word_freq15_vocab_file_path)
             f.write('Word (freq15):\n')
             f.write('  OOV rate (test): %f %%\n' % oov_rate)
+
+    # Tokenize
+    print('=====> Tokenize...')
+    char2idx = Char2idx(char_vocab_file_path)
+    char2idx_capital = Char2idx(
+        char_capital_vocab_file_path, capital_divide=True)
+    word2idx_freq1 = Word2idx(word_freq1_vocab_file_path)
+    word2idx_freq5 = Word2idx(word_freq5_vocab_file_path)
+    word2idx_freq10 = Word2idx(word_freq10_vocab_file_path)
+    word2idx_freq15 = Word2idx(word_freq15_vocab_file_path)
+    for speaker, utt_dict in tqdm(speaker_dict.items()):
+        for utt_index, transcript in utt_dict.items():
+            if is_test:
+                utt_dict[utt_index] = [transcript] * 6
+            else:
+                char_indices = char2idx(transcript)
+                char_indices_capital = char2idx_capital(transcript)
+                word_freq1_indices = word2idx_freq1(transcript)
+                word_freq5_indices = word2idx_freq5(transcript)
+                word_freq10_indices = word2idx_freq10(transcript)
+                word_freq15_indices = word2idx_freq15(transcript)
+
+                char_indices = ' '.join(list(map(str, char_indices.tolist())))
+                char_indices_capital = ' '.join(
+                    list(map(str, char_indices_capital.tolist())))
+                word_freq1_indices = ' '.join(
+                    list(map(str, word_freq1_indices.tolist())))
+                word_freq5_indices = ' '.join(
+                    list(map(str, word_freq5_indices.tolist())))
+                word_freq10_indices = ' '.join(
+                    list(map(str, word_freq10_indices.tolist())))
+                word_freq15_indices = ' '.join(
+                    list(map(str, word_freq15_indices.tolist())))
+
+                utt_dict[utt_index] = [char_indices, char_indices_capital,
+                                       word_freq1_indices, word_freq5_indices,
+                                       word_freq10_indices, word_freq15_indices]
+        speaker_dict[speaker] = utt_dict
 
     return speaker_dict
 

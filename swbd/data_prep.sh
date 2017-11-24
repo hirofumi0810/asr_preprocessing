@@ -82,22 +82,22 @@ echo ===========================================================================
 echo "                   Download transcriptions (LDC97S62)                     "
 echo ============================================================================
 
-if [ -d $DATASET_SAVE_PATH/swb_ms98_transcriptions ]; then
-  echo file exists: $DATASET_SAVE_PATH/swb_ms98_transcriptions
+if [ -d $DATASET_ROOT_PATH/swb_ms98_transcriptions ]; then
+  echo file exists: $DATASET_ROOT_PATH/swb_ms98_transcriptions
 else
   if ! which wget >&/dev/null; then
     echo "This script requires you to first install wget";
     exit 1;
   fi
 
-  wget http://www.openslr.org/resources/5/switchboard_word_alignments.tar.gz -P $DATASET_SAVE_PATH
+  wget http://www.openslr.org/resources/5/switchboard_word_alignments.tar.gz -P $DATASET_ROOT_PATH
   # alternative: wget http://www.isip.piconepress.com/projects/switchboard/releases/switchboard_word_alignments.tar.gz
-  tar xzvf $DATASET_SAVE_PATH/switchboard_word_alignments.tar.gz -C $DATASET_SAVE_PATH
-  rm $DATASET_SAVE_PATH/switchboard_word_alignments.tar.gz
+  tar xzvf $DATASET_ROOT_PATH/switchboard_word_alignments.tar.gz -C $DATASET_ROOT_PATH
+  rm $DATASET_ROOT_PATH/switchboard_word_alignments.tar.gz
 fi
 
 # Option A: SWBD dictionary file check
-[ ! -f $DATASET_SAVE_PATH/swb_ms98_transcriptions/sw-ms98-dict.text ] && \
+[ ! -f $DATASET_ROOT_PATH/swb_ms98_transcriptions/sw-ms98-dict.text ] && \
   echo  "SWBD dictionary file does not exist" &&  exit 1;
 
 
@@ -311,7 +311,7 @@ echo ===========================================================================
 
 python main.py \
   --swbd_audio_path $SWBD_AUDIO_PATH \
-  --swbd_trans_path $DATASET_SAVE_PATH/swb_ms98_transcriptions \
+  --swbd_trans_path $DATASET_ROOT_PATH/swb_ms98_transcriptions \
   --fisher_path $FISHER_PATH \
   --eval2000_audio_path $EVAL2000_AUDIO_PATH \
   --eval2000_trans_path $EVAL2000_TRANS_PATH \

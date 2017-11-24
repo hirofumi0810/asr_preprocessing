@@ -10,7 +10,7 @@ from __future__ import print_function
 from os.path import join, basename
 from tqdm import tqdm
 
-from utils.io.labels.phone import Phone2idx
+from utils.labels.phone import Phone2idx
 from utils.util import mkdir_join
 from timit.util import map_phone2phone
 
@@ -26,7 +26,7 @@ def read_phone(label_paths, vocab_file_save_path, save_vocab_file=False,
     Returns:
         text_dict (dict):
             key (string) => utterance name
-            value (list) => list of [trans_phone61, trans_phone48, trans_phone39]
+            value (list) => list of [phone61_indices, phone48_indices, phone39_indices]
     """
     print('=====> Reading target labels...')
 
@@ -98,10 +98,11 @@ def read_phone(label_paths, vocab_file_save_path, save_vocab_file=False,
         trans_dict[utt_name] = [trans_phone61, trans_phone48, trans_phone39]
 
     # Tokenize
+    print('=====> Tokenize...')
     phone2idx_61 = Phone2idx(phone61_vocab_map_file_path)
     phone2idx_48 = Phone2idx(phone48_vocab_map_file_path)
     phone2idx_39 = Phone2idx(phone39_vocab_map_file_path)
-    for utt_name, [rans_phone61, trans_phone48, trans_phone39] in tqdm(trans_dict.keys()):
+    for utt_name, [trans_phone61, trans_phone48, trans_phone39] in tqdm(trans_dict.items()):
         if is_test:
             trans_dict[utt_name] = [
                 trans_phone61, trans_phone48, trans_phone39]

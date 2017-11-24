@@ -35,7 +35,12 @@ def read(htk_path):
         feature_dim = int(sampSize / 4)
         f.seek(12, 0)
         input_data = np.fromfile(f, 'f')
-        input_data = input_data.reshape(-1, feature_dim)
+        try:
+            input_data = input_data.reshape(-1, feature_dim)
+        except:
+            print(input_data.shape)
+            raise ValueError
+
         input_data.byteswap(True)
 
     return input_data, sampPeriod, parmKind

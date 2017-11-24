@@ -13,9 +13,9 @@ trans*.txt
 sph2pipe_v2.5
 
 # Librispeech
-phone.py
-test_label_phone.py
+librispeech/phone.py
+librispeech/test/test_label_phone.py
 
 # CSJ
 *dialog*
-*ss*
+*_ss*

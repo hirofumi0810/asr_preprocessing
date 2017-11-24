@@ -190,10 +190,9 @@ def main():
             df_char_capital = df_char_capital.append(
                 series_char_capital, ignore_index=True)
 
-        df_char.to_csv(
-            join(dataset_save_path, 'dataset_character.csv'))
+        df_char.to_csv(join(dataset_save_path, 'character.csv'))
         df_char_capital.to_csv(
-            join(dataset_save_path, 'dataset_character_capital_divide.csv'))
+            join(dataset_save_path, 'character_capital_divide.csv'))
 
         ########################################
         # labels (phone)
@@ -262,12 +261,9 @@ def main():
             df_phone39 = df_phone39.append(
                 series_phone39, ignore_index=True)
 
-        df_phone61.to_csv(
-            join(dataset_save_path, 'dataset_phone61.csv'))
-        df_phone48.to_csv(
-            join(dataset_save_path, 'dataset_phone48.csv'))
-        df_phone39.to_csv(
-            join(dataset_save_path, 'dataset_phone39.csv'))
+        df_phone61.to_csv(join(dataset_save_path, 'phone61.csv'))
+        df_phone48.to_csv(join(dataset_save_path, 'phone48.csv'))
+        df_phone39.to_csv(join(dataset_save_path, 'phone39.csv'))
 
 
 if __name__ == '__main__':

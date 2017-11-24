@@ -157,13 +157,25 @@ def main(data_size):
         print('\n=> Saving dataset files...')
         dataset_save_path = mkdir_join(
             args.dataset_save_path, args.save_format, data_size, data_type)
-        df = pd.DataFrame(
+        df_char = pd.DataFrame(
+            [], columns=['frame_num', 'input_path', 'transcript'])
+        df_char_capital = pd.DataFrame(
+            [], columns=['frame_num', 'input_path', 'transcript'])
+        df_word_freq1 = pd.DataFrame(
+            [], columns=['frame_num', 'input_path', 'transcript'])
+        df_word_freq5 = pd.DataFrame(
+            [], columns=['frame_num', 'input_path', 'transcript'])
+        df_word_freq10 = pd.DataFrame(
+            [], columns=['frame_num', 'input_path', 'transcript'])
+        df_word_freq15 = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
 
         utt_count = 0
-        df_list = []
+        df_char_list, df_char_capital_list = [], []
+        df_word_freq1_list, df_word_freq5_list = [], []
+        df_word_freq10_list, df_word_freq15_list = [], []
         for speaker, utt_dict in tqdm(speaker_dict.items()):
-            for utt_name, transcript in utt_dict.items():
+            for utt_name, indices_list in utt_dict.items():
                 if args.save_format == 'numpy':
                     input_utt_save_path = join(
                         input_save_path, data_type, speaker, utt_name + '.npy')
@@ -191,28 +203,103 @@ def main(data_size):
                 frame_num = input_utt.shape[0]
                 del input_utt
 
-                series = pd.Series(
-                    [frame_num, input_utt_save_path, transcript],
-                    index=df.columns)
-                df = df.append(series, ignore_index=True)
+                char_indices, char_indices_capital, word_freq1_indices = indices_list[:3]
+                word_freq5_indices, word_freq10_indices, word_freq15_indices = indices_list[
+                    3:6]
+
+                series_char = pd.Series(
+                    [frame_num, input_utt_save_path, char_indices],
+                    index=df_char.columns)
+                series_char_capital = pd.Series(
+                    [frame_num, input_utt_save_path, char_indices_capital],
+                    index=df_char_capital.columns)
+                series_word_freq1 = pd.Series(
+                    [frame_num, input_utt_save_path, word_freq1_indices],
+                    index=df_word_freq1.columns)
+                series_word_freq5 = pd.Series(
+                    [frame_num, input_utt_save_path, word_freq5_indices],
+                    index=df_word_freq5.columns)
+                series_word_freq10 = pd.Series(
+                    [frame_num, input_utt_save_path, word_freq10_indices],
+                    index=df_word_freq10.columns)
+                series_word_freq15 = pd.Series(
+                    [frame_num, input_utt_save_path, word_freq15_indices],
+                    index=df_word_freq15.columns)
+
+                df_char = df_char.append(series_char, ignore_index=True)
+                df_char_capital = df_char_capital.append(
+                    series_char_capital, ignore_index=True)
+                df_word_freq1 = df_word_freq1.append(
+                    series_word_freq1, ignore_index=True)
+                df_word_freq5 = df_word_freq5.append(
+                    series_word_freq5, ignore_index=True)
+                df_word_freq10 = df_word_freq10.append(
+                    series_word_freq10, ignore_index=True)
+                df_word_freq15 = df_word_freq15.append(
+                    series_word_freq15, ignore_index=True)
+
                 utt_count += 1
 
                 # Reset
                 if utt_count == 50000:
-                    df_list.append(df)
-                    df = pd.DataFrame(
+                    df_char_list.append(df_char)
+                    df_char_capital_list.append(df_char_capital)
+                    df_word_freq1_list.append(df_word_freq1)
+                    df_word_freq5_list.append(df_word_freq5)
+                    df_word_freq10_list.append(df_word_freq10)
+                    df_word_freq15_list.append(df_word_freq15)
+
+                    df_char = pd.DataFrame(
                         [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_char_capital = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_word_freq1 = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_word_freq5 = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_word_freq10 = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_word_freq15 = pd.DataFrame(
+                        [], columns=['frame_num', 'input_path', 'transcript'])
+
                     utt_count = 0
 
         # Last dataframe
-        df_list.append(df)
+        df_char_list.append(df_char)
+        df_char_capital_list.append(df_char_capital)
+        df_word_freq1_list.append(df_word_freq1)
+        df_word_freq5_list.append(df_word_freq5)
+        df_word_freq10_list.append(df_word_freq10)
+        df_word_freq15_list.append(df_word_freq15)
 
         # Concatenate all dataframes
-        df = df_list[0]
-        for df_i in df_list[1:]:
-            df = pd.concat([df, df_i], axis=0)
+        df_char = df_char_list[0]
+        df_char_capital = df_char_capital_list[0]
+        df_word_freq1 = df_word_freq1_list[0]
+        df_word_freq5 = df_word_freq5_list[0]
+        df_word_freq10 = df_word_freq10_list[0]
+        df_word_freq15 = df_word_freq15_list[0]
 
-        df.to_csv(join(dataset_save_path, 'dataset.csv'))
+        for df_i in df_char_list[1:]:
+            df_char = pd.concat([df_char, df_i], axis=0)
+        for df_i in df_char_list[1:]:
+            df_char_capital = pd.concat([df_char_capital, df_i], axis=0)
+        for df_i in df_word_freq1_list[1:]:
+            df_word_freq1 = pd.concat([df_word_freq1, df_i], axis=0)
+        for df_i in df_word_freq5_list[1:]:
+            df_word_freq5 = pd.concat([df_word_freq5, df_i], axis=0)
+        for df_i in df_word_freq10_list[1:]:
+            df_word_freq10 = pd.concat([df_word_freq10, df_i], axis=0)
+        for df_i in df_word_freq15_list[1:]:
+            df_word_freq15 = pd.concat([df_word_freq15, df_i], axis=0)
+
+        df_char.to_csv(join(dataset_save_path, 'character.csv'))
+        df_char_capital.to_csv(
+            join(dataset_save_path, 'character_capital_divide.csv'))
+        df_word_freq1.to_csv(join(dataset_save_path, 'word_freq1.csv'))
+        df_word_freq5.to_csv(join(dataset_save_path, 'word_freq5.csv'))
+        df_word_freq10.to_csv(join(dataset_save_path, 'word_freq10.csv'))
+        df_word_freq15.to_csv(join(dataset_save_path, 'word_freq15.csv'))
 
 
 if __name__ == '__main__':
