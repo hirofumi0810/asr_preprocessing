@@ -106,6 +106,7 @@ def main(data_size):
     if data_size == '300h':
         speaker_dict_dict['train'] = read_trans(
             label_paths=path.trans(corpus='swbd'),
+            word_boundary_paths=path.word(corpus='swbd'),
             run_root_path='./',
             vocab_file_save_path=mkdir_join('./config/vocab_files'),
             save_vocab_file=True)
@@ -126,6 +127,7 @@ def main(data_size):
 
         speaker_dict_dict['train'] = read_trans(
             label_paths=path.trans(corpus='swbd'),
+            word_boundary_paths=path.word(corpus='swbd'),
             run_root_path='./',
             vocab_file_save_path=mkdir_join('./config/vocab_files'),
             save_vocab_file=True,
@@ -213,11 +215,10 @@ def main(data_size):
             with open(join(input_save_path, data_type, 'complete.txt'), 'w') as f:
                 f.write('')
 
-    ########################################
-    # dataset (csv)
-    ########################################
-    print('\n=> Saving dataset files...')
-    for data_type in ['train', 'eval2000_swbd', 'eval2000_ch']:
+        ########################################
+        # dataset (csv)
+        ########################################
+        print('\n=> Saving dataset files...')
         dataset_save_path = mkdir_join(
             args.dataset_save_path, args.save_format, data_size, data_type)
 
@@ -366,27 +367,6 @@ def main(data_size):
         df_word_freq10.to_csv(join(dataset_save_path, 'word_freq10.csv'))
         df_word_freq15.to_csv(join(dataset_save_path, 'word_freq15.csv'))
 
-        # Use the first 4000 utterances as the dev set
-        if data_type == 'train':
-            df_char[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'character.csv'))
-            df_char_capital[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'character_capital_divide.csv'))
-            df_word_freq1[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'word_freq1.csv'))
-            df_word_freq5[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'word_freq5.csv'))
-            df_word_freq10[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'word_freq10.csv'))
-            df_word_freq15[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'word_freq15.csv'))
-
 
 def merge_dicts(dicts):
     return {k: v for dic in dicts for k, v in dic.items()}
@@ -395,8 +375,8 @@ def merge_dicts(dicts):
 if __name__ == '__main__':
 
     data_sizes = ['300h']
-    if bool(args.fisher):
-        data_sizes += ['2000h']
+    # if bool(args.fisher):
+    #     data_sizes += ['2000h']
 
     for data_size in data_sizes:
         main(data_size)

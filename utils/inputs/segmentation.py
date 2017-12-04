@@ -8,6 +8,7 @@ from __future__ import print_function
 """Segment an audio file into each utterance (save as numpy files)."""
 
 import numpy as np
+from collections import OrderedDict
 
 from utils.inputs.htk import read as read_htk
 from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
@@ -67,17 +68,20 @@ def segment(audio_path, speaker, utterance_dict, is_training,
             window=config['window'],
             slide=config['slide'])
 
-    feature_dim = input_data.shape[1]
+    assert isinstance(utterance_dict, OrderedDict)
+    # NOTE: utterance_dict must be an instance of OrderedDict
 
     # Divide into each utterance
+    feature_dim = input_data.shape[1]
     input_data_dict = {}
     total_frame_num_file = 0
     end_frame_pre = 0
     utt_num = len(utterance_dict.keys())
-    utt_dict_sorted = sorted(utterance_dict.items(), key=lambda x: x[0])
     input_data_utt_sum = np.zeros((feature_dim,), dtype=dtype)
     stddev = np.zeros((feature_dim,), dtype=dtype)
-    for i, (utt_index, utt_info) in enumerate(utt_dict_sorted):
+    keys = sorted(list(utterance_dict.keys()))
+    for i, utt_index in enumerate(keys):
+        utt_info = utterance_dict[utt_index]
         start_frame, end_frame = utt_info[0], utt_info[1]
 
         # Check timestamp
@@ -85,6 +89,9 @@ def segment(audio_path, speaker, utterance_dict, is_training,
             print('Warning: time stamp is reversed.')
             print('speaker index: %s' % speaker)
             print('utterance index: %s' % utt_index)
+            print('start_frame: %.3f' % start_frame)
+            print('end_frame: %.3f' % end_frame)
+            raise ValueError
 
         # Check the first utterance
         if i == 0:
@@ -93,12 +100,14 @@ def segment(audio_path, speaker, utterance_dict, is_training,
             else:
                 start_frame_extend = 0
 
-            if len(utt_dict_sorted) != 1:
-                start_frame_next = utt_dict_sorted[i + 1][1][0]
+            if len(utterance_dict) != 1:
+                start_frame_next = utterance_dict[keys[i + 1]][0]
                 if end_frame > start_frame_next:
                     print('Warning: utterances are overlapping.')
                     print('speaker index: %s' % speaker)
                     print('utterance index: %s' % utt_index)
+                    print('end_frame: %.3f' % end_frame)
+                    print('start_frame_next: %.3f' % start_frame_next)
 
                 if start_frame_next - end_frame >= sil_duration * 2:
                     end_frame_extend = end_frame + sil_duration
@@ -130,11 +139,13 @@ def segment(audio_path, speaker, utterance_dict, is_training,
                 start_frame_extend = start_frame - \
                     int((start_frame - end_frame_pre) / 2)
 
-            start_frame_next = utt_dict_sorted[i + 1][1][0]
+            start_frame_next = utterance_dict[keys[i + 1]][0]
             if end_frame > start_frame_next:
                 print('Warning: utterances are overlapping.')
-                print('speaker: %s' % speaker)
+                print('speaker index: %s' % speaker)
                 print('utterance index: %s' % utt_index)
+                print('end_frame: %.3f' % end_frame)
+                print('start_frame_next: %.3f' % start_frame_next)
 
             if start_frame_next - end_frame >= sil_duration * 2:
                 end_frame_extend = end_frame + sil_duration

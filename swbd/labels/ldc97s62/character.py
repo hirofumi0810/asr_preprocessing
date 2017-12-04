@@ -11,6 +11,7 @@ import re
 from tqdm import tqdm
 from collections import OrderedDict
 
+from swbd.labels.ldc97s62.word_boundary import read_segmentation
 from swbd.labels.ldc97s62.fix_trans import fix_transcript
 from utils.labels.character import Char2idx
 from utils.labels.word import Word2idx
@@ -45,12 +46,14 @@ VOCALIZED_NOISE = 'VN'
 OOV = 'OOV'
 
 
-def read_trans(label_paths, run_root_path, vocab_file_save_path,
+def read_trans(label_paths, word_boundary_paths, run_root_path,
+               vocab_file_save_path,
                save_vocab_file=False,  speaker_dict_fisher=None,
                char_set=None, char_capital_set=None, word_count_dict=None):
     """Read transcripts (*_trans.txt) & save files (.npy).
     Args:
         label_paths (list): list of paths to label files
+        word_boundary_paths (list): list of paths to word boundary files
         run_root_path (string):
         vocab_file_save_path (string): path to vocabulary files
         save_vocab_file (bool, optional): if True, save vocabulary files
@@ -81,8 +84,10 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
         word_count_dict = {}
         vocab_set = set([])
 
-    for label_path in tqdm(label_paths):
+    for label_path, wb_path in zip(tqdm(label_paths), word_boundary_paths):
+        assert label_path == wb_path.replace('word', 'trans')
         utterance_dict = OrderedDict()
+        segmentation_dict = read_segmentation(wb_path)
         with open(label_path, 'r') as f:
             for line in f:
                 line = line.strip().lower().split(' ')
@@ -95,38 +100,69 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                 end_frame = int(float(line[2]) * 100 + 0.05)
                 transcript = ' '.join(line[3:])
 
-                # Clean transcript
-                transcript = fix_transcript(transcript)
-
-                # Skip silence
-                if transcript in ['', ' ']:
+                if transcript == '[silence]':
                     continue
 
-                # Convert space to "_"
-                transcript = re.sub(r'\s', SPACE, transcript)
+                # Divide into short utterances
+                length_threshold = 700
+                if end_frame - start_frame >= length_threshold:
+                    word_info_list = segmentation_dict[utt_index]
+                    divide_points = []
+                    divided_trans = []
+                    partial_word_list = []
+                    start_frame_tmp = start_frame
+                    for i, word_info in enumerate(word_info_list):
+                        if word_info[2] != '':
+                            partial_word_list.append(word_info[2])
+                        if 0 < i < len(word_info_list) - 1 and word_info[2] == '' and word_info[1] - start_frame_tmp >= length_threshold:
+                            divide_points.append(
+                                int((word_info[1] + word_info[0]) / 2))
+                            divided_trans.append(' '.join(partial_word_list))
+                            partial_word_list = []
+                            start_frame_tmp = word_info[0]
 
-                # Skip laughter, noise, vocalized-noise only utterance
-                if transcript.replace(NOISE, '').replace(LAUGHTER, '').replace(VOCALIZED_NOISE, '').replace(SPACE, '') != '':
+                    # Last segment
+                    if len(partial_word_list) > 0:
+                        divided_trans.append(' '.join(partial_word_list))
+
+                    if len(divide_points) > 0:
+                        transcript_list = divided_trans
+                    else:
+                        transcript_list = [transcript]
+                else:
+                    divide_points = []
+                    transcript_list = [transcript]
+
+                for i_trans, trans in enumerate(transcript_list):
+                    # Clean transcript
+                    trans = fix_transcript(trans)
+
+                    # Convert space to "_"
+                    trans = re.sub(r'\s', SPACE, trans)
+
+                    # Skip silence, laughter, noise, vocalized-noise
+                    if trans.replace(NOISE, '').replace(LAUGHTER, '').replace(VOCALIZED_NOISE, '').replace(SPACE, '') == '':
+                        continue
 
                     # Remove the first and last space
-                    if transcript[0] == SPACE:
-                        transcript = transcript[1:]
-                    if transcript[-1] == SPACE:
-                        transcript = transcript[:-1]
+                    if trans[0] == SPACE:
+                        trans = trans[1:]
+                    if trans[-1] == SPACE:
+                        trans = trans[:-1]
 
                     # Count words
-                    for word in transcript.split(SPACE):
+                    for word in trans.split(SPACE):
                         vocab_set.add(word)
                         if word not in word_count_dict.keys():
                             word_count_dict[word] = 0
                         word_count_dict[word] += 1
 
                     # Capital-divided
-                    transcript_capital = ''
-                    for word in transcript.split(SPACE):
+                    trans_capital = ''
+                    for word in trans.split(SPACE):
                         if len(word) == 1:
                             char_capital_set.add(word)
-                            transcript_capital += word
+                            trans_capital += word
                         else:
                             # Replace the first character with the capital
                             # letter
@@ -138,18 +174,34 @@ def read_trans(label_paths, run_root_path, vocab_file_save_path,
                                     char_capital_set.add(word[i:i + 2])
                                 else:
                                     char_capital_set.add(word[i])
-                            transcript_capital += word
+                            trans_capital += word
 
-                    for c in list(transcript):
+                    for c in list(trans):
                         char_set.add(c)
 
-                    utterance_dict[utt_index.zfill(4)] = [
-                        start_frame, end_frame, transcript]
+                    if len(transcript_list) == 1:
+                        utterance_dict[utt_index.zfill(4)] = [
+                            start_frame, end_frame, trans]
+                    else:
+                        assert len(transcript_list) - 1 == len(divide_points)
+                        if i_trans == 0:
+                            assert start_frame < divide_points[i_trans] - 1
+                            utterance_dict[utt_index.zfill(4) + '-' + str(i_trans + 1)] = [
+                                start_frame, divide_points[0] - 1, trans]
+                        elif i_trans == len(transcript_list) - 1:
+                            assert start_frame < end_frame
+                            utterance_dict[utt_index.zfill(4) + '-' + str(i_trans + 1)] = [
+                                divide_points[-1], end_frame, trans]
+                        else:
+                            assert divide_points[i_trans -
+                                                 1] < divide_points[i_trans] - 1
+                            utterance_dict[utt_index.zfill(4) + '-' + str(i_trans + 1)] = [
+                                divide_points[i_trans - 1], divide_points[i_trans] - 1, trans]
 
                     # for debug
                     # print(transcript_original)
-                    # print(transcript)
-                    # print(transcript_capital)
+                    # print(trans)
+                    # print(trans_capital)
 
             speaker_dict[speaker] = utterance_dict
 

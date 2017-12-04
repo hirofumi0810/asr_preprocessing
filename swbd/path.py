@@ -187,7 +187,7 @@ class Path(object):
             raise TypeError
 
     def trans(self, corpus):
-        """Get paths to transcription files of training data.
+        """Get paths to transcription files of the training data.
         Args:
             corpus (string): swbd or fisher or eval2000_swbd or
                 eval2000_ch
@@ -196,12 +196,22 @@ class Path(object):
         """
         return sorted(self._trans_paths[corpus])
 
+    def word(self, corpus):
+        """Get paths to word boundary files of the training data.
+        Args:
+            corpus (string): swbd
+        Returns:
+            paths: paths to transcription files
+        """
+        assert corpus == 'swbd'
+        return sorted(self._word_paths['swbd'])
+
 
 if __name__ == '__main__':
 
     path = Path(
         swbd_audio_path='/n/sd8/inaguma/corpus/swbd/data/LDC97S62',
-        swbd_trans_path='/n/sd8/inaguma/corpus/swbd/dataset/swb_ms98_transcriptions',
+        swbd_trans_path='/n/sd8/inaguma/corpus/swbd/swb_ms98_transcriptions',
         fisher_path='/n/sd8/inaguma/corpus/swbd/data/fisher',
         eval2000_audio_path='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002S09',
         eval2000_trans_path='/n/sd8/inaguma/corpus/swbd/data/eval2000/LDC2002T43',
@@ -214,6 +224,7 @@ if __name__ == '__main__':
     print(len(path.wav(corpus='swbd')))
     print(len(path.htk(corpus='swbd')))
     print(len(path.trans(corpus='swbd')))
+    print(len(path.word(corpus='swbd')))
 
     print('==== Fisher ====')
     print(len(path.sph(corpus='fisher')))

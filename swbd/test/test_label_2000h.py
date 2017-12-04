@@ -17,7 +17,7 @@ from swbd.labels.fisher.character import read_trans as read_trans_fisher
 from utils.measure_time_func import measure_time
 from utils.util import mkdir_join
 
-swbd_trans_path = '/n/sd8/inaguma/corpus/swbd/dataset/swb_ms98_transcriptions'
+swbd_trans_path = '/n/sd8/inaguma/corpus/swbd/swb_ms98_transcriptions'
 fisher_path = '/n/sd8/inaguma/corpus/swbd/data/fisher'
 
 # Search paths to transcript

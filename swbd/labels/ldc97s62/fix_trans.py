@@ -15,7 +15,7 @@ VOCALIZED_NOISE = 'VN'
 def fix_transcript(transcript):
 
     # Remove silence, <b_aside> and <e_aside>
-    transcript = re.sub(r'\[silence\]', '', transcript)
+    # transcript = re.sub(r'\[silence\]', '', transcript)
     transcript = re.sub(r'\<b_aside\>', '', transcript)
     transcript = re.sub(r'\<e_aside\>', '', transcript)
 
