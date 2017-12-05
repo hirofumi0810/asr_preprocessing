@@ -70,14 +70,10 @@ def read_trans(label_paths, target_speaker):
                 transcript_original = ' '.join(line[3:]).lower()
                 transcript = fix_transcript(transcript_original)
 
-                # Skip silence
-                if transcript in ['', ' ']:
-                    continue
-
                 # Convert space to "_"
                 transcript = re.sub(r'\s', SPACE, transcript)
 
-                # Skip laughter, noise, vocalized-noise only utterance
+                # Skip silence, laughter, noise, vocalized-noise only utterance
                 if transcript.replace(NOISE, '').replace(LAUGHTER, '').replace(VOCALIZED_NOISE, '').replace(SPACE, '') != '':
 
                     # Remove the first and last space

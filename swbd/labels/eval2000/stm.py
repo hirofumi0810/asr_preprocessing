@@ -140,7 +140,7 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
                     else:
                         raise ValueError
 
-                # reset
+                # Reset
                 utt_index = 0
                 utterance_dict = OrderedDict()
 
@@ -156,57 +156,59 @@ def read_stm(stm_path, pem_path, glm_path, run_root_path, data_size='300h'):
             ##################################################
             # Clean transcript
             ##################################################
-            # Remove <b_aside> and <e_aside>
-            transcript = re.sub(r'\<b_aside\>', '', transcript)
-            transcript = re.sub(r'\<e_aside\>', '', transcript)
+            if transcript != 'ignore_time_segment_in_scoring':
 
-            # Remove consecutive spaces
-            while '  ' in transcript:
-                transcript = re.sub(r'[\s]+', ' ', transcript)
+                # Remove <b_aside> and <e_aside>
+                transcript = re.sub(r'\<b_aside\>', '', transcript)
+                transcript = re.sub(r'\<e_aside\>', '', transcript)
 
-            # Remove first and last space
-            if transcript[0] == ' ':
-                transcript = transcript[1:]
-            if transcript[-1] == ' ':
-                transcript = transcript[:-1]
+                # Remove consecutive spaces
+                while '  ' in transcript:
+                    transcript = re.sub(r'[\s]+', ' ', transcript)
 
-            # Remove ()
-            transcript = re.sub(r'[\(\)]+', '', transcript)
+                # Remove first and last space
+                if transcript[0] == ' ':
+                    transcript = transcript[1:]
+                if transcript[-1] == ' ':
+                    transcript = transcript[:-1]
 
-            # Convert hesitation
-            word_list = []
-            for word in transcript.split(' '):
-                if word in HESITATION:
-                    word = '%hesitation'
-                word_list.append(word)
-            transcript = ' '.join(word_list)
+                # Remove ()
+                transcript = re.sub(r'[\(\)]+', '', transcript)
 
-            # Convert space to "_"
-            transcript = re.sub(r'\s', SPACE, transcript)
+                # Convert hesitation
+                word_list = []
+                for word in transcript.split(' '):
+                    if word in HESITATION:
+                        word = '%hesitation'
+                    word_list.append(word)
+                transcript = ' '.join(word_list)
 
-            # Write to text files for debug
-            if speaker[:2] == 'sw':
-                fp_swbd_original.write('%s  %d  %.2f  %.2f  %s\n' %
-                                       (speaker, utt_index, start_time, end_time, transcript_original))
-                fp_swbd_fixed.write('%s  %d  %.2f  %.2f  %s\n' %
-                                    (speaker, utt_index, start_time, end_time, transcript))
-            elif speaker[:2] == 'en':
-                fp_ch_original.write('%s  %d  %.2f  %.2f  %s\n' %
-                                     (speaker, utt_index, start_time, end_time, transcript_original))
-                fp_ch_fixed.write('%s  %d  %.2f  %.2f  %s\n' %
-                                  (speaker, utt_index, start_time, end_time, transcript))
+                # Convert space to "_"
+                transcript = re.sub(r'\s', SPACE, transcript)
 
-            for char in list(transcript.lower()):
-                char_set.add(char)
+                # Write to text files for debug
+                if speaker[:2] == 'sw':
+                    fp_swbd_original.write('%s  %d  %.2f  %.2f  %s\n' %
+                                           (speaker, utt_index, start_time, end_time, transcript_original))
+                    fp_swbd_fixed.write('%s  %d  %.2f  %.2f  %s\n' %
+                                        (speaker, utt_index, start_time, end_time, transcript))
+                elif speaker[:2] == 'en':
+                    fp_ch_original.write('%s  %d  %.2f  %.2f  %s\n' %
+                                         (speaker, utt_index, start_time, end_time, transcript_original))
+                    fp_ch_fixed.write('%s  %d  %.2f  %.2f  %s\n' %
+                                      (speaker, utt_index, start_time, end_time, transcript))
 
-            # for debug
-            # print(transcript)
+                for char in list(transcript.lower()):
+                    char_set.add(char)
 
-            start_frame = int(start_time * 100 + 0.5)
-            end_frame = int(end_time * 100 + 0.5)
-            utterance_dict[str(utt_index).zfill(4)] = [
-                start_frame, end_frame, transcript, transcript,
-                transcript, transcript, transcript, transcript]
+                # for debug
+                # print(transcript)
+
+                start_frame = int(start_time * 100 + 0.5)
+                end_frame = int(end_time * 100 + 0.5)
+                utterance_dict[str(utt_index).zfill(4)] = [
+                    start_frame, end_frame, transcript, transcript,
+                    transcript, transcript, transcript, transcript]
 
             utt_index += 1
             speaker_pre = speaker

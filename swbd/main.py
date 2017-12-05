@@ -16,6 +16,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from collections import Counter
+import pickle
 
 sys.path.append('../')
 from swbd.path import Path
@@ -24,10 +25,7 @@ from swbd.labels.ldc97s62.character import read_trans
 from swbd.labels.fisher.character import read_trans as read_trans_fisher
 from swbd.labels.eval2000.stm import read_stm
 from utils.util import mkdir_join
-
 from utils.inputs.wav_split import split_wav
-from utils.inputs.htk import read
-from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--swbd_audio_path', type=str,
@@ -236,6 +234,9 @@ def main(data_size):
         df_word_freq15 = pd.DataFrame(
             [], columns=['frame_num', 'input_path', 'transcript'])
 
+        with open(join(input_save_path, data_type, 'frame_num.pickle'), 'rb') as f:
+            frame_num_dict = pickle.load(f)
+
         utt_count = 0
         df_char_list, df_char_capital_list = [], []
         df_word_freq1_list, df_word_freq5_list = [], []
@@ -246,29 +247,16 @@ def main(data_size):
                 if args.save_format == 'numpy':
                     input_utt_save_path = join(
                         input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
-                    assert isfile(input_utt_save_path)
-                    input_utt = np.load(input_utt_save_path)
                 elif args.save_format == 'htk':
                     input_utt_save_path = join(
                         input_save_path, data_type, speaker, speaker + '_' + utt_index + '.htk')
-                    assert isfile(input_utt_save_path)
-                    input_utt, _, _ = read(input_utt_save_path)
                 elif args.save_format == 'wav':
                     input_utt_save_path = path.utt2wav(utt_index)
-                    assert isfile(input_utt_save_path)
-                    input_utt = w2f_psf(
-                        input_utt_save_path,
-                        feature_type=CONFIG['feature_type'],
-                        feature_dim=CONFIG['channels'],
-                        use_energy=CONFIG['energy'],
-                        use_delta1=CONFIG['delta'],
-                        use_delta2=CONFIG['deltadelta'],
-                        window=CONFIG['window'],
-                        slide=CONFIG['slide'])
                 else:
                     raise ValueError('save_format is numpy or htk or wav.')
-                frame_num = input_utt.shape[0]
-                del input_utt
+
+                assert isfile(input_utt_save_path)
+                frame_num = frame_num_dict[speaker + '_' + utt_index]
 
                 char_indices, char_indices_capital, word_freq1_indices = utt_info[2:5]
                 word_freq5_indices, word_freq10_indices, word_freq15_indices = utt_info[5:8]
@@ -303,11 +291,10 @@ def main(data_size):
                     series_word_freq10, ignore_index=True)
                 df_word_freq15 = df_word_freq15.append(
                     series_word_freq15, ignore_index=True)
-
                 utt_count += 1
 
                 # Reset
-                if utt_count == 50000:
+                if utt_count == 10000:
                     df_char_list.append(df_char)
                     df_char_capital_list.append(df_char_capital)
                     df_word_freq1_list.append(df_word_freq1)
@@ -327,7 +314,6 @@ def main(data_size):
                         [], columns=['frame_num', 'input_path', 'transcript'])
                     df_word_freq15 = pd.DataFrame(
                         [], columns=['frame_num', 'input_path', 'transcript'])
-
                     utt_count = 0
 
         # Last dataframe
@@ -374,7 +360,8 @@ def merge_dicts(dicts):
 
 if __name__ == '__main__':
 
-    data_sizes = ['300h']
+    data_sizes = ['2000h']
+    # data_sizes = ['300h']
     # if bool(args.fisher):
     #     data_sizes += ['2000h']
 
