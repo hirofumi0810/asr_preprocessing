@@ -85,8 +85,7 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
     print('=====> Reading audio files...')
     for i, audio_path in enumerate(tqdm(audio_paths)):
         # ex.) audio_path: speaker-book-utt_index.***
-        speaker, book, utt_index = basename(
-            audio_path).split('.')[0].split('-')
+        speaker = basename(audio_path).split('.')[0].split('-')[0]
         if speaker not in audio_path_dict.keys():
             audio_path_dict[speaker] = []
         audio_path_dict[speaker].append(audio_path)
@@ -164,9 +163,6 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
                 speaker_mean_dict[speaker] /= total_frame_num_dict[speaker]
 
             for audio_path in audio_paths_speaker:
-                speaker, book, utt_index = basename(
-                    audio_path).split('.')[0].split('-')
-
                 # Read each audio file
                 if tool == 'htk':
                     input_utt, sampPeriod, parmKind = read(audio_path)
@@ -233,9 +229,6 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
     frame_num_dict = {}
     for speaker, audio_paths_speaker in tqdm(audio_path_dict.items()):
         for audio_path in audio_paths_speaker:
-            speaker, book, utt_index = basename(
-                audio_path).split('.')[0].split('-')
-
             # Read each audio file
             if tool == 'htk':
                 input_utt, sampPeriod, parmKind = read(audio_path)
@@ -284,7 +277,8 @@ def read_audio(audio_paths, tool, config, normalize, is_training,
             else:
                 raise ValueError
 
-            frame_num_dict[speaker + '_' + utt_index] = input_utt.shape[0]
+            frame_num_dict[basename(audio_path).split('.')[
+                0]] = input_utt.shape[0]
 
             if save_path is not None:
                 # Save input features

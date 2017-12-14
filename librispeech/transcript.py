@@ -235,9 +235,9 @@ def read_trans(label_paths, data_size, vocab_file_save_path, is_test=False,
     word2idx_freq10 = Word2idx(word_freq10_vocab_file_path)
     word2idx_freq15 = Word2idx(word_freq15_vocab_file_path)
     for speaker, utt_dict in tqdm(speaker_dict.items()):
-        for utt_index, transcript in utt_dict.items():
+        for utt_name, transcript in utt_dict.items():
             if is_test:
-                utt_dict[utt_index] = [transcript] * 6
+                utt_dict[utt_name] = [transcript] * 6
             else:
                 char_indices = char2idx(transcript)
                 char_indices_capital = char2idx_capital(transcript)
@@ -258,9 +258,9 @@ def read_trans(label_paths, data_size, vocab_file_save_path, is_test=False,
                 word_freq15_indices = ' '.join(
                     list(map(str, word_freq15_indices.tolist())))
 
-                utt_dict[utt_index] = [char_indices, char_indices_capital,
-                                       word_freq1_indices, word_freq5_indices,
-                                       word_freq10_indices, word_freq15_indices]
+                utt_dict[utt_name] = [char_indices, char_indices_capital,
+                                      word_freq1_indices, word_freq5_indices,
+                                      word_freq10_indices, word_freq15_indices]
         speaker_dict[speaker] = utt_dict
 
     return speaker_dict

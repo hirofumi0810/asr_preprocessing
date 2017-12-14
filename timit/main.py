@@ -13,16 +13,14 @@ import argparse
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
+import pickle
 
 sys.path.append('../')
 from timit.path import Path
 from timit.transcript_character import read_char
 from timit.transcript_phone import read_phone
 from timit.input_data import read_audio
-from utils.util import mkdir_join, mkdir
-
-from utils.inputs.htk import read
-from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
+from utils.util import mkdir_join
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
@@ -145,50 +143,36 @@ def main():
         print('\n=> Saving dataset files (char)...')
         dataset_save_path = mkdir_join(
             args.dataset_save_path, args.save_format, data_type)
-        df_char = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_char_capital = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        for utt_name, [char_indices, char_indices_capital] in tqdm(trans_dict.items()):
+        df_columns = ['frame_num', 'input_path', 'transcript']
+        df_char = pd.DataFrame([], columns=df_columns)
+        df_char_capital = pd.DataFrame([], columns=df_columns)
+
+        with open(join(input_save_path, data_type, 'frame_num.pickle'), 'rb') as f:
+            frame_num_dict = pickle.load(f)
+
+        for utt_name, trans_list in tqdm(trans_dict.items()):
             if args.save_format == 'numpy':
                 speaker = utt_name.split('_')[0]
                 input_utt_save_path = join(
                     input_save_path, data_type, speaker, utt_name + '.npy')
-                assert isfile(input_utt_save_path)
-                input_utt = np.load(input_utt_save_path)
             elif args.save_format == 'htk':
                 speaker = utt_name.split('_')[0]
                 input_utt_save_path = join(
                     input_save_path, data_type, speaker, utt_name + '.htk')
-                assert isfile(input_utt_save_path)
-                input_utt, _, _ = read(input_utt_save_path)
             elif args.save_format == 'wav':
                 input_utt_save_path = path.utt2wav(utt_name)
-                assert isfile(input_utt_save_path)
-                input_utt = w2f_psf(
-                    input_utt_save_path,
-                    feature_type=CONFIG['feature_type'],
-                    feature_dim=CONFIG['channels'],
-                    use_energy=CONFIG['energy'],
-                    use_delta1=CONFIG['delta'],
-                    use_delta2=CONFIG['deltadelta'],
-                    window=CONFIG['window'],
-                    slide=CONFIG['slide'])
             else:
                 raise ValueError('save_format is numpy or htk or wav.')
-            frame_num = input_utt.shape[0]
-            del input_utt
 
-            series_char = pd.Series(
-                [frame_num, input_utt_save_path, char_indices],
-                index=df_char.columns)
-            series_char_capital = pd.Series(
-                [frame_num, input_utt_save_path, char_indices_capital],
-                index=df_char_capital.columns)
+            assert isfile(input_utt_save_path)
+            frame_num = frame_num_dict[utt_name]
 
-            df_char = df_char.append(series_char, ignore_index=True)
-            df_char_capital = df_char_capital.append(
-                series_char_capital, ignore_index=True)
+            char_indices, char_indices_capital = trans_list
+
+            df_char = add_element(
+                df_char, [frame_num, input_utt_save_path, char_indices])
+            df_char_capital = add_element(
+                df_char_capital, [frame_num, input_utt_save_path, char_indices_capital])
 
         df_char.to_csv(join(dataset_save_path, 'character.csv'))
         df_char_capital.to_csv(
@@ -208,62 +192,45 @@ def main():
         # dataset (phone, csv)
         ########################################
         print('\n=> Saving dataset files (phone)...')
-        df_phone61 = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_phone48 = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_phone39 = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        for utt_name, [phone61_indices, phone48_indices, phone39_indices] in tqdm(trans_dict.items()):
+        df_phone61 = pd.DataFrame([], columns=df_columns)
+        df_phone48 = pd.DataFrame([], columns=df_columns)
+        df_phone39 = pd.DataFrame([], columns=df_columns)
+
+        for utt_name, trans_list in tqdm(trans_dict.items()):
             if args.save_format == 'numpy':
                 speaker = utt_name.split('_')[0]
                 input_utt_save_path = join(
                     input_save_path, data_type, speaker, utt_name + '.npy')
-                assert isfile(input_utt_save_path)
-                input_utt = np.load(input_utt_save_path)
             elif args.save_format == 'htk':
                 speaker = utt_name.split('_')[0]
                 input_utt_save_path = join(
                     input_save_path, data_type, speaker, utt_name + '.htk')
-                assert isfile(input_utt_save_path)
-                input_utt, _, _ = read(input_utt_save_path)
             elif args.save_format == 'wav':
                 input_utt_save_path = path.utt2wav(utt_name)
-                assert isfile(input_utt_save_path)
-                input_utt = w2f_psf(
-                    input_utt_save_path,
-                    feature_type=CONFIG['feature_type'],
-                    feature_dim=CONFIG['channels'],
-                    use_energy=CONFIG['energy'],
-                    use_delta1=CONFIG['delta'],
-                    use_delta2=CONFIG['deltadelta'],
-                    window=CONFIG['window'],
-                    slide=CONFIG['slide'])
             else:
                 raise ValueError('save_format is numpy or htk or wav.')
-            frame_num = input_utt.shape[0]
-            del input_utt
 
-            series_phone61 = pd.Series(
-                [frame_num, input_utt_save_path, phone61_indices],
-                index=df_phone61.columns)
-            series_phone48 = pd.Series(
-                [frame_num, input_utt_save_path, phone48_indices],
-                index=df_phone48.columns)
-            series_phone39 = pd.Series(
-                [frame_num, input_utt_save_path, phone39_indices],
-                index=df_phone39.columns)
+            assert isfile(input_utt_save_path)
+            frame_num = frame_num_dict[utt_name]
 
-            df_phone61 = df_phone61.append(
-                series_phone61, ignore_index=True)
-            df_phone48 = df_phone48.append(
-                series_phone48, ignore_index=True)
-            df_phone39 = df_phone39.append(
-                series_phone39, ignore_index=True)
+            phone61_indices, phone48_indices, phone39_indices = trans_list
+
+            df_phone61 = add_element(
+                df_phone61, [frame_num, input_utt_save_path, phone61_indices])
+            df_phone48 = add_element(
+                df_phone48, [frame_num, input_utt_save_path, phone48_indices])
+            df_phone39 = add_element(
+                df_phone39, [frame_num, input_utt_save_path, phone39_indices])
 
         df_phone61.to_csv(join(dataset_save_path, 'phone61.csv'))
         df_phone48.to_csv(join(dataset_save_path, 'phone48.csv'))
         df_phone39.to_csv(join(dataset_save_path, 'phone39.csv'))
+
+
+def add_element(df, elem_list):
+    series = pd.Series(elem_list, index=df.columns)
+    df = df.append(series, ignore_index=True)
+    return df
 
 
 if __name__ == '__main__':
