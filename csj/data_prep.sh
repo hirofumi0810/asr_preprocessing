@@ -17,10 +17,10 @@ TOOL='htk'
 
 ### Configuration (Set by yourself)
 FEATURE_TYPE='fbank'  # (logmel) fbank or mfcc
-CHANNELS=40
+CHANNELS=80
 WINDOW=0.025
 SLIDE=0.01
-ENERGY=1
+ENERGY=0
 DELTA=1
 DELTADELTA=1
 # NORMALIZE='global'
@@ -64,7 +64,6 @@ fi
 declare -A file_number
 file_number["train_subset"]=986
 file_number["train_fullset"]=3212
-file_number["dev"]=39
 file_number["eval1"]=10
 file_number["eval2"]=10
 file_number["eval3"]=10
@@ -93,7 +92,8 @@ if [ $TOOL = 'htk' ]; then
       --fullset $fullset
 
   # Convert from wav to htk files
-  for data_type in train_subset train_fullset dev eval1 eval2 eval3 ; do
+  for data_type in train_subset train_fullset eval1 eval2 eval3 ; do
+    mkdir -p $HTK_SAVE_PATH/$data_type
 
     htk_paths=$(find $HTK_SAVE_PATH/$data_type/ -iname '*.htk')
     htk_file_num=$(find $HTK_SAVE_PATH/$data_type/ -iname '*.htk' | wc -l)

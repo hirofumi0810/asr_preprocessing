@@ -15,16 +15,14 @@ import argparse
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
+import pickle
 
 sys.path.append('../')
 from csj.path import Path
 from csj.input_data import read_audio
 from csj.labels.transcript import read_sdb
 from utils.util import mkdir_join
-
 from utils.inputs.wav_split import split_wav
-from utils.inputs.htk import read
-from utils.inputs.wav2feature_python_speech_features import wav2feature as w2f_psf
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to CSJ dataset')
@@ -172,114 +170,178 @@ def main(data_size):
             with open(join(input_save_path, data_type, 'complete.txt'), 'w') as f:
                 f.write('')
 
-    ########################################
-    # dataset (csv)
-    ########################################
-    print('\n=> Saving dataset files...')
-    for data_type in ['train', 'eval1', 'eval2', 'eval3']:
+        ########################################
+        # dataset (csv)
+        ########################################
+        print('\n=> Saving dataset files...')
         dataset_save_path = mkdir_join(
             args.dataset_save_path, args.save_format, data_size, data_type)
 
         print('---------- %s ----------' % data_type)
-        df_kanji = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_kana = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_phone = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
+        df_columns = ['frame_num', 'input_path', 'transcript']
+        df_kanji = pd.DataFrame([], columns=df_columns)
+        df_kanji_divide = pd.DataFrame([], columns=df_columns)
+        df_kana = pd.DataFrame([], columns=df_columns)
+        df_kana_divide = pd.DataFrame([], columns=df_columns)
+        df_phone = pd.DataFrame([], columns=df_columns)
+        df_phone_divide = pd.DataFrame([], columns=df_columns)
+        df_word_freq1 = pd.DataFrame([], columns=df_columns)
+        df_word_freq5 = pd.DataFrame([], columns=df_columns)
+        df_word_freq10 = pd.DataFrame([], columns=df_columns)
+        df_word_freq15 = pd.DataFrame([], columns=df_columns)
+        df_pos = pd.DataFrame([], columns=df_columns)
+
+        with open(join(input_save_path, data_type, 'frame_num.pickle'), 'rb') as f:
+            frame_num_dict = pickle.load(f)
 
         utt_count = 0
-        df_kanji_list, df_kana_list, df_phone_list = [], [], []
-        for speaker, utt_dict in tqdm(speaker_dict_dict[data_type].items()):
+        df_kanji_list, df_kanji_divide_list = [], []
+        df_kana_list,  df_kana_divide_list = [], []
+        df_phone_list, df_phone_divide_list = [], []
+        df_word_freq1_list, df_word_freq5_list = [], []
+        df_word_freq10_list, df_word_freq15_list = [], []
+        df_pos_list = []
+        speaker_dict = speaker_dict_dict[data_type]
+        for speaker, utt_dict in tqdm(speaker_dict.items()):
             for utt_index, utt_info in utt_dict.items():
-                trans_kanji, trans_kana, trans_phone = utt_info[2:]
+                kanji_indices, kanji_divide_indices = utt_info[2:4]
+                kana_indices, kana_divide_indices = utt_info[4:6]
+                phone_indices, phone_divide_indices = utt_info[6:8]
+                word_freq1_indices, word_freq5_indices = utt_info[8:10]
+                word_freq10_indices, word_freq15_indices = utt_info[10:12]
+                pos_indices = utt_info[12]
+
                 if args.save_format == 'numpy':
                     input_utt_save_path = join(
                         input_save_path, data_type, speaker, speaker + '_' + utt_index + '.npy')
-                    assert isfile(input_utt_save_path)
-                    input_utt = np.load(input_utt_save_path)
                 elif args.save_format == 'htk':
                     input_utt_save_path = join(
                         input_save_path, data_type, speaker, speaker + '_' + utt_index + '.htk')
-                    assert isfile(input_utt_save_path)
-                    input_utt, _, _ = read(input_utt_save_path)
                 elif args.save_format == 'wav':
                     input_utt_save_path = path.utt2wav(utt_index)
-                    assert isfile(input_utt_save_path)
-                    input_utt = w2f_psf(
-                        input_utt_save_path,
-                        feature_type=CONFIG['feature_type'],
-                        feature_dim=CONFIG['channels'],
-                        use_energy=CONFIG['energy'],
-                        use_delta1=CONFIG['delta'],
-                        use_delta2=CONFIG['deltadelta'],
-                        window=CONFIG['window'],
-                        slide=CONFIG['slide'])
                 else:
                     raise ValueError('save_format is numpy or htk or wav.')
-                frame_num = input_utt.shape[0]
-                del input_utt
 
-                series_kanji = pd.Series(
-                    [frame_num, input_utt_save_path, trans_kanji],
-                    index=df_kanji.columns)
-                series_kana = pd.Series(
-                    [frame_num, input_utt_save_path, trans_kana],
-                    index=df_kana.columns)
-                series_phone = pd.Series(
-                    [frame_num, input_utt_save_path, trans_phone],
-                    index=df_phone.columns)
+                assert isfile(input_utt_save_path)
+                frame_num = frame_num_dict[speaker + '_' + utt_index]
 
-                df_kanji = df_kanji.append(series_kanji, ignore_index=True)
-                df_kana = df_kana.append(series_kana, ignore_index=True)
-                df_phone = df_phone.append(series_phone, ignore_index=True)
-
+                df_kanji = add_element(
+                    df_kanji, [frame_num, input_utt_save_path, kanji_indices])
+                df_kanji_divide = add_element(
+                    df_kanji_divide, [frame_num, input_utt_save_path, kanji_divide_indices])
+                df_kana = add_element(
+                    df_kana, [frame_num, input_utt_save_path, kana_indices])
+                df_kana_divide = add_element(
+                    df_kana_divide, [frame_num, input_utt_save_path, kana_divide_indices])
+                df_phone = add_element(
+                    df_phone, [frame_num, input_utt_save_path, phone_indices])
+                df_phone_divide = add_element(
+                    df_phone_divide, [frame_num, input_utt_save_path, phone_divide_indices])
+                df_word_freq1 = add_element(
+                    df_word_freq1, [frame_num, input_utt_save_path, word_freq1_indices])
+                df_word_freq5 = add_element(
+                    df_word_freq5, [frame_num, input_utt_save_path, word_freq5_indices])
+                df_word_freq10 = add_element(
+                    df_word_freq10, [frame_num, input_utt_save_path, word_freq10_indices])
+                df_word_freq15 = add_element(
+                    df_word_freq15, [frame_num, input_utt_save_path, word_freq15_indices])
+                df_pos = add_element(
+                    df_pos, [frame_num, input_utt_save_path, pos_indices])
                 utt_count += 1
 
                 # Reset
-                if utt_count == 50000:
+                if utt_count == 10000:
                     df_kanji_list.append(df_kanji)
+                    df_kanji_divide_list.append(df_kanji_divide)
                     df_kana_list.append(df_kana)
+                    df_kana_divide_list.append(df_kana_divide)
                     df_phone_list.append(df_phone)
-                    df_kanji = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
-                    df_kana = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
-                    df_phone = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_phone_divide_list.append(df_phone_divide)
+                    df_word_freq1_list.append(df_word_freq1)
+                    df_word_freq5_list.append(df_word_freq5)
+                    df_word_freq10_list.append(df_word_freq10)
+                    df_word_freq15_list.append(df_word_freq15)
+                    df_pos_list.append(df_pos)
+
+                    df_kanji = pd.DataFrame([], columns=df_columns)
+                    df_kanji_divide = pd.DataFrame([], columns=df_columns)
+                    df_kana = pd.DataFrame([], columns=df_columns)
+                    df_kana_divide = pd.DataFrame([], columns=df_columns)
+                    df_phone = pd.DataFrame([], columns=df_columns)
+                    df_phone_divide = pd.DataFrame([], columns=df_columns)
+                    df_word_freq1 = pd.DataFrame([], columns=df_columns)
+                    df_word_freq5 = pd.DataFrame([], columns=df_columns)
+                    df_word_freq10 = pd.DataFrame([], columns=df_columns)
+                    df_word_freq15 = pd.DataFrame([], columns=df_columns)
+                    df_pos = pd.DataFrame([], columns=df_columns)
                     utt_count = 0
 
-            # Last dataframe
-            df_kanji_list.append(df_kanji)
-            df_kana_list.append(df_kana)
-            df_phone_list.append(df_phone)
+        # Last dataframe
+        df_kanji_list.append(df_kanji)
+        df_kanji_divide_list.append(df_kanji_divide)
+        df_kana_list.append(df_kana)
+        df_kana_divide_list.append(df_kana_divide)
+        df_phone_list.append(df_phone)
+        df_phone_divide_list.append(df_phone_divide)
+        df_word_freq1_list.append(df_word_freq1)
+        df_word_freq5_list.append(df_word_freq5)
+        df_word_freq10_list.append(df_word_freq10)
+        df_word_freq15_list.append(df_word_freq15)
+        df_pos_list.append(df_pos)
 
-            # Concatenate all dataframes
-            df_kanji = df_kanji_list[0]
-            df_kana = df_kana_list[0]
-            df_phone = df_phone_list[0]
-            for df_i in df_kanji_list[1:]:
-                df_kanji = pd.concat([df_kanji, df_i], axis=0)
-            for df_i in df_kana_list[1:]:
-                df_kana = pd.concat([df_kana, df_i], axis=0)
-            for df_i in df_phone_list[1:]:
-                df_phone = pd.concat([df_phone, df_i], axis=0)
+        # Concatenate all dataframes
+        df_kanji = df_kanji_list[0]
+        df_kanji_divide = df_kanji_divide_list[0]
+        df_kana = df_kana_list[0]
+        df_kana_divide = df_kana_divide_list[0]
+        df_phone = df_phone_list[0]
+        df_phone_divide = df_phone_divide_list[0]
+        df_word_freq1 = df_word_freq1_list[0]
+        df_word_freq5 = df_word_freq5_list[0]
+        df_word_freq10 = df_word_freq10_list[0]
+        df_word_freq15 = df_word_freq15_list[0]
+        df_pos = df_pos_list[0]
 
-        df_kanji.to_csv(join(dataset_save_path, 'dataset_kanji.csv'))
-        df_kana.to_csv(join(dataset_save_path, 'dataset_kana.csv'))
-        df_phone.to_csv(join(dataset_save_path, 'dataset_phone.csv'))
+        for df_i in df_kanji_list[1:]:
+            df_kanji = pd.concat([df_kanji, df_i], axis=0)
+        for df_i in df_kanji_divide_list[1:]:
+            df_kanji_divide = pd.concat([df_kanji_divide, df_i], axis=0)
+        for df_i in df_kana_list[1:]:
+            df_kana = pd.concat([df_kana, df_i], axis=0)
+        for df_i in df_kana_divide_list[1:]:
+            df_kana_divide = pd.concat([df_kana_divide, df_i], axis=0)
+        for df_i in df_phone_list[1:]:
+            df_phone = pd.concat([df_phone, df_i], axis=0)
+        for df_i in df_phone_divide_list[1:]:
+            df_phone_divide = pd.concat([df_phone_divide, df_i], axis=0)
+        for df_i in df_word_freq1_list[1:]:
+            df_word_freq1 = pd.concat([df_word_freq1, df_i], axis=0)
+        for df_i in df_word_freq5_list[1:]:
+            df_word_freq5 = pd.concat([df_word_freq5, df_i], axis=0)
+        for df_i in df_word_freq10_list[1:]:
+            df_word_freq10 = pd.concat([df_word_freq10, df_i], axis=0)
+        for df_i in df_word_freq15_list[1:]:
+            df_word_freq15 = pd.concat([df_word_freq15, df_i], axis=0)
+        for df_i in df_pos_list[1:]:
+            df_pos = pd.concat([df_pos, df_i], axis=0)
 
-        # Use the first 4000 utterances as the dev set
-        if data_type == 'train':
-            df_kanji[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'dataset_kanji.csv'))
-            df_kana[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'dataset_kana.csv'))
-            df_phone[:4000].to_csv(mkdir_join(
-                args.dataset_save_path, args.save_format, data_size, 'dev',
-                'dataset_phone.csv'))
+        df_kanji.to_csv(join(dataset_save_path, 'kanji.csv'))
+        df_kanji_divide.to_csv(join(dataset_save_path, 'kanji_divide.csv'))
+        df_kana.to_csv(join(dataset_save_path, 'kana.csv'))
+        df_kana_divide.to_csv(join(dataset_save_path, 'kana_divide.csv'))
+        df_phone.to_csv(join(dataset_save_path, 'phone.csv'))
+        df_phone_divide.to_csv(join(dataset_save_path, 'phone_divide.csv'))
+        df_word_freq1.to_csv(join(dataset_save_path, 'word_freq1.csv'))
+        df_word_freq5.to_csv(join(dataset_save_path, 'word_freq5.csv'))
+        df_word_freq10.to_csv(join(dataset_save_path, 'word_freq10.csv'))
+        df_word_freq15.to_csv(join(dataset_save_path, 'word_freq15.csv'))
+        df_pos.to_csv(join(dataset_save_path, 'pos.csv'))
+
+
+def add_element(df, elem_list):
+    series = pd.Series(elem_list, index=df.columns)
+    df = df.append(series, ignore_index=True)
+    return df
 
 
 if __name__ == '__main__':

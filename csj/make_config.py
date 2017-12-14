@@ -54,9 +54,8 @@ def main():
                 energy=bool(args.energy),
                 delta=bool(args.delta),
                 deltadelta=bool(args.deltadelta))
-    # NOTE: 123-dim features are extracted by default
 
-    data_types = ['dev', 'eval1', 'eval2', 'eval3']
+    data_types = ['eval1', 'eval2', 'eval3']
 
     if bool(args.subset):
         data_types += ['train_subset']

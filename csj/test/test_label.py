@@ -32,12 +32,12 @@ class TestLabel(unittest.TestCase):
         print('  data_size: %s' % str(data_size))
         print('=' * 50)
 
-        for data_type in ['dev', 'eval1', 'eval2', 'eval3']:
+        for data_type in ['train', 'eval1', 'eval2', 'eval3']:
             if data_type == 'train':
                 label_paths = path.trans(data_type='train_' + data_size)
             else:
                 label_paths = path.trans(data_type=data_type)
-            save_vocab_file = True if data_type == 'train'
+            save_vocab_file = True if data_type == 'train' else False
             is_test = True if 'eval' in data_type else False
 
             print('---------- %s ----------' % data_type)
@@ -45,6 +45,7 @@ class TestLabel(unittest.TestCase):
                 label_paths=label_paths,
                 data_size=data_size,
                 vocab_file_save_path=mkdir_join('../config', 'vocab_files'),
+                save_vocab_file=save_vocab_file,
                 is_test=is_test,
                 data_type=data_type)
 

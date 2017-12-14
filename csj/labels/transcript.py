@@ -14,6 +14,9 @@ from tqdm import tqdm
 import jaconv
 from collections import OrderedDict
 
+from utils.labels.phone import Phone2idx
+from utils.labels.character import Char2idx
+from utils.labels.word import Word2idx
 from utils.util import mkdir_join
 from csj.labels.fix_trans import fix_transcript
 from csj.labels.fix_trans import is_hiragana, is_katakana
@@ -52,6 +55,9 @@ SPACE = '_'
 SIL = 'sil'
 NOISE = 'NZ'
 OOV = 'OOV'
+
+NOISES = ['<雑音>', '<笑>', '<息>', '<咳>', '<泣>', '<拍手>', '<フロア発話>',
+          '<フロア笑>', '<ベル>', '<デモ>']
 
 
 def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
@@ -92,21 +98,16 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
     char_set = set([])
     word_count_dict = {}
     vocab_set = set([])
+    pos_set = set([])
     for label_path in tqdm(label_paths):
         col_names = [j for j in range(25)]
         df = pd.read_csv(label_path, names=col_names,
                          encoding='SHIFT-JIS', delimiter='\t', header=None)
-        drop_column = col_names
-        drop_column.remove(3)
-        drop_column.remove(5)
-        drop_column.remove(10)
-        drop_column.remove(11)
-        df = df.drop(drop_column, axis=1)
 
-        utterance_dict = {}
+        utterance_dict = OrderedDict()
         utt_index_pre = 1
         start_frame_pre, end_frame_pre = None, None
-        trans_kana, trans_kanji = '', ''
+        trans_kana, trans_kanji, trans_pos = '', '', ''
         speaker = basename(label_path).split('.')[0]
         for key, row in df.iterrows():
             time_info = row[3].split(' ')
@@ -119,105 +120,142 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
             if end_frame_pre is None:
                 end_frame_pre = end_frame
 
-            kanji = row[5]  # include kanji characters
-            yomi = row[10]
-            # pos_tag = row[11]
+            word = row[5]
+            kana = row[10]
+            if word in NOISES:
+                pos = 'nan'
+            elif '? ' in word and word.count('(') == 1:
+                pos = 'nan'
+            elif not isinstance(row[11], str):
+                pos = '-'
+            else:
+                pos = row[11]
 
             # Stack word in the same utterance
             if utt_index == utt_index_pre:
-                trans_kana += yomi + ' '
-                trans_kanji += kanji + ' '
+                trans_kanji += word + ' '
+                trans_kana += kana + ' '
+                trans_pos += pos + ' '
                 utt_index_pre = utt_index
                 end_frame_pre = end_frame
                 continue
-            else:
-                # Count the number of kakko
-                left_kanji = trans_kanji.count('(')
-                right_kanji = trans_kanji.count(')')
-                if left_kanji != right_kanji:
-                    trans_kana += yomi + ' '
-                    trans_kanji += kanji + ' '
-                    utt_index_pre = utt_index
-                    end_frame_pre = end_frame
-                    continue
 
-                left_kana = trans_kana.count('(')
-                right_kana = trans_kana.count(')')
-                if left_kana != right_kana:
-                    trans_kana += yomi + ' '
-                    trans_kanji += kanji + ' '
-                    utt_index_pre = utt_index
-                    end_frame_pre = end_frame
-                    continue
-                else:
-                    # Clean transcript
-                    trans_kana = fix_transcript(trans_kana)
-                    trans_kanji = fix_transcript(trans_kanji)
+            # Count the number of brackets
+            left_kanji = trans_kanji.count('(')
+            right_kanji = trans_kanji.count(')')
+            if left_kanji != right_kanji:
+                trans_kanji += word + ' '
+                trans_kana += kana + ' '
+                trans_pos += pos + ' '
+                utt_index_pre = utt_index
+                end_frame_pre = end_frame
+                continue
 
-                    # Remove double space
-                    while '  ' in trans_kana:
-                        trans_kana = re.sub(r'[\s]+', ' ', trans_kana)
-                    while '  ' in trans_kanji:
-                        trans_kanji = re.sub(r'[\s]+', ' ', trans_kanji)
+            left_kana = trans_kana.count('(')
+            right_kana = trans_kana.count(')')
+            if left_kana != right_kana:
+                trans_kanji += word + ' '
+                trans_kana += kana + ' '
+                trans_pos += pos + ' '
+                utt_index_pre = utt_index
+                end_frame_pre = end_frame
+                continue
 
-                    # Convert space to "_"
-                    trans_kana = re.sub(r'\s', SPACE, trans_kana)
-                    trans_kanji = re.sub(r'\s', SPACE, trans_kanji)
+            # Clean transcript
+            trans_kanji = fix_transcript(trans_kanji)
+            trans_kana = fix_transcript(trans_kana)
+            trans_pos = trans_pos.replace('-', '')
 
-                    # Skip silence & noise only utterance
-                    if trans_kana.replace(NOISE, '').replace(SPACE, '') != '':
+            # Remove double space
+            while '  ' in trans_kanji:
+                trans_kanji = re.sub(r'[\s]+', ' ', trans_kanji)
+            while '  ' in trans_kana:
+                trans_kana = re.sub(r'[\s]+', ' ', trans_kana)
+            while '  ' in trans_pos:
+                trans_pos = re.sub(r'[\s]+', ' ', trans_pos)
 
-                        # Remove the first and last space
-                        if len(trans_kanji) > 0:
-                            if trans_kanji[0] == SPACE:
-                                trans_kana = trans_kana[1:]
-                                trans_kanji = trans_kanji[1:]
-                            if trans_kanji[-1] == SPACE:
-                                trans_kana = trans_kana[:-1]
-                                trans_kanji = trans_kanji[:-1]
+            # Skip silence & noise only utterance
+            if trans_kanji.replace(NOISE, '').replace(' ', '') != '':
 
-                        # for exception
-                        if trans_kana[0:2] == 'Z_':
-                            trans_kana = trans_kana[2:]
+                # Remove the first and last space
+                if len(trans_kanji) > 0:
+                    if trans_kanji[0] == ' ':
+                        trans_kanji = trans_kanji[1:]
+                        trans_kana = trans_kana[1:]
+                        trans_pos = trans_pos[1:]
+                    if trans_kanji[-1] == ' ':
+                        trans_kanji = trans_kanji[:-1]
+                        trans_kana = trans_kana[:-1]
+                        trans_pos = trans_pos[:-1]
 
-                        for char in list(trans_kanji):
-                            char_set.add(char)
+                # Convert space to "_"
+                trans_kanji = re.sub(r'\s', SPACE, trans_kanji)
+                trans_kana = re.sub(r'\s', SPACE, trans_kana)
+                trans_pos = re.sub(r'\s', SPACE, trans_pos)
 
-                        # Count words
-                        word_list = trans_kanji.split(SPACE)
-                        for word in word_list:
-                            vocab_set.add(word)
-                            if word not in word_count_dict.keys():
-                                word_count_dict[word] = 0
-                            word_count_dict[word] += 1
+                # For exception
+                if trans_kana[0:2] == 'Z_':
+                    trans_kana = trans_kana[2:]
 
-                        # Convert kana character to phone
-                        trans_phone = ' '.join(
-                            kana2phone(trans_kana, kana2phone_dict))
+                for c in list(trans_kanji):
+                    char_set.add(c)
+                for p in trans_pos.split(SPACE):
+                    pos_set.add(p)
 
-                        utterance_dict[str(utt_index - 1).zfill(4)] = [
-                            start_frame_pre,
-                            end_frame_pre,
-                            trans_kanji,
-                            trans_kana,
-                            trans_phone]
+                assert len(trans_kanji.split(SPACE)) == len(
+                    trans_pos.split(SPACE))
 
-                        # for debug
-                        # print(trans_kanji)
-                        # print(trans_kana)
-                        # print('-----')
+                # Count words
+                word_list = trans_kanji.split(SPACE)
+                for w in word_list:
+                    vocab_set.add(w)
+                    if w not in word_count_dict.keys():
+                        word_count_dict[w] = 0
+                    word_count_dict[w] += 1
 
-                    # Initialization
-                    trans_kana = yomi + ' '
-                    trans_kanji = kanji + ' '
-                    utt_index_pre = utt_index
-                    start_frame_pre = start_frame
-                    end_frame_pre = end_frame
+                # Convert kana character to phone
+                trans_phone = ' '.join(
+                    kana2phone(trans_kana, kana2phone_dict))
+
+                utterance_dict[str(utt_index - 1).zfill(4)] = [
+                    start_frame_pre,
+                    end_frame_pre,
+                    trans_kanji,
+                    trans_kana,
+                    trans_phone,
+                    trans_pos]
+
+                # for debug
+                # print(trans_pos)
+                # print(trans_kanji)
+                # print(trans_kana)
+                # print(trans_phone)
+                # print('-----')
+
+            # Initialization
+            trans_kanji = word + ' '
+            trans_kana = kana + ' '
+            trans_pos = pos + ' '
+            utt_index_pre = utt_index
+            start_frame_pre = start_frame
+            end_frame_pre = end_frame
 
         # Register all utterances of each speaker
         speaker_dict[speaker] = utterance_dict
 
     # Make vocabulary files
+    kanji_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'kanji_' + data_size + '.txt')
+    kanji_divide_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'kanji_divide_' + data_size + '.txt')
+    kana_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'kana_' + data_size + '.txt')
+    kana_divide_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'kana_divide_' + data_size + '.txt')
+    phone_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'phone_' + data_size + '.txt')
+    phone_divide_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'phone_divide_' + data_size + '.txt')
     word_freq1_vocab_file_path = mkdir_join(
         vocab_file_save_path, 'word_freq1_' + data_size + '.txt')
     word_freq5_vocab_file_path = mkdir_join(
@@ -226,10 +264,8 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
         vocab_file_save_path, 'word_freq10_' + data_size + '.txt')
     word_freq15_vocab_file_path = mkdir_join(
         vocab_file_save_path, 'word_freq15_' + data_size + '.txt')
-    char_kanji_vocab_file_path = mkdir_join(
-        vocab_file_save_path, 'kanji_' + data_size + '.txt')
-    char_kana_vocab_file_path = mkdir_join(vocab_file_save_path, 'kana.txt')
-    phone_vocab_file_path = mkdir_join(vocab_file_save_path, 'phone.txt')
+    pos_vocab_file_path = mkdir_join(
+        vocab_file_save_path, 'pos_' + data_size + '.txt')
 
     # Remove unneccesary character
     char_set.discard('N')
@@ -241,6 +277,7 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
 
     # for debug
     # print(sorted(list(char_set)))
+    # print(sorted(list(pos_set)))
 
     if save_vocab_file:
         # character-level (kanji)
@@ -251,19 +288,37 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
         for kana in kana_list:
             kanji_set.add(kana)
             kanji_set.add(jaconv.kata2hira(kana))
-        with open(char_kanji_vocab_file_path, 'w') as f:
+        with open(kanji_vocab_file_path, 'w') as f:
+            kanji_list = sorted(list(kanji_set)) + [NOISE]
+            for kanji in kanji_list:
+                f.write('%s\n' % kanji)
+
+        # character-level (kanji_divide)
+        with open(kanji_divide_vocab_file_path, 'w') as f:
             kanji_list = sorted(list(kanji_set)) + [NOISE, SPACE]
             for kanji in kanji_list:
                 f.write('%s\n' % kanji)
 
         # character-level (kana)
-        with open(char_kana_vocab_file_path, 'w') as f:
+        with open(kana_vocab_file_path, 'w') as f:
+            kana_list_tmp = sorted(kana_list) + [NOISE]
+            for kana in kana_list_tmp:
+                f.write('%s\n' % kana)
+
+        # character-level (kana_divide)
+        with open(kana_divide_vocab_file_path, 'w') as f:
             kana_list_tmp = sorted(kana_list) + [NOISE, SPACE]
             for kana in kana_list_tmp:
                 f.write('%s\n' % kana)
 
-        # phone-level
+        # phone-level (phone)
         with open(phone_vocab_file_path, 'w') as f:
+            phone_list = sorted(list(phone_set)) + [NOISE]
+            for phone in phone_list:
+                f.write('%s\n' % phone)
+
+        # phone-level (phone_divide)
+        with open(phone_divide_vocab_file_path, 'w') as f:
             phone_list = sorted(list(phone_set)) + [NOISE, SIL]
             for phone in phone_list:
                 f.write('%s\n' % phone)
@@ -295,6 +350,12 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
             for word in vocab_list:
                 f.write('%s\n' % word)
 
+        # POS tag
+        with open(pos_vocab_file_path, 'w') as f:
+            pos_list = sorted(list(pos_set))
+            for pos in pos_list:
+                f.write('%s\n' % pos)
+
     # Compute OOV rate
     if is_test:
         with open(join(vocab_file_save_path, '../oov_rate_' + data_type + '_' + data_size + '.txt'), 'w') as f:
@@ -323,7 +384,76 @@ def read_sdb(label_paths, data_size, vocab_file_save_path, is_test=False,
             f.write('Word (freq15):\n')
             f.write('  OOV rate (test): %f %%\n' % oov_rate)
 
+    # Tokenize
+    print('=====> Tokenize...')
+    kanji2idx = Char2idx(kanji_vocab_file_path, double_letter=True)
+    kanji2idx_divide = Char2idx(kanji_divide_vocab_file_path,
+                                double_letter=True)
+    kana2idx = Char2idx(kana_vocab_file_path, double_letter=True)
+    kana2idx_divide = Char2idx(
+        kana_divide_vocab_file_path, double_letter=True)
+    phone2idx = Phone2idx(phone_vocab_file_path)
+    phone2idx_divide = Phone2idx(phone_divide_vocab_file_path)
+    word2idx_freq1 = Word2idx(word_freq1_vocab_file_path)
+    word2idx_freq5 = Word2idx(word_freq5_vocab_file_path)
+    word2idx_freq10 = Word2idx(word_freq10_vocab_file_path)
+    word2idx_freq15 = Word2idx(word_freq15_vocab_file_path)
+    pos2idx = Word2idx(pos_vocab_file_path)
+    for speaker, utt_dict in tqdm(speaker_dict.items()):
+        for utt_index, utt_info in utt_dict.items():
+            start_frame, end_frame, trans_kanji, trans_kana, trans_phone, trans_pos = utt_info
+            if is_test:
+                utt_dict[utt_index] = [
+                    start_frame, end_frame,
+                    trans_kanji.replace(SPACE, ''), trans_kanji,
+                    trans_kana.replace(SPACE, ''), trans_kana,
+                    trans_phone.replace(SIL, '').replace(
+                        '  ', ' '), trans_phone,
+                    trans_kanji, trans_kanji, trans_kanji, trans_kanji,
+                    trans_pos]
+            else:
+                kanji_indices = kanji2idx(trans_kanji.replace(SPACE, ''))
+                kanji_divide_indices = kanji2idx_divide(trans_kanji)
+                kana_indices = kana2idx(trans_kana.replace(SPACE, ''))
+                kana_divide_indices = kana2idx_divide(trans_kana)
+
+                phone_indices = phone2idx(
+                    trans_phone.replace(SIL, '').replace('  ', ' '))
+                phone_divide_indices = phone2idx_divide(trans_phone)
+                word_freq1_indices = word2idx_freq1(trans_kanji)
+                word_freq5_indices = word2idx_freq5(trans_kanji)
+                word_freq10_indices = word2idx_freq10(trans_kanji)
+                word_freq15_indices = word2idx_freq15(trans_kanji)
+                pos_indices = pos2idx(trans_pos)
+
+                kanji_indices = int2str(kanji_indices)
+                kanji_divide_indices = int2str(kanji_divide_indices)
+                kana_indices = int2str(kana_indices)
+                kana_divide_indices = int2str(kana_divide_indices)
+                phone_indices = int2str(phone_indices)
+                phone_divide_indices = int2str(phone_divide_indices)
+                word_freq1_indices = int2str(word_freq1_indices)
+                word_freq5_indices = int2str(word_freq5_indices)
+                word_freq10_indices = int2str(word_freq10_indices)
+                word_freq15_indices = int2str(word_freq15_indices)
+                pos_indices = int2str(pos_indices)
+
+                utt_dict[utt_index] = [
+                    start_frame, end_frame,
+                    kanji_indices, kanji_divide_indices,
+                    kana_indices, kana_divide_indices,
+                    phone_indices, phone_divide_indices,
+                    word_freq1_indices, word_freq5_indices,
+                    word_freq10_indices, word_freq15_indices,
+                    pos_indices]
+
+        speaker_dict[speaker] = utt_dict
+
     return speaker_dict
+
+
+def int2str(indices):
+    return' '.join(list(map(str, indices.tolist())))
 
 
 def kana2phone(trans_kana, kana2phone_dict):

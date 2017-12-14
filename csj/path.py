@@ -7,7 +7,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import re
 from os.path import join, basename, isfile, abspath
 from glob import glob
 
@@ -64,7 +63,6 @@ class Path(object):
         self.wav_paths = {
             'train_subset': [],  # 967 A + 19 M files
             'train_fullset': [],  # 3212 (A + S + M + R) files
-            'dev': [],  # the first 39 files of train_subset
             'eval1': [],  # 10 files
             'eval2': [],  # 10 files
             'eval3': [],  # 10 files
@@ -84,8 +82,6 @@ class Path(object):
                 continue
             elif speaker[0] == 'D':
                 # 学会講演インタビュー，模擬講演インタビュー，課題指向対話，自由対話
-                # if speaker not in excluded_speakers and '-R' in speaker and
-                # 'D03' in speaker:
                 if speaker not in excluded_speakers:
                     self.wav_paths['dialog'].append(wav_path)
             elif speaker[0] == 'A':
@@ -120,8 +116,6 @@ class Path(object):
                 continue
             elif speaker[0] == 'D':
                 # 学会講演インタビュー，模擬講演インタビュー，課題指向対話，自由対話
-                # if speaker not in excluded_speakers and '-R' in speaker and
-                # 'D03' in speaker:
                 if speaker not in excluded_speakers:
                     self.wav_paths['dialog'].append(wav_path)
                 continue
@@ -135,50 +129,16 @@ class Path(object):
         self.trans_paths = {
             'train_subset': [],
             'train_fullset': [],
-            'dev': [],
             'eval1': [],
             'eval2': [],
             'eval3': [],
             'dialog': []
         }
 
-        # Train subset (about 240h)
-        for i, wav_path in enumerate(self.wav_paths['train_subset']):
-            speaker = basename(wav_path).split('.')[0]
-            self.wav_paths['train_subset'][i] = wav_path
-            ver4_path = join(self.ver4_path, speaker + '.sdb')
-            if isfile(ver4_path):
-                self.trans_paths['train_subset'].append(ver4_path)
-            else:
-                self.trans_paths['train_subset'].append(
-                    wav_path.replace('.wav', '.sdb'))
-
-        # Train fullset (about 586h)
-        for i, wav_path in enumerate(self.wav_paths['train_fullset']):
-            speaker = basename(wav_path).split('.')[0]
-            self.wav_paths['train_fullset'][i] = wav_path
-            ver4_path = join(self.ver4_path, speaker + '.sdb')
-            if isfile(ver4_path):
-                self.trans_paths['train_fullset'].append(ver4_path)
-            else:
-                self.trans_paths['train_fullset'].append(
-                    wav_path.replace('.wav', '.sdb'))
-
-        # Dev
-        self.wav_paths['dev'] = sorted(self.wav_paths['train_subset'])[:39]
-        for i, wav_path in enumerate(self.wav_paths['dev']):
-            self.wav_paths['dev'][i] = wav_path
-            self.trans_paths['dev'].append(wav_path.replace('.wav', '.sdb'))
-        # NOTE: dev set is the first 4k sentences from training data
-        # (39 speakers) as in
-        # https://github.com/kaldi-asr/kaldi/blob/master/egs/csj/s5/run.sh
-
-        # eval1, eval2, eval3
-        for data_type in ['eval1', 'eval2', 'eval3']:
+        for data_type in ['train_subset', 'train_fullset',
+                          'eval1', 'eval2', 'eval3']:
             for i, wav_path in enumerate(self.wav_paths[data_type]):
                 speaker = basename(wav_path).split('.')[0]
-                wav_path = join(self.wav_path, wav_path)
-                self.wav_paths[data_type][i] = wav_path
                 ver4_path = join(self.ver4_path, speaker + '.sdb')
                 if isfile(ver4_path):
                     self.trans_paths[data_type].append(ver4_path)
@@ -186,23 +146,11 @@ class Path(object):
                     self.trans_paths[data_type].append(
                         wav_path.replace('.wav', '.sdb'))
 
-        # Dialog
-        for i, wav_path in enumerate(self.wav_paths['dialog']):
-            wav_path = re.sub('-R', '', wav_path)
-            speaker = basename(wav_path).split('.')[0]
-            self.wav_paths['dialog'][i] = wav_path
-            ver4_path = join(self.ver4_path, speaker + '.sdb')
-            if isfile(ver4_path):
-                self.trans_paths['dialog'].append(ver4_path)
-            else:
-                self.trans_paths['dialog'].append(
-                    wav_path.replace('.wav', '.sdb'))
-
     def wav(self, data_type):
         """Get paths to wav files.
         Args:
-            data_type (string): train_subset or train_fullset or dev or eval1
-                or eval2 or eval3 or dialog
+            data_type (string): train_subset or train_fullset or
+                eval1 or eval2 or eval3
         Returns:
             list of paths to wav files
         """
@@ -211,7 +159,8 @@ class Path(object):
     def htk(self, data_type):
         """Get paths to htk files.
         Args:
-            data_type (string): train or dev or test
+            data_type (string): train_subset or train_fullset or
+                eval1 or eval2 or eval3
         Returns:
             list of paths to htk files
         """
@@ -224,8 +173,8 @@ class Path(object):
     def trans(self, data_type):
         """Get paths to transcription (.sdb) files.
         Args:
-            data_type (string): train_subset or train_fullset or dev or
-                eval1 or eval2 or eval3 or dialog
+            data_type (string): train_subset or train_fullset or
+                eval1 or eval2 or eval3
         Returns:
             list of paths to transcription files
         """
@@ -238,8 +187,8 @@ if __name__ == '__main__':
                 config_path=abspath('./config'),
                 htk_save_path='/n/sd8/inaguma/corpus/csj/htk')
 
-    for data_type in ['train_fullset', 'train_subset', 'dev',
-                      'eval1', 'eval2', 'eval3', 'dialog']:
+    for data_type in ['train_fullset', 'train_subset',
+                      'eval1', 'eval2', 'eval3']:
 
         print('===== %s =====' % data_type)
         print(len(path.wav(data_type=data_type)))

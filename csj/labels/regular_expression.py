@@ -11,11 +11,10 @@ import re
 
 
 def remove_pause(kana_seq):
-    # 0.2 秒以上のポーズ
+    # 200ms以上のポーズ
     expr = r'(.*)<P:\d{5}\.\d{3}-\d{5}\.\d{3}>(.*)'
     pause = re.match(expr, kana_seq)
     while pause is not None:
-        # NOTE: 空白は入れない（言語的な情報が減るため）
         kana_seq = pause.group(1) + pause.group(2)
         pause = re.match(expr, kana_seq)
     return kana_seq
@@ -25,8 +24,9 @@ def remove_question_which(kana_seq):
     expr = r'(.*)\(\?[\s]+([^()]+),([^()]+)\)(.*)'
     qw = re.match(expr, kana_seq)
     while qw is not None:
-        # NOTE: Select latter
-        kana_seq = qw.group(1) + qw.group(3) + qw.group(4)
+        # NOTE: Select the former
+        kana_seq = qw.group(1) + qw.group(2) + qw.group(4)
+        # kana_seq = qw.group(1) + qw.group(3) + qw.group(4)
         qw = re.match(expr, kana_seq)
     return kana_seq
 
@@ -46,8 +46,11 @@ def remove_Btag(kana_seq):
     expr = r'(.*)\(B[\s]+([^()]+);([^()]+)\)(.*)'
     Btag = re.match(expr, kana_seq)
     while Btag is not None:
-        # NOTE: Select latter
-        kana_seq = Btag.group(1) + Btag.group(3) + Btag.group(4)
+        # NOTE: Select the former
+        # 前者：実際の発音
+        # 後者：本来の発音
+        kana_seq = Btag.group(1) + Btag.group(2) + Btag.group(4)
+        # kana_seq = Btag.group(1) + Btag.group(3) + Btag.group(4)
         Btag = re.match(expr, kana_seq)
     return kana_seq
 
@@ -89,7 +92,9 @@ def remove_Atag(kana_seq):
     expr = r'(.*)\(A[\s]+([^()]+);([^()]+)\)(.*)'
     Atag = re.match(expr, kana_seq)
     while Atag is not None:
-        kana_seq = Atag.group(1) + Atag.group(3) + Atag.group(4)
+        # NOTE: Select the former
+        kana_seq = Atag.group(1) + Atag.group(2) + Atag.group(4)
+        # kana_seq = Atag.group(1) + Atag.group(3) + Atag.group(4)
         Atag = re.match(expr, kana_seq)
     return kana_seq
 
@@ -128,8 +133,13 @@ def remove_which(kana_seq):
     expr = r'(.*)\(W[\s]+([^()]+);([^()]+)\)(.*)'
     which = re.match(expr, kana_seq)
     while which is not None:
-        # NOTE: Select latter
-        kana_seq = which.group(1) + which.group(3) + which.group(4)
+        # NOTE: Select the former
+        # 前者：実際の発音
+        # 後者：本来の発音
+        if which.group(2) not in ['?', '<>']:
+            kana_seq = which.group(1) + which.group(2) + which.group(4)
+        else:
+            kana_seq = which.group(1) + which.group(3) + which.group(4)
         which = re.match(expr, kana_seq)
     return kana_seq
 
