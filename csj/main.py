@@ -23,6 +23,7 @@ from csj.input_data import read_audio
 from csj.labels.transcript import read_sdb
 from utils.util import mkdir_join
 from utils.inputs.wav_split import split_wav
+from utils.dataset import add_element
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to CSJ dataset')
@@ -33,13 +34,13 @@ parser.add_argument('--feature_save_path', type=str,
 parser.add_argument('--wav_save_path', type=str,
                     help='path to save wav files (per utterance)')
 parser.add_argument('--tool', type=str,
-                    help='htk or python_speech_features or htk')
+                    choices=['htk', 'python_speech_features', 'librosa'])
 parser.add_argument('--htk_save_path', type=str, help='path to save features')
 parser.add_argument('--normalize', type=str,
-                    help='global or speaker or utterance')
-parser.add_argument('--save_format', type=str, help='numpy or htk or wav')
+                    choices=['global', 'speaker', 'utterance', 'no'])
+parser.add_argument('--save_format', type=str, choices=['numpy', 'htk', 'wav'])
 
-parser.add_argument('--feature_type', type=str, help='fbank or mfcc')
+parser.add_argument('--feature_type', type=str, choices=['fbank', 'mfcc'])
 parser.add_argument('--channels', type=int,
                     help='the number of frequency channels')
 parser.add_argument('--window', type=float,
@@ -177,7 +178,6 @@ def main(data_size):
         dataset_save_path = mkdir_join(
             args.dataset_save_path, args.save_format, data_size, data_type)
 
-        print('---------- %s ----------' % data_type)
         df_columns = ['frame_num', 'input_path', 'transcript']
         df_kanji = pd.DataFrame([], columns=df_columns)
         df_kanji_divide = pd.DataFrame([], columns=df_columns)
@@ -336,12 +336,6 @@ def main(data_size):
         df_word_freq10.to_csv(join(dataset_save_path, 'word_freq10.csv'))
         df_word_freq15.to_csv(join(dataset_save_path, 'word_freq15.csv'))
         df_pos.to_csv(join(dataset_save_path, 'pos.csv'))
-
-
-def add_element(df, elem_list):
-    series = pd.Series(elem_list, index=df.columns)
-    df = df.append(series, ignore_index=True)
-    return df
 
 
 if __name__ == '__main__':

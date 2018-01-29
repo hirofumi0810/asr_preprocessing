@@ -26,6 +26,7 @@ from swbd.labels.fisher.character import read_trans as read_trans_fisher
 from swbd.labels.eval2000.stm import read_stm
 from utils.util import mkdir_join
 from utils.inputs.wav_split import split_wav
+from utils.dataset import add_element
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--swbd_audio_path', type=str,
@@ -44,14 +45,14 @@ parser.add_argument('--feature_save_path', type=str,
 parser.add_argument('--run_root_path', type=str,
                     help='path to run this script')
 parser.add_argument('--tool', type=str,
-                    help='htk or python_speech_features or htk')
+                    choices=['htk', 'python_speech_features', 'librosa'])
 parser.add_argument('--wav_save_path', type=str, help='path to wav files.')
 parser.add_argument('--htk_save_path', type=str, help='path to htk files.')
 parser.add_argument('--normalize', type=str,
-                    help='global or speaker or utterance or None')
-parser.add_argument('--save_format', type=str, help='numpy or htk or wav')
+                    choices=['global', 'speaker', 'utterance', 'no'])
+parser.add_argument('--save_format', type=str, choices=['numpy', 'htk', 'wav'])
 
-parser.add_argument('--feature_type', type=str, help='fbank or mfcc')
+parser.add_argument('--feature_type', type=str, choices=['fbank', 'mfcc'])
 parser.add_argument('--channels', type=int,
                     help='the number of frequency channels')
 parser.add_argument('--window', type=float,
@@ -221,18 +222,13 @@ def main(data_size):
             args.dataset_save_path, args.save_format, data_size, data_type)
 
         print('---------- %s ----------' % data_type)
-        df_char = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_char_capital = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_word_freq1 = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_word_freq5 = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_word_freq10 = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
-        df_word_freq15 = pd.DataFrame(
-            [], columns=['frame_num', 'input_path', 'transcript'])
+        df_columns = ['frame_num', 'input_path', 'transcript']
+        df_char = pd.DataFrame([], columns=df_columns)
+        df_char_capital = pd.DataFrame([], columns=df_columns)
+        df_word_freq1 = pd.DataFrame([], columns=df_columns)
+        df_word_freq5 = pd.DataFrame([], columns=df_columns)
+        df_word_freq10 = pd.DataFrame([], columns=df_columns)
+        df_word_freq15 = pd.DataFrame([], columns=df_columns)
 
         with open(join(input_save_path, data_type, 'frame_num.pickle'), 'rb') as f:
             frame_num_dict = pickle.load(f)
@@ -261,36 +257,18 @@ def main(data_size):
                 char_indices, char_indices_capital, word_freq1_indices = utt_info[2:5]
                 word_freq5_indices, word_freq10_indices, word_freq15_indices = utt_info[5:8]
 
-                series_char = pd.Series(
-                    [frame_num, input_utt_save_path, char_indices],
-                    index=df_char.columns)
-                series_char_capital = pd.Series(
-                    [frame_num, input_utt_save_path, char_indices_capital],
-                    index=df_char_capital.columns)
-                series_word_freq1 = pd.Series(
-                    [frame_num, input_utt_save_path, word_freq1_indices],
-                    index=df_word_freq1.columns)
-                series_word_freq5 = pd.Series(
-                    [frame_num, input_utt_save_path, word_freq5_indices],
-                    index=df_word_freq5.columns)
-                series_word_freq10 = pd.Series(
-                    [frame_num, input_utt_save_path, word_freq10_indices],
-                    index=df_word_freq10.columns)
-                series_word_freq15 = pd.Series(
-                    [frame_num, input_utt_save_path, word_freq15_indices],
-                    index=df_word_freq15.columns)
-
-                df_char = df_char.append(series_char, ignore_index=True)
-                df_char_capital = df_char_capital.append(
-                    series_char_capital, ignore_index=True)
-                df_word_freq1 = df_word_freq1.append(
-                    series_word_freq1, ignore_index=True)
-                df_word_freq5 = df_word_freq5.append(
-                    series_word_freq5, ignore_index=True)
-                df_word_freq10 = df_word_freq10.append(
-                    series_word_freq10, ignore_index=True)
-                df_word_freq15 = df_word_freq15.append(
-                    series_word_freq15, ignore_index=True)
+                df_char = add_element(
+                    df_char, [frame_num, input_utt_save_path, char_indices])
+                df_char_capital = add_element(
+                    df_char_capital, [frame_num, input_utt_save_path, char_indices_capital])
+                df_word_freq1 = add_element(
+                    df_word_freq1, [frame_num, input_utt_save_path, word_freq1_indices])
+                df_word_freq5 = add_element(
+                    df_word_freq5, [frame_num, input_utt_save_path, word_freq5_indices])
+                df_word_freq10 = add_element(
+                    df_word_freq10, [frame_num, input_utt_save_path, word_freq10_indices])
+                df_word_freq15 = add_element(
+                    df_word_freq15, [frame_num, input_utt_save_path, word_freq15_indices])
                 utt_count += 1
 
                 # Reset
@@ -302,18 +280,12 @@ def main(data_size):
                     df_word_freq10_list.append(df_word_freq10)
                     df_word_freq15_list.append(df_word_freq15)
 
-                    df_char = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
-                    df_char_capital = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
-                    df_word_freq1 = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
-                    df_word_freq5 = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
-                    df_word_freq10 = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
-                    df_word_freq15 = pd.DataFrame(
-                        [], columns=['frame_num', 'input_path', 'transcript'])
+                    df_char = pd.DataFrame([], columns=df_columns)
+                    df_char_capital = pd.DataFrame([], columns=df_columns)
+                    df_word_freq1 = pd.DataFrame([], columns=df_columns)
+                    df_word_freq5 = pd.DataFrame([], columns=df_columns)
+                    df_word_freq10 = pd.DataFrame([], columns=df_columns)
+                    df_word_freq15 = pd.DataFrame([], columns=df_columns)
                     utt_count = 0
 
         # Last dataframe

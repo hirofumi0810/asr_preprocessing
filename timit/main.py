@@ -21,6 +21,7 @@ from timit.transcript_character import read_char
 from timit.transcript_phone import read_phone
 from timit.input_data import read_audio
 from utils.util import mkdir_join
+from utils.dataset import add_element
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
@@ -30,13 +31,13 @@ parser.add_argument('--feature_save_path', type=str,
                     help='path to save input features')
 parser.add_argument('--config_path', type=str, help='path to config directory')
 parser.add_argument('--tool', type=str,
-                    help='htk or python_speech_features or htk')
+                    choices=['htk', 'python_speech_features', 'librosa'])
 parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
 parser.add_argument('--normalize', type=str,
-                    help='global (per gender) or speaker or utterance or no')
-parser.add_argument('--save_format', type=str, help='numpy or htk or wav')
+                    choices=['global', 'speaker', 'utterance', 'no'])
+parser.add_argument('--save_format', type=str, choices=['numpy', 'htk', 'wav'])
 
-parser.add_argument('--feature_type', type=str, help='fbank or mfcc')
+parser.add_argument('--feature_type', type=str, choices=['fbank', 'mfcc'])
 parser.add_argument('--channels', type=int,
                     help='the number of frequency channels')
 parser.add_argument('--window', type=float,
@@ -225,12 +226,6 @@ def main():
         df_phone61.to_csv(join(dataset_save_path, 'phone61.csv'))
         df_phone48.to_csv(join(dataset_save_path, 'phone48.csv'))
         df_phone39.to_csv(join(dataset_save_path, 'phone39.csv'))
-
-
-def add_element(df, elem_list):
-    series = pd.Series(elem_list, index=df.columns)
-    df = df.append(series, ignore_index=True)
-    return df
 
 
 if __name__ == '__main__':
