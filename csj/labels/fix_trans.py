@@ -24,70 +24,53 @@ from csj.labels.regular_expression import remove_laughing
 from csj.labels.regular_expression import remove_Otag
 from csj.labels.regular_expression import remove_Mtag
 
-NOISE = 'NZ'
-NOISES = ['<雑音>', '<笑>', '<息>', '<咳>', '<泣>', '<拍手>', '<フロア発話>',
-          '<フロア笑>', '<ベル>', '<デモ>']
+NOISES = ['<雑音>', '<息>', '<笑>', '<咳>', '<泣>', '<拍手>', '<フロア発話>',
+          '<フロア笑>', '<ベル>', '<デモ>', '<朗読間違い>']
 
 
-def fix_transcript(kana_seq):
+def fix_transcript(transcript):
 
     # Ignore utterances (R ×××...)
-    if 'R' in kana_seq or '×' in kana_seq:
+    if 'R' in transcript or '×' in transcript:
         return ''
 
-    # Replace noises to a single class
+    # Remove noises
     for noise in NOISES:
-        kana_seq = kana_seq.replace(noise, NOISE)
-
-    # Remove
-    kana_seq = re.sub(r'<朗読間違い>', '', kana_seq)
+        transcript = transcript.replace(noise, '')
 
     # Convert (?) -> ?, <FV> -> <>
-    kana_seq = re.sub(r'\(\?\)', '?', kana_seq)
-    kana_seq = re.sub(r'<FV>', '<>', kana_seq)  # vocal fly
-    # NOTE: 先に完全に消すわけにはいかない
+    transcript = re.sub(r'\(\?\)', '?', transcript)
+    transcript = re.sub(r'<FV>', '<>', transcript)  # vocal fly
+    # NOTE: 先に完全に消さない
 
     # Decompose hierarchical structure
-    for _ in range(kana_seq.count('(') + kana_seq.count('<')):
-        kana_seq = remove_pause(kana_seq)
-        kana_seq = remove_question(kana_seq)
-        kana_seq = remove_which(kana_seq)
-        kana_seq = remove_question_which(kana_seq)
+    for _ in range(transcript.count('(') + transcript.count('<')):
+        transcript = remove_pause(transcript)
+        transcript = remove_question(transcript)
+        transcript = remove_which(transcript)
+        transcript = remove_question_which(transcript)
 
-        kana_seq = remove_cry(kana_seq)
-        kana_seq = remove_cough(kana_seq)
-        kana_seq = remove_laughing(kana_seq)
-        kana_seq = remove_filler(kana_seq)
-        kana_seq = remove_disfluency(kana_seq)
+        transcript = remove_cry(transcript)
+        transcript = remove_cough(transcript)
+        transcript = remove_laughing(transcript)
+        transcript = remove_filler(transcript)
+        transcript = remove_disfluency(transcript)
 
-        kana_seq = remove_Atag(kana_seq)
-        kana_seq = remove_Btag(kana_seq)
-        kana_seq = remove_Ktag(kana_seq)
-        kana_seq = remove_Ltag(kana_seq)
-        kana_seq = remove_Mtag(kana_seq)
-        kana_seq = remove_Otag(kana_seq)
-        kana_seq = remove_Xtag(kana_seq)
-
-    # Convert number to kanji character
-    # kana_seq = kana_seq.replace('１', '一')
-    # kana_seq = kana_seq.replace('２', '二')
-    # kana_seq = kana_seq.replace('３', '三')
-    # kana_seq = kana_seq.replace('４', '四')
-    # kana_seq = kana_seq.replace('５', '五')
-    # kana_seq = kana_seq.replace('６', '六')
-    # kana_seq = kana_seq.replace('７', '七')
-    # kana_seq = kana_seq.replace('８', '八')
-    # kana_seq = kana_seq.replace('９', '九')
-    # kana_seq = kana_seq.replace('０', '零')
-    # \十,\百,\千
+        transcript = remove_Atag(transcript)
+        transcript = remove_Btag(transcript)
+        transcript = remove_Ktag(transcript)
+        transcript = remove_Ltag(transcript)
+        transcript = remove_Mtag(transcript)
+        transcript = remove_Otag(transcript)
+        transcript = remove_Xtag(transcript)
 
     # Remove
-    kana_seq = re.sub(r'<H>', '', kana_seq)  # extended voise
-    kana_seq = re.sub(r'<Q>', '', kana_seq)  # exytended voise
-    kana_seq = re.sub(r'\?', '', kana_seq)  # (?)
-    kana_seq = re.sub(r'<>', '', kana_seq)  # <FV>
+    transcript = re.sub(r'<H>', '', transcript)  # extended voise
+    transcript = re.sub(r'<Q>', '', transcript)  # exytended voise
+    transcript = re.sub(r'\?', '', transcript)  # (?)
+    transcript = re.sub(r'<>', '', transcript)  # <FV>
 
-    return kana_seq
+    return transcript
 
 
 def is_hiragana(char):

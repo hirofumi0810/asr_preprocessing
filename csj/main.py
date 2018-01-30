@@ -189,7 +189,6 @@ def main(data_size):
         df_word_freq5 = pd.DataFrame([], columns=df_columns)
         df_word_freq10 = pd.DataFrame([], columns=df_columns)
         df_word_freq15 = pd.DataFrame([], columns=df_columns)
-        df_pos = pd.DataFrame([], columns=df_columns)
 
         with open(join(input_save_path, data_type, 'frame_num.pickle'), 'rb') as f:
             frame_num_dict = pickle.load(f)
@@ -200,7 +199,6 @@ def main(data_size):
         df_phone_list, df_phone_divide_list = [], []
         df_word_freq1_list, df_word_freq5_list = [], []
         df_word_freq10_list, df_word_freq15_list = [], []
-        df_pos_list = []
         speaker_dict = speaker_dict_dict[data_type]
         for speaker, utt_dict in tqdm(speaker_dict.items()):
             for utt_index, utt_info in utt_dict.items():
@@ -209,7 +207,6 @@ def main(data_size):
                 phone_indices, phone_divide_indices = utt_info[6:8]
                 word_freq1_indices, word_freq5_indices = utt_info[8:10]
                 word_freq10_indices, word_freq15_indices = utt_info[10:12]
-                pos_indices = utt_info[12]
 
                 if args.save_format == 'numpy':
                     input_utt_save_path = join(
@@ -245,8 +242,6 @@ def main(data_size):
                     df_word_freq10, [frame_num, input_utt_save_path, word_freq10_indices])
                 df_word_freq15 = add_element(
                     df_word_freq15, [frame_num, input_utt_save_path, word_freq15_indices])
-                df_pos = add_element(
-                    df_pos, [frame_num, input_utt_save_path, pos_indices])
                 utt_count += 1
 
                 # Reset
@@ -261,7 +256,6 @@ def main(data_size):
                     df_word_freq5_list.append(df_word_freq5)
                     df_word_freq10_list.append(df_word_freq10)
                     df_word_freq15_list.append(df_word_freq15)
-                    df_pos_list.append(df_pos)
 
                     df_kanji = pd.DataFrame([], columns=df_columns)
                     df_kanji_divide = pd.DataFrame([], columns=df_columns)
@@ -273,7 +267,6 @@ def main(data_size):
                     df_word_freq5 = pd.DataFrame([], columns=df_columns)
                     df_word_freq10 = pd.DataFrame([], columns=df_columns)
                     df_word_freq15 = pd.DataFrame([], columns=df_columns)
-                    df_pos = pd.DataFrame([], columns=df_columns)
                     utt_count = 0
 
         # Last dataframe
@@ -287,7 +280,6 @@ def main(data_size):
         df_word_freq5_list.append(df_word_freq5)
         df_word_freq10_list.append(df_word_freq10)
         df_word_freq15_list.append(df_word_freq15)
-        df_pos_list.append(df_pos)
 
         # Concatenate all dataframes
         df_kanji = df_kanji_list[0]
@@ -300,7 +292,6 @@ def main(data_size):
         df_word_freq5 = df_word_freq5_list[0]
         df_word_freq10 = df_word_freq10_list[0]
         df_word_freq15 = df_word_freq15_list[0]
-        df_pos = df_pos_list[0]
 
         for df_i in df_kanji_list[1:]:
             df_kanji = pd.concat([df_kanji, df_i], axis=0)
@@ -322,8 +313,6 @@ def main(data_size):
             df_word_freq10 = pd.concat([df_word_freq10, df_i], axis=0)
         for df_i in df_word_freq15_list[1:]:
             df_word_freq15 = pd.concat([df_word_freq15, df_i], axis=0)
-        for df_i in df_pos_list[1:]:
-            df_pos = pd.concat([df_pos, df_i], axis=0)
 
         df_kanji.to_csv(join(dataset_save_path, 'kanji.csv'))
         df_kanji_divide.to_csv(join(dataset_save_path, 'kanji_divide.csv'))
@@ -335,7 +324,6 @@ def main(data_size):
         df_word_freq5.to_csv(join(dataset_save_path, 'word_freq5.csv'))
         df_word_freq10.to_csv(join(dataset_save_path, 'word_freq10.csv'))
         df_word_freq15.to_csv(join(dataset_save_path, 'word_freq15.csv'))
-        df_pos.to_csv(join(dataset_save_path, 'pos.csv'))
 
 
 if __name__ == '__main__':

@@ -7,8 +7,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
 from os.path import join, basename
+import sys
 import argparse
 
 sys.path.append('../')
@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, help='path to CSJ dataset')
 parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
 
-parser.add_argument('--feature_type', type=str, help='fbank or mfcc')
+parser.add_argument('--feature_type', type=str, choices=['fbank', 'mfcc'])
 parser.add_argument('--channels', type=int,
                     help='the number of frequency channels')
 parser.add_argument('--window', type=float,
@@ -40,8 +40,7 @@ def main():
 
     args = parser.parse_args()
     htk_save_path = mkdir(args.htk_save_path)
-    path = Path(data_path=args.data_path,
-                config_path='./config')
+    path = Path(data_path=args.data_path, config_path='./config')
 
     # HTK settings
     save_config(audio_file_type='wav',
@@ -68,8 +67,8 @@ def main():
 
         with open('./config/wav2htk_' + data_type + '.scp', 'w') as f:
             for wav_path in wav_paths:
-                speaker_name = basename(wav_path).split('.')[0]
-                save_path_tmp = join(save_path, speaker_name + '.htk')
+                speaker = basename(wav_path).split('.')[0]
+                save_path_tmp = join(save_path, speaker + '.htk')
                 f.write(wav_path + '  ' + save_path_tmp + '\n')
 
 

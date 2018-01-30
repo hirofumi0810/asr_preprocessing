@@ -18,7 +18,7 @@ from utils.inputs.htk import read, write
 
 
 def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
-               save_path=None, save_format=None,
+               save_path=None, save_format='numpy',
                global_mean_male=None, global_mean_female=None,
                global_std_male=None, global_std_female=None,
                dtype=np.float32):
@@ -42,6 +42,7 @@ def read_audio(audio_paths, speaker_dict, tool, config, normalize, is_training,
                          data by mean & std per utterance
         is_training (bool, optional): training or not
         save_path (string): path to save npy files
+        save_format (string, optional): numpy or htk
         global_mean_male (np.ndarray, optional): global mean of male over the
             training set
         global_std_male (np.ndarray, optional): global standard deviation of

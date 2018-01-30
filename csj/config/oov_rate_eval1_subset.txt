@@ -1,8 +1,8 @@
 Word (freq1):
-  OOV rate (test): 0.768236 %
+  OOV rate (test): 0.785510 %
 Word (freq5):
-  OOV rate (test): 1.528866 %
+  OOV rate (test): 1.559581 %
 Word (freq10):
-  OOV rate (test): 2.027078 %
+  OOV rate (test): 2.104862 %
 Word (freq15):
-  OOV rate (test): 2.544307 %
+  OOV rate (test): 2.638704 %

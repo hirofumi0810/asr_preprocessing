@@ -44,11 +44,11 @@ label_paths = {
 
 CONFIG = {
     'feature_type': 'logmelfbank',
-    'channels': 40,
+    'channels': 80,
     'sampling_rate': 16000,
     'window': 0.025,
     'slide': 0.01,
-    'energy': True,
+    'energy': False,
     'delta': True,
     'deltadelta': True
 }
@@ -84,7 +84,7 @@ class TestInput(unittest.TestCase):
         speaker_dict = read_sdb(
             label_paths=label_paths['train'],
             data_size='subset',
-            vocab_file_save_path='../config/mapping_files',
+            vocab_file_save_path='../config/vocab_files',
             is_training=True,
             save_vocab_file=True)
         global_mean_male, global_mean_female, global_std_male, global_std_female = read_audio(
@@ -100,7 +100,7 @@ class TestInput(unittest.TestCase):
             speaker_dict = read_sdb(
                 label_paths=label_paths[data_type],
                 data_size='subset',
-                vocab_file_save_path='../config/mapping_files',
+                vocab_file_save_path='../config/vocab_files',
                 is_test=True)
             read_audio(
                 audio_paths=audio_paths[data_type],

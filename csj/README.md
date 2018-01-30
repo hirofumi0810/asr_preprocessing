@@ -12,5 +12,5 @@ The configure file is in ./config/config_fbank. The default input feature is 40 
 
 2. Set to the path to CSJ corpus and paths to save input features & dataset in make.sh and run
 ```
-./make.sh
+./data_prep.sh
 ```
