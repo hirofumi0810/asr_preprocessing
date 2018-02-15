@@ -127,62 +127,11 @@ def main():
                 f.write('')
 
         ########################################
-        # labels (character)
-        ########################################
-        print('\n=> Processing transcripts (char)...')
-        save_vocab_file = True if data_type == 'train' else False
-        is_test = True if data_type == 'test' else False
-        trans_dict = read_char(
-            label_paths=path.trans(data_type=data_type),
-            vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
-            save_vocab_file=save_vocab_file,
-            is_test=is_test)
-
-        ########################################
-        # dataset (character, csv)
-        ########################################
-        print('\n=> Saving dataset files (char)...')
-        dataset_save_path = mkdir_join(
-            args.dataset_save_path, args.save_format, data_type)
-        df_columns = ['frame_num', 'input_path', 'transcript']
-        df_char = pd.DataFrame([], columns=df_columns)
-        df_char_capital = pd.DataFrame([], columns=df_columns)
-
-        with open(join(input_save_path, data_type, 'frame_num.pickle'), 'rb') as f:
-            frame_num_dict = pickle.load(f)
-
-        for utt_name, trans_list in tqdm(trans_dict.items()):
-            if args.save_format == 'numpy':
-                speaker = utt_name.split('_')[0]
-                input_utt_save_path = join(
-                    input_save_path, data_type, speaker, utt_name + '.npy')
-            elif args.save_format == 'htk':
-                speaker = utt_name.split('_')[0]
-                input_utt_save_path = join(
-                    input_save_path, data_type, speaker, utt_name + '.htk')
-            elif args.save_format == 'wav':
-                input_utt_save_path = path.utt2wav(utt_name)
-            else:
-                raise ValueError('save_format is numpy or htk or wav.')
-
-            assert isfile(input_utt_save_path)
-            frame_num = frame_num_dict[utt_name]
-
-            char_indices, char_indices_capital = trans_list
-
-            df_char = add_element(
-                df_char, [frame_num, input_utt_save_path, char_indices])
-            df_char_capital = add_element(
-                df_char_capital, [frame_num, input_utt_save_path, char_indices_capital])
-
-        df_char.to_csv(join(dataset_save_path, 'character.csv'))
-        df_char_capital.to_csv(
-            join(dataset_save_path, 'character_capital_divide.csv'))
-
-        ########################################
         # labels (phone)
         ########################################
         print('\n=> Processing transcripts (phone)...')
+        save_vocab_file = True if data_type == 'train' else False
+        is_test = True if data_type == 'test' else False
         trans_dict = read_phone(
             label_paths=path.phone(data_type=data_type),
             vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
@@ -193,9 +142,15 @@ def main():
         # dataset (phone, csv)
         ########################################
         print('\n=> Saving dataset files (phone)...')
+        dataset_save_path = mkdir_join(
+            args.dataset_save_path, args.save_format, data_type)
+        df_columns = ['frame_num', 'input_path', 'transcript']
         df_phone61 = pd.DataFrame([], columns=df_columns)
         df_phone48 = pd.DataFrame([], columns=df_columns)
         df_phone39 = pd.DataFrame([], columns=df_columns)
+
+        with open(join(input_save_path, data_type, 'frame_num.pickle'), 'rb') as f:
+            frame_num_dict = pickle.load(f)
 
         for utt_name, trans_list in tqdm(trans_dict.items()):
             if args.save_format == 'numpy':
@@ -226,6 +181,51 @@ def main():
         df_phone61.to_csv(join(dataset_save_path, 'phone61.csv'))
         df_phone48.to_csv(join(dataset_save_path, 'phone48.csv'))
         df_phone39.to_csv(join(dataset_save_path, 'phone39.csv'))
+
+        ########################################
+        # labels (character)
+        ########################################
+        # print('\n=> Processing transcripts (char)...')
+        # trans_dict = read_char(
+        #     label_paths=path.trans(data_type=data_type),
+        #     vocab_file_save_path=mkdir_join('./config', 'vocab_files'),
+        #     save_vocab_file=save_vocab_file,
+        #     is_test=is_test)
+
+        ########################################
+        # dataset (character, csv)
+        ########################################
+        # print('\n=> Saving dataset files (char)...')
+        # df_char = pd.DataFrame([], columns=df_columns)
+        # df_char_capital = pd.DataFrame([], columns=df_columns)
+        #
+        # for utt_name, trans_list in tqdm(trans_dict.items()):
+        #     if args.save_format == 'numpy':
+        #         speaker = utt_name.split('_')[0]
+        #         input_utt_save_path = join(
+        #             input_save_path, data_type, speaker, utt_name + '.npy')
+        #     elif args.save_format == 'htk':
+        #         speaker = utt_name.split('_')[0]
+        #         input_utt_save_path = join(
+        #             input_save_path, data_type, speaker, utt_name + '.htk')
+        #     elif args.save_format == 'wav':
+        #         input_utt_save_path = path.utt2wav(utt_name)
+        #     else:
+        #         raise ValueError('save_format is numpy or htk or wav.')
+        #
+        #     assert isfile(input_utt_save_path)
+        #     frame_num = frame_num_dict[utt_name]
+        #
+        #     char_indices, char_indices_capital = trans_list
+        #
+        #     df_char = add_element(
+        #         df_char, [frame_num, input_utt_save_path, char_indices])
+        #     df_char_capital = add_element(
+        #         df_char_capital, [frame_num, input_utt_save_path, char_indices_capital])
+        #
+        # df_char.to_csv(join(dataset_save_path, 'character.csv'))
+        # df_char_capital.to_csv(
+        #     join(dataset_save_path, 'character_capital_divide.csv'))
 
 
 if __name__ == '__main__':

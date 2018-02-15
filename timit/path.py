@@ -50,30 +50,44 @@ class Path(object):
 
             if data_type != 'train':
                 # Load speaker list
-                test_speakers = []
+                speaker_list = []
                 with open(join(self.config_path, data_type + '_speaker_list.txt'), 'r') as f:
                     for line in f:
                         line = line.strip()
-                        test_speakers.append(line)
+                        speaker_list.append(line)
 
             for file_path in glob(join(data_path, '*/*/*')):
                 region, speaker, file_name = file_path.split('/')[-3:]
                 utt_index = basename(file_name)
                 ext = splitext(file_name)[1]
 
-                if data_type != 'train' and speaker not in test_speakers:
-                    continue
+                if data_type == 'train':
+                    if utt_index[0: 2] in ['sx', 'si', 'sa']:
+                        if ext == '.wav':
+                            self._wav_paths[data_type].append(file_path)
+                            self._utt2wav[speaker + '_' +
+                                          utt_index] = file_path
+                        elif ext == '.txt':
+                            self._text_paths[data_type].append(file_path)
+                        elif ext == '.wrd':
+                            self._word_paths[data_type].append(file_path)
+                        elif ext == '.phn':
+                            self._phone_paths[data_type].append(file_path)
+                else:
+                    if speaker not in speaker_list:
+                        continue
 
-                if utt_index[0: 2] in ['sx', 'si']:
-                    if ext == '.wav':
-                        self._wav_paths[data_type].append(file_path)
-                        self._utt2wav[speaker + '_' + utt_index] = file_path
-                    elif ext == '.txt':
-                        self._text_paths[data_type].append(file_path)
-                    elif ext == '.wrd':
-                        self._word_paths[data_type].append(file_path)
-                    elif ext == '.phn':
-                        self._phone_paths[data_type].append(file_path)
+                    if utt_index[0: 2] in ['sx', 'si']:
+                        if ext == '.wav':
+                            self._wav_paths[data_type].append(file_path)
+                            self._utt2wav[speaker + '_' +
+                                          utt_index] = file_path
+                        elif ext == '.txt':
+                            self._text_paths[data_type].append(file_path)
+                        elif ext == '.wrd':
+                            self._word_paths[data_type].append(file_path)
+                        elif ext == '.phn':
+                            self._phone_paths[data_type].append(file_path)
 
     def utt2wav(self, utt_name):
         return self._utt2wav[utt_name]

@@ -21,7 +21,7 @@ parser.add_argument('--data_path', type=str, help='path to TIMIT dataset')
 parser.add_argument('--htk_save_path', type=str, help='path to save htk files')
 parser.add_argument('--config_path', type=str, help='path to config directory')
 
-parser.add_argument('--feature_type', type=str, help='fbank or mfcc')
+parser.add_argument('--feature_type', type=str, choices=['fbank', 'mfcc'])
 parser.add_argument('--channels', type=int,
                     help='the number of frequency channels')
 parser.add_argument('--window', type=float,

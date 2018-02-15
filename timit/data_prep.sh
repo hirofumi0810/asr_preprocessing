@@ -56,7 +56,7 @@ if [ ! -e $HTK_SAVE_PATH ] && [ $TOOL = 'htk' ]; then
 fi
 
 declare -A file_number
-file_number["train"]=3696
+file_number["train"]=4620
 file_number["dev"]=400
 file_number["test"]=192
 
