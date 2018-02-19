@@ -62,7 +62,8 @@ class Path(object):
                 ext = splitext(file_name)[1]
 
                 if data_type == 'train':
-                    if utt_index[0: 2] in ['sx', 'si', 'sa']:
+                    # if utt_index[0: 2] in ['sx', 'si', 'sa']:
+                    if utt_index[0: 2] in ['sx', 'si']:
                         if ext == '.wav':
                             self._wav_paths[data_type].append(file_path)
                             self._utt2wav[speaker + '_' +
